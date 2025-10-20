@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>請購動態360看板</title>
+    <script src="../static/js/vue.global.js"></script>
+    <link href="../static/css/tailwind.min.css" rel="stylesheet">
+    <script src="../static/js/tailwinds.js"></script>
+    <script src="../static/js/axios.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; 
+        }
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.2s;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.2s;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+        .rotate-90 {
+            transform: rotate(90deg);
+        }
+        [data-folder-card] {
+            position: fixed !important;
+            z-index: 9999 !important;
+        }
+    </style>
+</head>
+
+<body class="bg-[#EEEEEE] font-sans leading-normal tracking-normal">
+
+    <div id="app" class="mx-auto relative">
+
+        <!-- 新增資料夾與驗收路徑 z-index 最高 -->
+        <!-- <div v-if="showFolderCard" data-folder-card class="inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-96 pointer-events-auto">
+                <h3 class="text-lg font-bold text-gray-700 mb-3">請輸入資料夾名稱</h3>
+                <input
+                    v-if="folderCardTargetKey === '報告路徑'"
+                    v-model="newFolderName"
+                    placeholder="請輸入報告資料夾名稱"
+                    class="w-full border border-gray-300 px-3 py-2 rounded text-sm"
+                />
+                <input
+                    v-else-if="folderCardTargetKey === '驗收路徑'"
+                    v-model="acceptanceFolderName"
+                    placeholder="請輸入驗收資料夾名稱"
+                    class="w-full border border-gray-300 px-3 py-2 rounded text-sm"
+                />
+                <div class="mt-4 flex justify-end space-x-2">
+                    <button
+                        class="px-4 py-1.5 text-sm border rounded text-gray-700 hover:bg-gray-100"
+                        @click="showFolderCard = false"
+                    >
+                        取消
+                    </button>
+                    <button
+                        class="px-4 py-1.5 text-sm border border-blue-500 text-blue-600 rounded hover:bg-blue-50"
+                    @click="checkFolderName()"
+                    >
+                        確認
+                    </button>
+                </div>
+            </div>
+        </div> -->
+
+
+        <!-- 左上浮動：未請購件數 -->
+        <div class="absolute left-4 z-40 flex gap-2">
+        <!-- 全部 -->
+            <div 
+                class="flex justify-center items-center text-white text-xs bg-blue-500 font-bold px-2 h-16 rounded shadow hover:bg-blue-600 transition w-[50px] text-center cursor-pointer"
+                @click="resetAllFilters()"
+            >
+                全部
+            </div>
+
+            <!-- 未請購 -->
+            <div 
+                class="flex flex-col justify-center text-white text-xs bg-red-500 px-2 h-16 rounded shadow hover:bg-red-600 transition w-[60px] text-center leading-snug cursor-pointer"
+                @click="filterPurchaseStatus = 'UNORDERED'"
+            >
+                <span>未請購</span>
+                <span>{{ filteredUnorderedCount }} 件</span>
+            </div>
+
+            <!-- 已請購 -->
+            <div 
+                class="flex flex-col justify-center text-white text-xs bg-emerald-600 px-2 h-16 rounded shadow hover:bg-emerald-700 transition w-[60px] text-center leading-snug cursor-pointer"
+                @click="filterPurchaseStatus = 'ORDERED'"
+                >
+                <span>已請購</span>
+                <span>{{ filteredOrderedCount }} 件</span>
+            </div>
+
+            <!-- 當前未請購金額 -->
+            <div 
+                class="flex flex-col justify-center text-white text-xs bg-red-500 px-2 h-16 rounded shadow hover:bg-red-600 transition w-[120px] text-center leading-snug"
+            >
+                <span>當前未請購</span>
+                <div class="flex justify-center items-center gap-1">
+                <img src="../static/picture/money.png" alt="money" class="w-3.5 h-3.5 object-contain" />
+                <span>{{ allUnorderedCountMoney.toLocaleString() }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主標題置中 -->
+        <div class="absolute left-0 right-0 h-16 flex items-center justify-center z-10">
+            <h1 class="text-3xl font-semibold text-black">
+                請購動態360看板
+            </h1>
+        </div>
+
+        <!-- 右側資訊 -->
+        <div class="my-4 flex justify-end pr-4">
+            <div class="inline-flex items-center gap-3">
+                <!-- 每月花費(已開單) -->
+                <div class="flex flex-col justify-center text-green-700 text-sm bg-green-100 px-3 py-2 rounded shadow w-64 text-center leading-snug min-h-[64px]">
+                    <label for="issuedMonthSelect" class="text-sm font-semibold text-green-800 mb-1">
+                        📅 每月花費 💰 {{ monthlyTotalAmount.toLocaleString() }} 元
+                    </label>
+                    <select
+                        id="issuedMonthSelect"
+                        v-model="selectedIssuedMonth"
+                        class="w-full text-black border border-gray-300 px-2 py-1 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        style="z-index: 50; position: relative;"
+                        >
+                        <option disabled value="">請選擇</option>
+                        <option v-for="month in issuedMonthOptions" :key="month" :value="month">
+                            {{ formatMonth(month) }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 包含未請購月份區塊 -->
+                <div class="h-16 flex flex-col justify-center text-white text-xs bg-red-500 px-3 py-1.5 rounded shadow hover:bg-red-600 transition w-72 text-center leading-snug">
+                    <label for="monthSelect" class="text-xs font-semibold text-white mb-0.5">
+                        📅 請選擇月份 (未請購) 💰 {{ formattedSelectedAmount }}
+                    </label>
+                    <select
+                        id="monthSelect"
+                        v-model="selectedMonth"
+                        class="w-full text-black border border-gray-300 px-2 py-0.5 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-400"
+                        style="z-index: 50;"
+                    >
+                        <option disabled value="">請選擇</option>
+                        <option v-for="month in Object.keys(total_money_by_month_data)" :key="month" :value="month">
+                            {{ formatMonth(month) }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- 剩下餘額 -->
+                <div class="text-white text-sm bg-emerald-500 px-4 py-2 rounded shadow hover:bg-emerald-600 transition min-w-[100px] h-16 text-center leading-snug flex flex-col justify-center">
+                    <span>剩下餘額</span>
+                    <span>{{ rest_money.toLocaleString() }}</span>
+                </div>
+
+                <!-- 齒輪按鈕 + 小卡（正確擺在 inline-flex 裡面） -->
+                <div class="relative" style="z-index: 30;">
+                    <div
+                        @click="toggleSettings"
+                        :class="{ 'rotate-90': showSettings }"
+                        class="w-14 h-14 flex items-center justify-center bg-white border rounded-full shadow cursor-pointer hover:shadow-lg transition-transform duration-300"
+                        style="z-index: 1001; position: relative;"
+                    >
+                        <img
+                            src="../static/picture/齒輪.png"
+                            alt="設定"
+                            class="w-8 h-8 object-contain pointer-events-none"
+                        />
+                    </div>
+                
+                    <transition name="fade">
+                        <div v-if="showSettings"
+                            class="absolute w-64 bg-white border rounded-lg shadow-lg p-4"
+                            style="z-index: 32; left: -250px; top: 50px;">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">請購預算設定</h3>
+                            <div class="space-y-4">
+                                <!-- 當月請購預算 -->
+                                <div>
+                                    <label for="current-budget" class="block text-lg font-medium text-gray-700">當月請購預算</label>
+                                    <input 
+                                        id="current-budget" 
+                                        v-model="currentBudget" 
+                                        type="number" 
+                                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                                        placeholder="請輸入當月請購預算"
+                                    />
+                                </div>
+                                <!-- 當月追加預算 -->
+                                <div>
+                                    <label for="additional-budget" class="block text-lg font-medium text-gray-700">當月追加預算</label>
+                                    <input 
+                                        id="additional-budget" 
+                                        v-model="additionalBudget" 
+                                        type="number" 
+                                        class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" 
+                                        placeholder="請輸入當月追加預算"
+                                    />
+                                </div>
+                                <!-- 提交按鈕 -->
+                                <div class="flex space-x-4 mt-4">
+                                    <button @click="closeConfigCard" class="w-full py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">關閉</button>
+                                    <button @click="uploadMoney" class="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">提交</button>
+                                </div>
+                            </div>
+                        </div>
+                    </transition>
+                </div>
+            </div>
+        </div>
+        <!-- 上方標題列結束 -->
+
+        <!-- 資料表格 -->
+        <div class="border border-gray-300 rounded-lg shadow-md overflow-y-auto" style="max-height: 80vh; min-height: 600px; overflow-x: auto;">
+             <table class="min-w-full bg-white">
+                <thead class="sticky top-0 bg-gray-800">
+                    <tr class="bg-gray-100">
+                        <!-- 開單狀態 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isStatesFiltered }"
+                            >
+                            <div ref="stateDropdownWrapper">
+                                <div @click="toggleDropdown('showStateFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>開單狀態</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showStateFilter }">⏷</span>
+                                </div>
+
+                                <!-- 下拉篩選卡片 -->
+                                <transition name="fade">
+                                    <div v-if="showStateFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-40 p-2 space-y-2">
+
+                                        <!-- 標題與套用 -->
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <!-- 多選清單 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="state in uniqueStates" 
+                                                :key="state" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="state" 
+                                                    v-model="checkedStates" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ state }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除按鈕 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedStates = []; showStateFilter = false"
+                                                class="text-gray-500 text-xs hover:text-red-500">
+                                                清除篩選
+                                            </button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 開單狀態 -->  
+                        <!-- 驗收狀態 -->  
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isReceivingResutlFiltered }">
+                            <div ref="ReceivingResultDropdownWrapper">
+                                <div @click="toggleDropdown('showReceivingResultFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>驗收狀態</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showReceivingResultFilter }">⏷</span>
+                                </div>
+
+                                <!-- 下拉篩選卡片 -->
+                                <transition name="fade">
+                                    <div v-if="showReceivingResultFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-40 p-2 space-y-2">
+
+                                        <!-- 標題與套用 -->
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <!-- 多選清單 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="val in uniqueReceivingResult" 
+                                                :key="val" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="val" 
+                                                    v-model="checkedReceivingResults" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">
+                                                    {{ val === 'V' ? '✔ 通過' : val === 'X' ? '✖ 不通過' : '⧗ 未驗收' }}
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除按鈕 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedReceivingResults = []; showReceivingResultFilter = false"
+                                                class="text-gray-500 text-xs hover:text-red-500">
+                                                清除篩選
+                                            </button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 驗收狀態 -->
+                        <!-- WBS -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isWBSFiltered }">
+                            <div ref="WBSDropdownWrapper">
+                                <div @click="toggleDropdown('showWBSFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>WBS</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showWBSFilter }">⏷</span>
+                                </div>
+
+                                <!-- 下拉篩選卡片 -->
+                                <transition name="fade">
+                                    <div v-if="showWBSFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                    
+                                        <!-- 標題與套用 -->
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <!-- 多選清單 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="wbs in uniqueWBS" 
+                                                :key="wbs" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="wbs" 
+                                                    v-model="checkedWBS" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ wbs }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除按鈕 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedWBS = []; showWBSFilter = false" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- WBS -->
+
+                        <!-- 請購順序 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isOrdersFiltered }">
+                            <div ref="OrderDropdownWrapper">
+                                <div @click="toggleDropdown('showOrderFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>請購順序</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showOrderFilter }">⏷</span>
+                                </div>
+
+                                <!-- 下拉篩選卡片 -->
+                                <transition name="fade">
+                                    <div v-if="showOrderFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-40 p-2 space-y-2">
+                                    
+                                        <!-- 標題與套用 -->
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                            <button @click="toggleSort('請購順序')"
+                                                class="text-gray-500 text-xs hover:text-red-500">
+                                                順序調整
+                                            </button>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <!-- 多選清單 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="order in uniqueOrders" 
+                                                :key="order" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <!-- :value="order"  -->
+                                                <input 
+                                                    type="checkbox" 
+                                                    
+                                                    :value="String(order)"  
+                                                    v-model="checkedOrders" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ order }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除按鈕 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedOrders = []; showOrderFilter = false" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 請購順序 -->
+
+                        <!-- 需求者 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isPeopleFiltered }">
+                            <div ref="NeedPersonDropdownWrapper">
+                                <div @click="toggleDropdown('showPersonFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>需求者</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showPersonFilter }">⏷</span>
+                                </div>
+
+                                <!-- 下拉篩選卡片 -->
+                                <transition name="fade">
+                                    <div v-if="showPersonFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                    
+                                        <!-- 標題與套用 -->
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <!-- 多選清單，點整行可選 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="person in uniquePeople" 
+                                                :key="person" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="person" 
+                                                    v-model="checkedPeople" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ person }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除按鈕 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="clearPersonFilter" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 需求者 -->
+                        
+                        <!-- 請購項目 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isItemsFiltered }">
+                            <div ref="NeedItemDropdownWrapper">
+                                <div @click="closeAllDropdowns(); showItemFilter = !showItemFilter"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>請購項目</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showItemFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showItemFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                    
+                                        <!-- 模糊搜尋輸入框 -->
+                                        <input v-model="itemSearchText"
+                                            @input="onItemSearchChange"
+                                            placeholder="模糊搜尋"
+                                            class="w-full border border-gray-300 px-2 py-1 text-sm rounded" />
+
+                                        <!-- 選項清單 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="item in uniqueItems" 
+                                                :key="item" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="item" 
+                                                    v-model="checkedItems" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded" />
+                                                <span class="text-sm text-gray-700">{{ item || '(空白)' }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedItems = []; showItemFilter = false"
+                                            class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 請購項目 -->
+
+                        <!-- 需求原因 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isReasonsFiltered }">
+                            <div ref="NeedReasonDropdownWrapper">
+                                <div @click="toggleDropdown('showReasonFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>需求原因</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showReasonFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showReasonFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                        
+                                        <!-- 模糊搜尋輸入框 -->
+                                        <input v-model="reasonSearchText"
+                                                @input="onReasonSearchChange"
+                                                placeholder="模糊搜尋"
+                                                class="w-full border border-gray-300 px-2 py-1 text-sm rounded" 
+                                        />
+
+                                        <!-- 多選清單 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="reason in uniqueReasons.filter(r => !reasonSearchText || r.includes(reasonSearchText))"
+                                                :key="reason"
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="reason" 
+                                                    v-model="checkedReasons"
+                                                    class="text-blue-600 focus:ring-blue-500 rounded" />
+                                                    <span class="text-sm text-gray-700">{{ reason || '(空白)' }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedReasons = []; showReasonFilter = false"
+                                                    class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 需求原因 -->
+
+                        <!-- 總金額 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isAmountsFiltered }">
+                            <div ref="TotalMoneyDropdownWrapper">
+                                <div @click="toggleDropdown('showAmountFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>總金額</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showAmountFilter }">⏷</span>
+                                </div>
+
+                                <!-- 下拉篩選卡片 -->
+                                <transition name="fade">
+                                    <div v-if="showAmountFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+
+                                        <!-- 標題與排序 -->
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                            <button @click="toggleSort('總金額')" class="text-gray-500 text-xs hover:text-red-500">順序調整</button>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <!-- 多選清單（不再格式化月份）-->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label v-for="amount in uniqueAmounts"
+                                                :key="amount"
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition">
+                                                <input type="checkbox"
+                                                        :value="amount"
+                                                        v-model="checkedAmounts"
+                                                        class="text-blue-600 focus:ring-blue-500 rounded" />
+                                                <span class="text-sm text-gray-700">{{ amount }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除按鈕 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedAmounts = []; showAmountFilter = false"
+                                                    class="text-gray-500 text-xs hover:text-red-500">
+                                                清除篩選
+                                            </button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 總金額 -->
+
+                        <!-- 需求日 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isNeedDatesFiltered }">
+                            <div ref="NeedDateDropdownWrapper">
+                                <div @click="toggleDropdown('showNeedDateFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>需求日</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showNeedDateFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showNeedDateFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-48 p-2 space-y-2">
+
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="date in uniqueNeedDates" 
+                                                :key="date" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="date" 
+                                                    v-model="checkedNeedDates" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ date }}</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedNeedDates = []; showNeedDateFilter = false" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 需求日 -->
+
+                        <!-- 已開單日期 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isIssuedMonthsFiltered }">
+                            <div ref="AleadyDateDropdownWrapper">
+                                <div @click="toggleDropdown('showIssuedMonthFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>已開單日期</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showIssuedMonthFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showIssuedMonthFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-48 p-2 space-y-2">
+
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                            <button @click="toggleSort('已開單日期')"
+                                                class="text-gray-500 text-xs hover:text-red-500">
+                                                順序調整
+                                            </button>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="month in uniqueIssuedMonths" 
+                                                :key="month" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="month" 
+                                                    v-model="checkedIssuedMonths" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ month.slice(0, 4) }}/{{ month.slice(4, 6) }}</span>
+                                            </label>
+                                        </div>
+
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedIssuedMonths = []; showIssuedMonthFilter = false" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 已開單日期 -->
+
+                        <!-- ePR No. -->
+                        <th class="relative py-3 px-6 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isEPRsFiltered }">
+                            <div ref="EPRNODropdownWrapper">
+                                <div @click="toggleDropdown('showEPRFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>ePR No.</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showEPRFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showEPRFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                        <!-- 模糊搜尋輸入框 -->
+                                        <input v-model="ePRsSearchText"
+                                                @input="onePRSearchChange"
+                                                placeholder="模糊搜尋"
+                                                class="w-full border border-gray-300 px-2 py-1 text-sm rounded" 
+                                        />
+                                        <hr class="border-gray-200" />
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label v-for="epr in uniqueEPRs" :key="epr"
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition">
+                                                <input type="checkbox" :value="epr" v-model="checkedEPRs"
+                                                    class="text-blue-600 focus:ring-blue-500 rounded" />
+                                                <span class="text-sm text-gray-700">{{ epr || '尚未有 ePR 編號' }}</span>
+                                            </label>
+                                        </div>
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedEPRs = []; showEPRFilter = false"
+                                                class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- ePR No. -->
+                        <!-- PO No -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isPONosFiltered }">
+                            <div ref="poDropdownWrapper">
+                                <div @click="toggleDropdown('showPONoFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>PO No</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showPONoFilter }">⏷</span>
+                                </div>
+
+                                <!-- 下拉篩選卡片 -->
+                                <transition name="fade">
+                                    <div v-if="showPONoFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-48 p-2 space-y-2">
+
+                                        <!-- 多選清單 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="po in uniquePONos" 
+                                                :key="po" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="po" 
+                                                    v-model="checkedPONos" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ po }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除按鈕 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedPONos = []; showPONoFilter = false"
+                                                class="text-gray-500 text-xs hover:text-red-500">
+                                                清除篩選
+                                            </button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- PO No -->
+                        <!-- 簽核中關卡 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isStageFiltered }">
+                            <div ref="CheckDropdownWrapper">
+                                <div @click="toggleDropdown('showStageFilter')" class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>簽核中關卡</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showStageFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showStageFilter" class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label v-for="stage in uniqueStages" :key="stage" class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition">
+                                                <input type="checkbox" :value="stage" v-model="checkedStages" class="text-blue-600 focus:ring-blue-500 rounded" />
+                                                <span class="text-sm text-gray-700">{{ stage || '尚未有資料' }}</span>
+                                            </label>
+                                        </div>
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedStages = []; showStageFilter = false" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 簽核中關卡 -->
+                        <!-- Status -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isStatuesFiltered }">
+                            <div ref="StatusDropdownWrapper">
+                                <div @click="toggleDropdown('showStatusFilter')" class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>Status</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showStatusFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showStatusFilter" class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label v-for="s in uniqueStatuses" :key="s" class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition">
+                                                <input type="checkbox" :value="s" v-model="checkedStatuses" class="text-blue-600 focus:ring-blue-500 rounded" />
+                                                <span class="text-sm text-gray-700">{{ s || '尚未有資料' }}</span>
+                                            </label>
+                                        </div>
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedStatuses = []; showStatusFilter = false" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- Status -->
+                        <!-- 備註 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isRemarksFiltered }">
+                            <div ref="RemarksDropdownWrapper">
+                                <div @click="toggleDropdown('showRemarkFilter')" class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>備註</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showRemarkFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showRemarkFilter" class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                        <input v-model="remarkSearchText"
+                                                @input="onRemarkSearchChange"
+                                                placeholder="模糊搜尋"
+                                                class="w-full border border-gray-300 px-2 py-1 text-sm rounded" 
+                                        />
+                                        <hr class="border-gray-200" />
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label v-for="s in uniqueRemarks" :key="s" class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition">
+                                                <input type="checkbox" :value="s" v-model="checkedRemarks" class="text-blue-600 focus:ring-blue-500 rounded" />
+                                                <span class="text-sm text-gray-700">{{ s || '尚未有資料' }}</span>
+                                            </label>
+                                        </div>
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedRemarks = []; showRemarkFilter = false" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 whitespace-nowrap text-center">Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(item, index) in sortedFilteredData" 
+                            :key="index" 
+                            class="border-t border-gray-200"
+                            :class="{
+                                'bg-gray-500 text-white': item['開單狀態'] === 'C' || item['取消'] === 'C'
+                            }"
+                        >
+                        <td class="py-2 px-4 text-sm text-center"
+                            :class="{
+                                'text-red-500 text-5xl font-bold': item['開單狀態'] === 'X',
+                                'text-green-500 text-5xl font-bold': item['開單狀態'] === 'V'
+                            }">
+                            {{ item['開單狀態'] }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center"
+                            :class="{
+                                'text-red-500 text-5xl font-bold': item['驗收狀態'] === 'X',
+                                'text-green-500 text-5xl font-bold': item['驗收狀態'] === 'V'
+                            }">
+                            {{ item.驗收狀態 }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center">{{ item.WBS }}</td>
+                        <td class="py-2 px-4 text-sm font-bold text-center" 
+                            :class="{
+                                'text-red-500 text-5xl text-center': Number(item.請購順序) === 1,
+                                'text-yellow-500 text-5xl text-center': Number(item.請購順序) === 2,
+                                'text-green-500 text-5xl text-center': Number(item.請購順序) === 3
+                            }">
+                            {{ item.請購順序 }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center">{{ item.需求者 }}</td>
+                        <td class="py-2 px-4 text-sm ">{{ item.請購項目 }}</td>
+                        <td class="py-2 px-4 text-sm ">{{ item.需求原因 }}</td>
+                        <td class="py-2 px-4 text-sm text-center">{{ Number(item.總金額).toLocaleString() }}</td>
+                        <td class="py-2 px-4 text-sm text-center">
+                            {{ String(item.需求日).length === 8 ? String(item.需求日).slice(0,4) + '/' + String(item.需求日).slice(4,6) + '/' + String(item.需求日).slice(6,8) : item.需求日 }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center">
+                            {{ String(item.已開單日期).length === 8 ? String(item.已開單日期).slice(0,4) + '/' + String(item.已開單日期).slice(4,6) + '/' + String(item.已開單日期).slice(6,8) : '' }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center">
+                            <span v-if="String(item['ePR No.']).length === 10">
+                                <a 
+                                    :href="`https://khwfap.kh.asegroup.com/ePR/zh-TW/PRQuery/QueryPR?id=${item['ePR No.']}`" 
+                                    class="text-blue-600 hover:underline" 
+                                    target="_blank"
+                                >
+                                    {{ item["ePR No."] || ''}}
+                                </a>
+                            </span>
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center" v-html="item['PO No.'] || ''"></td>
+                        <td class="py-2 px-4 text-sm text-center">
+                            {{ item.簽核中關卡 }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center">
+                            {{ item.Status }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center">{{ item.備註 }}</td>
+                        <td class="py-2 px-4 text-sm text-center">
+                            <div class="flex flex-col items-center gap-2">
+                                <button 
+                                    @click="editItem(index, item)" 
+                                    class="w-20 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold py-1 px-2 rounded-lg shadow transition-all duration-200">
+                                    ✏️ 修正
+                                </button>
+                                <button 
+                                    @click="deleteItem(index, item)" 
+                                    class="w-20 bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-2 rounded-lg shadow transition-all duration-200">
+                                    🗑️ 刪除
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- 表格區塊結束 -->
+
+        <!-- 底部按鈕區塊 - 合併左右兩側 -->
+        <div class="fixed bottom-6 left-6 right-6 z-50 flex justify-between items-end">
+            <!-- 左側：篩選區間按鈕 -->
+            <div class="relative">
+                <div 
+                    class="text-white text-lg bg-green-600 px-5 py-3 rounded-full shadow-lg hover:bg-green-700 transition min-w-[140px] h-12 text-center cursor-pointer flex items-center justify-center"
+                    @click="openFilterCard">
+                    📅 篩選區間
+                </div>
+
+                <!-- 卡片顯示在按鈕上方 -->
+                <transition name="fade">
+                    <div v-if="showFilterCard"
+                        class="absolute bottom-full left-0 mb-2 w-80 bg-white border rounded-lg shadow-xl p-4 text-gray-800"
+                        style="z-index: 9999;">
+                        <h3 class="text-lg font-semibold mb-3 text-center border-b pb-2">📅 日期區間篩選</h3>
+                        <div class="space-y-3">
+                            <label class="block">
+                                <span class="text-sm font-medium text-gray-700">開始日期：</span>
+                                <input type="date" v-model="filterStartDate"
+                                    class="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                            </label>
+                            <label class="block">
+                                <span class="text-sm font-medium text-gray-700">結束日期：</span>
+                                <input type="date" v-model="filterEndDate"
+                                    class="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                            </label>
+                        </div>
+                        <div class="mt-4 flex justify-between space-x-2">
+                            <button @click="applyDateRangeFilter"
+                                class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex-1">
+                                ✅ 套用
+                            </button>
+                            <button @click="cancelDateRangeFilter"
+                                class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition flex-1">
+                                🔄 取消篩選
+                            </button>
+                            <button @click="showFilterCard = false"
+                                class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition flex-1">
+                                ❌ 關閉
+                            </button>
+                        </div>
+                    </div>
+                </transition>
+            </div>
+
+            <!-- 右側：三個按鈕群組 -->
+            <div class="flex items-end space-x-4">
+                <div 
+                    class="bg-purple-500 hover:bg-purple-600 text-white text-lg px-5 py-3 rounded-full shadow-lg cursor-pointer flex items-center justify-center h-12"
+                    @click="goDetailPage">
+                    <span> 📋 eRT 驗收總表</span>
+                </div>
+                <div 
+                    class="bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-3 rounded-full shadow-lg text-lg cursor-pointer flex items-center justify-center h-12"
+                    @click="openUploadModal">
+                    🔁 更新目前狀態
+                </div>
+                <div 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-full shadow-lg text-lg cursor-pointer flex items-center justify-center h-12"
+                    @click="openNewItemModal">
+                    ➕ 新增
+                </div>
+            </div>
+        </div>
+
+        <!-- 📂 上傳 Modal 視窗 -->
+        <div v-if="showUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white w-full max-w-md rounded-lg p-6 shadow-xl space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">🔁 上傳更新檔案</h2>
+
+                <input type="file" @change="handleFileChange" class="block w-full border border-gray-300 rounded px-3 py-2" />
+
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button @click="showUploadModal = false"
+                            class="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded shadow">
+                        ❌ 取消
+                    </button>
+                    <button @click="uploadFile"
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
+                        📤 確認上傳
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 修正卡片 UI -->
+        <div v-if="editingIndex !== null" class="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto py-10 px-4">
+            <div class="relative bg-white w-full max-w-full rounded-xl shadow-xl p-6 space-y-6 mx-auto">
+                <h2 class="text-3xl font-bold text-gray-800 text-center border-b pb-3 flex items-center justify-center gap-2">
+                    ✏️ 修正請購資料
+                    <!-- 複製圖示 -->
+                    <div class="relative group inline-block">
+                        <img
+                            src="../static/picture/Copy.png"
+                            alt="複製圖示"
+                            class="w-8 h-8 object-contain cursor-pointer hover:scale-110 transition-transform"
+                            @click="copyToNewItem"
+                        />
+                        <div
+                            class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-white text-gray-800 text-sm rounded-lg shadow-lg border z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
+                            >
+                            📄 複製此請購資料，另存為新單據
+                        </div>
+                    </div>
+
+                    <!-- 寄信圖示 -->
+                    <div v-if="admins.includes(username)" class="relative group inline-block">
+                        <img
+                            src="../static/picture/mail.png"
+                            alt="寄信圖示"
+                            class="w-8 h-8 object-contain cursor-pointer hover:scale-110 transition-transform"
+                            @click="sendItemEmail"
+                        />
+                        <div
+                            class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-white text-gray-800 text-sm rounded-lg shadow-lg border z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
+                        >
+                            📧 快速寄送簽核信件，提醒經理簽核此請購項目
+                        </div>
+                    </div>
+
+                    <!-- 常用文字圖示 -->
+                    <div v-if="admins.includes(username)" class="relative group inline-block">
+                        <img
+                            src="../static/picture/can.png"
+                            alt="常用文字圖示"
+                            class="w-8 h-8 object-contain cursor-pointer hover:scale-110 transition-transform"
+                            @click="copyCantext"
+                        />
+                        <div
+                            class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-4 py-2 bg-white text-gray-800 text-sm rounded-lg shadow-lg border z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap"
+                        >
+                        📝 套用常見備註內容，供採購者使用快速複製罐頭訊息
+                        </div>
+                    </div>
+                </h2>
+                <div class="relative w-full text-center mt-4">
+                    <!-- 置中文字 -->
+                    <p class="text-sm text-gray-500">
+                        <span class="text-red-500">*</span> 字號為管理員選填，其餘人無權限
+                    </p>
+
+                    <!-- 右側固定的 Radio + Select + Input -->
+                    <div class="mt-2 flex justify-end items-center gap-3">
+                        
+                        <!-- Radio 區塊 -->
+                        <div class="flex gap-2">
+                            <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                <input type="radio" name="settingType" value="none" v-model="settingType"  class="w-3 h-3 text-blue-500 focus:ring-blue-400" checked>
+                                <span class="text-gray-700">無指定預設</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                <input type="radio" name="settingType" value="cooperate" v-model="settingType"  class="w-3 h-3 text-blue-500 focus:ring-blue-400">
+                                <span class="text-gray-700">合作開發</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                <input type="radio" name="settingType" value="suggestion" v-model="settingType" class="w-3 h-3 text-blue-500 focus:ring-blue-400">
+                                <span class="text-gray-700">建議廠商</span>
+                            </label>
+                        </div>
+
+                        <!-- Select 廠商 -->
+                        <select 
+                            v-model="selectedVender" 
+                            :disabled="settingType === 'none'"
+                            class="border border-gray-300 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            >
+                            <option disabled value="">請選擇廠商</option>
+                            <option v-for="v in venders" :key="v" :value="v">
+                                {{ v }}
+                            </option>
+                        </select>
+
+                        <!-- 右側輸入框 -->
+                        <input 
+                            v-model="lasteprno"
+                            type="text" 
+                            placeholder="前購單號(ePR No. Or PO No.)"
+                            class="border border-gray-300 rounded px-2 py-0.5 text-xs w-60 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                    </div>
+                </div>
+
+
+                <!-- 分五列 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div v-for="(label, key) in editableFields" :key="key" >
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            <template v-if="key === 'ePR No.'">
+                                ePR No.（格式：YYMMDD+4碼流水號） <span class="text-red-500 mr-1">*</span>
+                            </template>
+                            <template v-else>
+                                {{ label }}
+                            </template>
+                        </label>
+
+                        <!-- 需求日：顯示 + 真正輸入 -->
+                        <input
+                            v-if="key === '需求日'"
+                            :value="formatDateInput(editItemData[key])"
+                            @input="editItemData[key] = $event.target.value.replace(/-/g, '')"
+                            type="date"
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm bg-gray-100 text-gray-700"
+                        />
+
+
+                        <!-- 下拉選單：需求者 -->
+                        <select
+                            v-else-if="key === '需求者'"
+                            v-model="editItemData[key]"
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm bg-gray-100 text-gray-700"
+                            >
+                            <option disabled value="">請選擇需求者</option>
+                            <option v-for="p in requesters" :key="p" :value="p">{{ p }}</option>
+                        </select>
+
+                        <input
+                            v-else-if="key === 'ePR No.'"
+                            v-model="editItemData[key]"
+                            @input="handleEPRChangeEdit"
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm bg-gray-100 text-gray-700"
+                        />
+
+                        <!-- 請購順序 -->
+                        <textarea
+                            v-else-if="key === '請購順序'"
+                            v-model="editItemData[key]"
+                            :placeholder="`1 超急件\n2 急件\n3 一般件`"
+                            @focus="editItemData[key] === '' ? editItemData[key] = '' : null"
+                            rows="3"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40 whitespace-pre-line"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key==='已開單日期'"
+                            v-model="editItemData[key]"
+                            rows="2"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                            readonly
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key==='進度追蹤超連結'"
+                            v-model="editItemData[key]"
+                            rows="2"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                            readonly
+                        ></textarea>
+
+                        <input
+                            v-else-if="key === '總金額'"
+                            :value="formatNumber(editItemData[key])"
+                            readonly
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm bg-gray-100 text-gray-700"
+                        />
+
+                        <textarea
+                            v-else-if="key==='請購項目'"
+                            v-model="editItemData[key]"
+                            rows="2"
+                            @paste="handlePaste($event, editItemData, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key==='需求原因'"
+                            v-model="editItemData[key]"
+                            rows="2"
+                            @paste="handlePaste($event, editItemData, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key==='報告路徑'"
+                            v-model="editItemData[key]"
+                            rows="2"
+                            @paste="handlePaste($event, editItemData, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key==='報告路徑'"
+                            v-model="editItemData[key]"
+                            rows="2"
+                            @paste="handlePaste($event, editItemData, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key==='驗收路徑'"
+                            v-model="editItemData[key]"
+                            rows="2"
+                            @paste="handlePaste($event, editItemData, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <!-- 其他欄位 -->
+                        <textarea
+                            v-else
+                            v-model="editItemData[key]"
+                            rows="2"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+                    </div>
+                </div>
+
+
+                <!-- 細項資料表格 -->
+                <div class="mt-4 border border-gray-300 rounded-lg shadow overflow-x-auto">
+                    <table class="min-w-full table-auto text-sm border bg-white rounded shadow">
+                        <thead class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 text-sm font-semibold sticky top-0 z-10">
+                            <tr>
+                                <th
+                                    v-for="field in detailTableFields"
+                                    :key="field.key"
+                                    class="border px-4 py-2 text-left align-top whitespace-pre-wrap break-words"
+                                >
+                                    {{ field.label }}
+                                </th>
+                                <th class="border px-4 py-2 text-left align-top whitespace-pre-wrap break-words">⚙️ 操作</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr
+                                v-for="(row, index) in editTableRows"
+                                :key="index"
+                                class="hover:bg-gray-50"
+                            >
+                                <td
+                                    v-for="field in detailTableFields"
+                                    :key="field.key"
+                                    class="border px-2 py-1 align-top text-left whitespace-pre-wrap break-words"
+                                    >
+                                    <!-- ✅ 使用 textarea 處理品項欄位 -->
+                                    <textarea
+                                        v-if="row.isEditing && field.key === '品項'"
+                                        :value="getDisplayValue(row, field.key)"
+                                        @input="handleCellInput($event, row, field.key, { recalculateTotal: true }); handleItemLimit(row)"
+                                        @keydown="preventTypingOverLimit($event, row)"
+                                        @paste="handlePaste($event, row, '品項')"
+                                        rows="2"
+                                        class="w-full px-1 py-1 border rounded text-sm resize-y"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    ></textarea>
+                                    <textarea
+                                        v-else-if="row.isEditing && field.key === '規格'"
+                                        v-model="row['規格']"
+                                        @paste="handlePaste($event, row, '規格')"
+                                        rows="2"
+                                        class="w-full px-1 py-1 border rounded text-sm resize-y"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    ></textarea>
+                                    <input 
+                                        v-else-if="row.isEditing && field.key === '數量'"
+                                        v-model="row['數量']" 
+                                        @blur="formatField(row, '數量', 'edit')"
+                                        class="w-full px-1 py-1 border rounded text-sm text-left"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    />
+                                    <input 
+                                        v-else-if="row.isEditing && field.key === '單價'"
+                                        v-model="row['單價']" 
+                                        @blur="formatField(row, '單價', 'edit')"
+                                        class="w-full px-1 py-1 border rounded text-sm text-left"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    />
+                                    <input 
+                                        v-else-if="row.isEditing && field.key === 'RT金額'"
+                                        v-model="row['RT金額']" 
+                                        @blur="formatField(row, 'RT金額', 'edit')"
+                                        class="w-full px-1 py-1 border rounded text-sm text-left"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    />
+                                    <input 
+                                        v-else-if="row.isEditing && field.key === 'RT總金額'"
+                                        v-model="row['RT總金額']" 
+                                        @blur="formatField(row, 'RT總金額', 'edit')"
+                                        class="w-full px-1 py-1 border rounded text-sm text-left"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    />
+                                    <input 
+                                        v-else-if="row.isEditing && field.key === '總數'"
+                                        v-model="row['總數']" 
+                                        @blur="formatField(row, '總數', 'edit')"
+                                        class="w-full px-1 py-1 border rounded text-sm text-left"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    />
+                                    <textarea
+                                        v-else-if="row.isEditing && field.key === '備註'"
+                                        v-model="row['備註']"
+                                        @paste="handlePaste($event, row, '備註')"
+                                        rows="2"
+                                        class="w-full px-1 py-1 border rounded text-sm resize-y"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    ></textarea>
+                                    <input
+                                        v-else-if="row.isEditing"
+                                        :value="getDisplayValue(row, field.key)"
+                                        @input="handleCellInput($event, row, field.key, { recalculateTotal: true })"
+                                        :readonly="field.key === '總價'"
+                                        class="w-full px-1 py-1 border rounded text-sm"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    />
+                                    <input
+                                        v-else-if="row.isEditing"
+                                        :value="getDisplayValue(row, field.key)"
+                                        :readonly="field.key === 'Delivery Date 廠商承諾交期'"
+                                        class="w-full px-1 py-1 border rounded text-sm"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    />
+                                    <input
+                                        v-else-if="row.isEditing"
+                                        :value="getDisplayValue(row, field.key)"
+                                        :readonly="field.key === 'SOD Qty 廠商承諾數量'"
+                                        class="w-full px-1 py-1 border rounded text-sm"
+                                        style="word-break: break-word; white-space: pre-wrap;"
+                                    />
+                                    <span
+                                        v-else
+                                            class="block text-sm whitespace-pre-wrap break-words leading-normal"
+                                            style="min-height: 2.5rem; word-break: break-word;"
+                                        >
+                                        {{ ['單價', '數量', '總價', '總數', "RT金額", "RT總金額"].includes(field.key) ? formatNumber(row[field.key]) : row[field.key] }}
+                                    </span>
+                                </td>
+                                <td class="border px-2 py-1 align-top">
+                                    <div class="flex flex-col items-center justify-center gap-0.5">
+                                        <template v-if="!row.isEditing">
+                                            <button @click="startRowEdit(row)" class="text-blue-600 font-bold hover:underline">✏️</button>
+                                        </template>
+                                        <template v-else>
+                                            <button @click="finishRowEdit(row, 'edit')" class="text-green-600 font-bold hover:underline">✔️</button>
+                                            <button @click="cancelRowEdit(row, index)" class="text-yellow-600 font-bold hover:underline">❌</button>
+                                            <button @click="deleteRowEdit(index, 'edit')" class="text-red-600 font-bold hover:underline">🗑️</button>
+                                        </template>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- 在表格底下加這段 -->
+                    <div class="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-2 flex justify-end z-20">
+                        <button
+                            @click="addNewEditRow"
+                            class="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 text-sm font-semibold shadow"
+                        >
+                            ➕ 新增一筆
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 底部按鈕 -->
+                <div class="flex justify-end gap-4 pt-4">
+                    <button @click="cancelEdit" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-lg transition">
+                        取消
+                    </button>
+                    <button @click="saveEdit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition">
+                        💾 儲存
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- 新增卡片 UI -->
+        <div v-if="showNewItemModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 overflow-y-auto py-10 px-4">
+            <div class="relative bg-white w-full max-w-full rounded-xl shadow-xl p-6 space-y-6 mx-auto">
+                <h2 class="text-3xl font-bold text-gray-800 text-center border-b pb-3">
+                    新增請購資料
+                    <span class="text-red-500 ml-2 text-xl align-middle">*</span>
+                </h2>
+
+                <div class="relative w-full text-center mt-4">
+                    <!-- 置中文字 -->
+                    <p class="text-sm text-gray-500">
+                        <span class="text-red-500">*</span> 字號為管理員選填，其餘人無權限
+                    </p>
+
+                    <!-- 右側固定的 Radio + Select + Input -->
+                    <div class="mt-2 flex justify-end items-center gap-3">
+                        
+                        <!-- Radio 區塊 -->
+                        <div class="flex gap-2">
+                            <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                <input type="radio" name="settingType" value="none" v-model="settingType"  class="w-3 h-3 text-blue-500 focus:ring-blue-400" checked>
+                                <span class="text-gray-700">無指定預設</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                <input type="radio" name="settingType" value="cooperate" v-model="settingType"  class="w-3 h-3 text-blue-500 focus:ring-blue-400">
+                                <span class="text-gray-700">合作開發</span>
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer text-xs">
+                                <input type="radio" name="settingType" value="suggestion" v-model="settingType" class="w-3 h-3 text-blue-500 focus:ring-blue-400">
+                                <span class="text-gray-700">建議廠商</span>
+                            </label>
+                        </div>
+
+                        <!-- Select 廠商 -->
+                        <select 
+                            v-model="selectedVender" 
+                            :disabled="settingType === 'none'"
+                            class="border border-gray-300 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            >
+                            <option disabled value="">請選擇廠商</option>
+                            <option v-for="v in venders" :key="v" :value="v">
+                                {{ v }}
+                            </option>
+                        </select>
+
+                        <!-- 右側輸入框 -->
+                        <input 
+                            v-model="lasteprno"
+                            type="text" 
+                            placeholder="前購單號(ePR No. Or PO No.)"
+                            class="border border-gray-300 rounded px-2 py-0.5 text-xs w-60 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    <div v-for="(label, key) in editableFields" :key="key">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">
+                            <template v-if="key === 'ePR No.'">
+                                ePR No.（格式：YYMMDD+4碼流水號） <span class="text-red-500 mr-1">*</span>
+                            </template>
+                            <template v-else>
+                                {{ label }}
+                            </template>
+                        </label>
+
+
+                        <input
+                            v-if="key === '需求日'"
+                            :value="newItem[key]"
+                            readonly
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm bg-gray-100"
+                        />
+                        <input
+                            v-if="key === '需求日'"
+                            type="date"
+                            @input="handleDateInput($event.target.value)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm"
+                        />
+                        
+                        <div v-else-if="key === '需求者'" class="space-y-1 relative">
+                            <input
+                                v-model="newItem[key]"
+                                @input="filterRequesterSuggestions"
+                                @blur="hideRequesterSuggestions"
+                                placeholder="請輸入或選擇需求者"
+                                class="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                            <ul v-if="showRequesterSuggestions && filteredRequesters.length" class="absolute z-50 bg-white border w-full mt-1 rounded shadow text-sm max-h-40 overflow-y-auto">
+                                <li
+                                    v-for="(name, idx) in filteredRequesters"
+                                    :key="idx"
+                                    @click="selectRequester(name)"
+                                    class="px-3 py-1 hover:bg-blue-100 cursor-pointer"
+                                >
+                                    {{ name }}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <textarea v-else-if="key === '請購順序'"
+                            v-model="newItem[key]"
+                            :placeholder="`1 超急件\n2 急件\n3 一般件`"
+                            @focus="newItem[key] === '' ? newItem[key] = '' : null"
+                            rows="3"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40 whitespace-pre-line"
+                        ></textarea>
+
+                        <input
+                            v-else-if="key === '總金額'"
+                            v-model="newItem[key]"
+                            readonly
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+
+                        <input
+                            v-else-if="key === '已開單日期'"
+                            v-model="newItem[key]"
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            readonly
+                        />
+
+                        <input
+                            v-else-if="key === 'ePR No.'"
+                            v-model="newItem[key]"
+                            @input="handleEPRChange($event)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <textarea
+                            v-else-if="key === ''"
+                            v-model="newItem[key]"
+                            rows="2"
+                            @paste="handlePaste($event, newItem, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key === '進度追蹤超連結'"
+                            v-model="newItem[key]"
+                            rows="2"
+                            readonly
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key === '請購項目'"
+                            v-model="newItem[key]"
+                            rows="2"
+                            @paste="handlePaste($event, newItem, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key === '需求原因'"
+                            v-model="newItem[key]"
+                            rows="2"
+                            @paste="handlePaste($event, newItem, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key === '報告路徑'"
+                            v-model="newItem[key]"
+                            rows="2"
+                            @paste="handlePaste($event, newItem, key)"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else-if="key === '驗收路徑'"
+                            v-model="newItem[key]"
+                            rows="2"
+                            readonly
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+
+                        <textarea
+                            v-else
+                            v-model="newItem[key]"
+                            rows="2"
+                            class="w-full border border-gray-300 px-3 py-2 rounded resize-y text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 max-h-40"
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto mt-6 rounded-lg shadow border border-gray-300">
+                    <table class="min-w-full table-auto text-sm border bg-white rounded shadow">
+                        <thead class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 text-sm font-semibold sticky top-0 z-10">
+                            <tr>
+                                <th
+                                    v-for="header in tableHeaders"
+                                    :key="header.key"
+                                    class="border px-4 py-2 text-left align-top whitespace-pre-wrap break-words"
+                                >
+                                    {{ header.label }}
+                                </th>
+                                <th
+                                    class="border px-4 py-2 text-left align-top break-words whitespace-nowrap min-w-[5rem]"
+                                    >
+                                ⚙️ 操作
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(row, index) in yourTableData" :key="index" class="hover:bg-gray-50">
+                                <td class="border px-2 py-1"><input v-model="row['交貨驗證']" class="w-full px-1 py-1 border rounded text-sm" /></td>
+                                <td class="border px-2 py-1"><input v-model="row['ePR No.']" class="w-full px-1 py-1 border rounded text-sm" /></td>
+                                <td class="border px-2 py-1"><input v-model="row['PO No.']" class="w-full px-1 py-1 border rounded text-sm" /></td>
+                                <td class="border px-2 py-1"><input v-model="row.Item" class="w-full px-1 py-1 border rounded text-sm" /></td>
+                                <td class="border px-2 py-1">
+                                    <textarea
+                                        v-model="row['品項']"
+                                        @input="handleItemLimit(row)"
+                                        @keydown="preventTypingOverLimit($event, row)"
+                                        @paste="handlePaste($event, row, '品項')"
+                                        rows="2"
+                                        class="w-full px-1 py-1 border rounded text-sm resize-y"
+                                    ></textarea>
+                                </td>
+                                <td class="border px-2 py-1">
+                                    <textarea 
+                                        v-model="row['規格']" 
+                                        @paste="handlePaste($event, row, '規格')"
+                                        rows="2"
+                                        class="w-full px-1 py-1 border rounded text-sm resize-y"
+                                    ></textarea>
+                                </td>
+                                <td class="border px-2 py-1">
+                                    <input 
+                                        v-model="row['數量']" 
+                                        @blur="formatField(row, '數量', 'new')"
+                                        class="w-full px-1 py-1 border rounded text-sm"
+                                    />
+                                </td>
+                                <td class="border px-2 py-1">
+                                    <input 
+                                        v-model="row['總數']" 
+                                        @blur="formatField(row, '總數', 'new')"
+                                        class="w-full px-1 py-1 border rounded text-sm" 
+                                    />
+                                </td>
+                                <td class="border px-2 py-1">
+                                    <input 
+                                        v-model="row['單價']"
+                                        @blur="formatField(row, '單價', 'new')" 
+                                        class="w-full px-1 py-1 border rounded text-sm"
+                                    />
+                                </td>
+                                <td class="border px-2 py-1">
+                                    <input 
+                                        :value="getDisplayValue(row, '總價')"
+                                        readonly
+                                        class="w-full px-1 py-1 border rounded text-sm" 
+                                    />
+                                </td>
+                                <td class="border px-2 py-1">
+                                    <textarea 
+                                        v-model="row['備註']" 
+                                        rows="2"
+                                        class="w-full px-1 py-1 border rounded text-sm resize-y"
+                                        @paste="handlePaste($event, row, '備註')"
+                                    ></textarea>
+                                </td>
+                                <td class="border px-2 py-1 text-center">
+                                    <!-- <button @click="yourTableData.splice(index, 1)" class="text-red-600 text-lg hover:text-red-800">🗑️</button> -->
+                                    <button
+                                        @click="removeNewItemRow(index)"
+                                        class="text-red-600 text-lg hover:text-red-800"
+                                    >
+                                        🗑️
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!-- 在表格底下加這段 -->
+                    <div class="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-2 flex justify-end z-20">
+                        <button
+                            @click="addNewRow"
+                            class="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 text-sm font-semibold shadow"
+                        >
+                            ➕ 新增一筆
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 pt-4">
+                    <button @click="closeSaveNewItem" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-lg transition">取消</button>
+                    <button @click="saveNewItem" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition">✅ 新增</button>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+    <script src="../static/js/func/Planned_Purchase_Request_List.js"></script>
+</body>
+
+</html>
