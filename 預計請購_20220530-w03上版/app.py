@@ -14,7 +14,6 @@ import logging
 import shutil
 import numpy as np
 import traceback
-from loguru import logger
 
 BACKEND_DATA = r"D:\Data\Backend_Access_Management\Backend_data.json"
 VENDER_FILE_PATH = f'static/data/vender.ini'
@@ -44,19 +43,20 @@ def clean_value(val):
 
 def authenticate_user(username, password):
     try:
-        # server = Server('ldap://KHADDC02.kh.asegroup.com', get_info = ALL)
+        server = Server('ldap://KHADDC02.kh.asegroup.com', get_info = ALL)
         # 使用 NTLM
         user = f'kh\\{username}'
         password = f'{password}'
+        return True
 
         # print("帳號: ", username, " 密碼: ", password)
-        # 建立連接
+        # # 建立連接
         # conn = Connection(server, user = user, password = password, authentication = NTLM)
 
-        # 嘗試綁定
+        # # 嘗試綁定
         # if conn.bind():
-            # app.logger.info(f"User {username} login successful.")
-        return True
+        #     app.logger.info(f"User {username} login successful.")
+        
         # else:
         #     # app.logger.warning(f"Login failed for user {username}: {conn.last_error}")
         #     return False
@@ -1250,12 +1250,12 @@ BUYER_FILE_LOCK = f"static/data/Buyer_detail.csv.lock"  # 🔒 鎖檔案路徑
 from difflib import SequenceMatcher
 buyer_file_lock = FileLock(BUYER_FILE_LOCK, timeout=10)
 
-# eHub 處理
 def is_po_in_record(row_po_str, target_po):
     """檢查 PO 是否在記錄中（支援 <br /> 分隔的多個 PO）"""
     po_list = re.split(r"<br\s*/?>", str(row_po_str))
     po_list = [po.strip() for po in po_list if po.strip()]
     return target_po.strip() in po_list
+
 
 def fuzzy_in(text, keyword):
     """模糊比對關鍵字是否在文字中"""
@@ -1283,6 +1283,7 @@ def cleanup_temp_csv_files(po_no=None):
                     logger.info(f"✅ 已刪除: {file_path}")
     except Exception as e:
         logger.error(f"清理暫存檔案時發生錯誤: {str(e)}")
+
 
 @app.route("/api/save_csv", methods=["POST", "OPTIONS"])
 def save_csv():
@@ -2883,14 +2884,6 @@ def save_override_all():
             "matching_output": matching_output,
             "auto_updated": auto_updated_items  # 🆕 也在成功時回傳
         }))
-    
-   
-
-    
-
-
-
-
 
 
 
@@ -2906,6 +2899,213 @@ logging.basicConfig(
     encoding='utf-8'
 )
 logger = logging.getLogger("BuyerDetailUpdater")
+
+
+# 2025/11/03修正
+@app.route('/api/update-buyer-items', methods=['POST'])
+def update_buyer_items():
+    """
+    更新 Buyer_detail.csv - 先刪除同 Id 的所有舊資料，再寫入新資料
+    """
+    try:
+        data = request.json
+        item_id = data.get('Id')
+        new_items = data.get('items', [])
+        username = data.get('username', '')
+        
+        if not item_id:
+            return jsonify({'status': 'error', 'success': False, 'message': '缺少 Id'}), 400
+        
+        if not new_items or len(new_items) == 0:
+            return jsonify({'status': 'error', 'success': False, 'message': '沒有要更新的資料'}), 400
+        
+        logger.info(f"🔄 使用者 {username} 請求更新 Id: {item_id}，共 {len(new_items)} 筆資料")
+        
+        # 🔒 使用檔案鎖
+        with buyer_file_lock:
+            logger.info(f"🔒 已取得檔案鎖，開始更新...")
+            
+            # 讀取 CSV
+            df = pd.read_csv(BUYER_FILE, encoding='utf-8-sig', dtype=str)
+            df.columns = df.columns.str.strip()
+            
+            # ⭐ 步驟1: 刪除同 Id 的所有舊資料
+            mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
+            old_count = mask.sum()
+            
+            if old_count > 0:
+                logger.info(f"📝 找到 {old_count} 筆舊資料，準備刪除")
+            
+            df = df[~mask]
+            logger.info(f"✅ 已刪除 {old_count} 筆舊資料")
+            
+            # ⭐ 步驟2: 準備新資料
+            new_rows = []
+            for item in new_items:
+                # 移除前端的特殊欄位
+                item.pop('backup', None)
+                item.pop('isEditing', None)
+                item.pop('_alertedItemLimit', None)
+                
+                # 確保所有欄位都存在
+                new_row = {}
+                for col in df.columns:
+                    new_row[col] = str(item.get(col, '')) if item.get(col) is not None else ''
+                new_rows.append(new_row)
+                logger.info(f"  新資料: Item={item.get('Item')}, 品項={item.get('品項')}, 總價={item.get('總價')}")
+            
+            # ⭐ 步驟3: 加入新資料
+            new_df = pd.DataFrame(new_rows)
+            df = pd.concat([df, new_df], ignore_index=True)
+            logger.info(f"✅ 已加入 {len(new_items)} 筆新資料")
+            
+            # 確保欄位順序正確
+            final_columns = ['Id', '開單狀態', '交貨驗證', 'User', 'ePR No.', 'PO No.', 'Item', '品項', '規格', 
+                           '數量', '總數', '單價', '總價', '備註', '字數', 'isEditing', 'backup', '_alertedItemLimit', 
+                           'Delivery Date 廠商承諾交期', 'SOD Qty 廠商承諾數量', '驗收數量', '拒收數量', 
+                           '發票月份', 'WBS', '需求日', 'RT金額', 'RT總金額', '驗收狀態']
+            
+            # 確保所有欄位存在
+            for col in final_columns:
+                if col not in df.columns:
+                    df[col] = ''
+            
+            # 重新排序
+            df = df[final_columns]
+            
+            # 儲存
+            df.to_csv(BUYER_FILE, index=False, encoding='utf-8-sig', na_rep='')
+            
+            logger.info(f"✅ 更新成功! (刪除 {old_count} 筆 + 新增 {len(new_items)} 筆)")
+            logger.info(f"🔓 釋放檔案鎖")
+        
+        # ⭐⭐⭐ 關鍵修改：將 int64 轉換成 int ⭐⭐⭐
+        return jsonify({
+            'status': 'success',
+            'success': True,
+            'message': '更新成功',
+            'msg': f'已刪除 {old_count} 筆舊資料，新增 {len(new_items)} 筆資料',
+            'deleted_count': int(old_count),      # ⭐ 加 int() 轉換
+            'added_count': len(new_items)
+        }), 200
+        
+    except Timeout:
+        error_msg = '檔案正在被其他程序使用，請稍後再試'
+        logger.info(f"⏱️ {error_msg}")
+        return jsonify({'status': 'error', 'success': False, 'message': error_msg}), 503
+        
+    except Exception as e:
+        error_msg = str(e)
+        logger.info(f"❌ 更新失敗: {error_msg}")
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'success': False, 'message': error_msg}), 500
+
+
+# 2025/11/03修正
+@app.route('/api/delete-buyer-item-exact', methods=['POST'])
+def delete_buyer_item_exact():
+    """
+    刪除 Buyer_detail.csv - 精確比對所有欄位，找到完全一樣的才刪除
+    """
+    try:
+        data = request.json
+        item_to_delete = data.get('item', {})
+        username = data.get('username', '')
+        
+        if not item_to_delete or not item_to_delete.get('Id'):
+            return jsonify({'status': 'error', 'success': False, 'message': '缺少資料或 Id'}), 400
+        
+        item_id = item_to_delete.get('Id')
+        logger.info(f"🗑️ 使用者 {username} 請求刪除 Id: {item_id}, Item: {item_to_delete.get('Item')}")
+        
+        # 🔒 使用檔案鎖
+        with buyer_file_lock:
+            logger.info(f"🔒 已取得檔案鎖，開始刪除...")
+            
+            # 讀取 CSV
+            df = pd.read_csv(BUYER_FILE, encoding='utf-8-sig', dtype=str)
+            df.columns = df.columns.str.strip()
+            
+            # 記錄刪除前的筆數
+            df_before_count = len(df)
+            
+            # ⭐ 建立比對遮罩：比對所有欄位
+            # 需要比對的欄位（排除前端特殊欄位）
+            ignore_fields = ['backup', 'isEditing', '_alertedItemLimit']
+            
+            # 找到所有需要比對的欄位
+            fields_to_compare = [col for col in df.columns if col not in ignore_fields]
+            
+            logger.info(f"📋 準備比對 {len(fields_to_compare)} 個欄位")
+            
+            # 建立比對條件
+            mask = pd.Series([True] * len(df))
+            
+            matched_fields = []
+            for field in fields_to_compare:
+                if field in item_to_delete:
+                    expected_value = str(item_to_delete[field]) if item_to_delete[field] is not None else ''
+                    
+                    # 處理 CSV 中的 NaN
+                    actual_values = df[field].fillna('').astype(str)
+                    
+                    # 比對
+                    field_match = actual_values == expected_value
+                    mask = mask & field_match
+                    
+                    if expected_value != '':  # 只記錄非空值的欄位
+                        matched_fields.append(f"{field}={expected_value}")
+            
+            matched_count = mask.sum()
+            
+            if matched_count == 0:
+                logger.info(f"❌ 找不到完全符合的資料")
+                logger.info(f"   比對條件: {', '.join(matched_fields[:5])}...")
+                return jsonify({
+                    'status': 'error',
+                    'success': False,
+                    'message': '找不到完全符合的資料'
+                }), 404
+            
+            if matched_count > 1:
+                logger.info(f"⚠️ 警告：找到 {matched_count} 筆完全相同的資料，將全部刪除")
+            
+            # 記錄要刪除的資料
+            deleted_data = df[mask].to_dict('records')
+            logger.info(f"📝 準備刪除 {matched_count} 筆資料:")
+            for idx, item in enumerate(deleted_data):
+                logger.info(f"  資料 {idx+1}: Item={item.get('Item')}, 品項={item.get('品項')}, 總價={item.get('總價')}")
+            
+            # ⭐ 執行刪除
+            df = df[~mask]
+            df_after_count = len(df)
+            
+            # 儲存
+            df.to_csv(BUYER_FILE, index=False, encoding='utf-8-sig', na_rep='')
+            
+            deleted_count = df_before_count - df_after_count
+            logger.info(f"✅ 刪除成功! 共刪除 {deleted_count} 筆資料 (總筆數: {df_before_count} → {df_after_count})")
+            logger.info(f"🔓 釋放檔案鎖")
+        
+        return jsonify({
+            'status': 'success',
+            'success': True,
+            'message': '刪除成功',
+            'msg': f'成功刪除 {deleted_count} 筆資料',
+            'deleted_count': int(deleted_count)  # ⭐ 轉換成 int
+        }), 200
+        
+    except Timeout:
+        error_msg = '檔案正在被其他程序使用，請稍後再試'
+        logger.info(f"⏱️ {error_msg}")
+        return jsonify({'status': 'error', 'success': False, 'message': error_msg}), 503
+        
+    except Exception as e:
+        error_msg = str(e)
+        logger.info(f"❌ 刪除失敗: {error_msg}")
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'success': False, 'message': error_msg}), 500
+    
 
 
 @app.route("/api/update_delivery_receipt", methods=["POST"])
@@ -3096,7 +3296,7 @@ def get_buyer_details():
 # 物料收貨單
 from datetime import datetime
 import hashlib
-from bs4 import BeautifulSoup # type: ignore
+from bs4 import BeautifulSoup
 import email
 from email import policy
 from email.parser import BytesParser
@@ -3988,195 +4188,6 @@ from flask import Flask, send_file, jsonify, Response
 from io import BytesIO
 import tempfile
 
-@app.route('/api/download_buyer_detail_xlsx', methods=['GET'])
-def download_buyer_detail_xlsx():
-    try:
-        # 方法1：直接從資料庫或 JSON 獲取資料（推薦）
-        # 這樣可以避免 CSV 檔案中的格式問題
-        
-        # 如果你有資料庫連接，使用這個方法：
-        # df = pd.read_sql("SELECT * FROM buyer_detail", connection)
-        
-        # 如果你想從現有的 API 端點獲取資料：
-        try:
-            # 從你現有的 API 端點獲取 JSON 資料
-            import requests # type: ignore
-            response = requests.get('http://127.0.0.1:5000/api/buyer_detail')
-            if response.status_code == 200:
-                data = response.json()
-                df = pd.DataFrame(data)
-            else:
-                raise Exception("無法從 API 獲取資料")
-        except:
-            # 備用方案：讀取 CSV 檔案
-            csv_file_path = './data/BUYER_DETAIL_RT_Table.csv'
-            
-            # 嘗試不同的編碼方式
-            encodings = ['utf-8', 'big5', 'gbk', 'cp950']
-            df = None
-            
-            for encoding in encodings:
-                try:
-                    df = pd.read_csv(csv_file_path, encoding=encoding)
-                    print(f"成功使用 {encoding} 編碼讀取檔案")
-                    break
-                except UnicodeDecodeError:
-                    continue
-            
-            if df is None:
-                return jsonify({'error': '無法讀取資料檔案，編碼問題'}), 500
-        
-        # 定義需要的欄位（按順序）
-        required_columns = [
-            "交貨驗證",
-            "驗收狀態", 
-            "ePR No.",
-            "PO No.",
-            "Item",
-            "品項",
-            "規格",
-            "數量",
-            "總數",
-            "單價",
-            "總價",
-            "RT金額",
-            "RT總金額",
-            "備註",
-            "Delivery Date 廠商承諾交期",
-            "SOD Qty 廠商承諾數量",
-            "驗收數量",
-            "拒收數量",
-            "發票月份",
-            "WBS",
-            "需求日"
-        ]
-        
-        # 只選擇需要的欄位，並按指定順序排列
-        available_columns = [col for col in required_columns if col in df.columns]
-        df_filtered = df[available_columns].copy()
-        
-        # 清理資料
-        def clean_cell_value(value):
-            if pd.isna(value) or value is None:
-                return ''
-            
-            # 轉換為字符串
-            str_value = str(value)
-            
-            # 移除 Excel 不支援的控制字符
-            # Excel 不支援 ASCII 0-31 的控制字符（除了 9=tab, 10=LF, 13=CR）
-            cleaned = ''.join(char for char in str_value 
-                            if ord(char) >= 32 or char in ['\t', '\n', '\r'])
-            
-            # 替換可能造成問題的字符
-            cleaned = cleaned.replace('\n', ' ').replace('\r', ' ')
-            
-            # 限制單元格內容長度（Excel 限制為 32,767 字符）
-            if len(cleaned) > 32000:
-                cleaned = cleaned[:32000] + '...'
-            
-            return cleaned.strip()
-        
-        # 應用清理函數到篩選後的資料
-        for column in df_filtered.columns:
-            df_filtered[column] = df_filtered[column].apply(clean_cell_value)
-        
-        # 使用篩選後的資料
-        df = df_filtered
-        
-        # 創建 Excel 檔案
-        excel_buffer = BytesIO()
-        
-        try:
-            # 使用 xlsxwriter 引擎（更穩定）
-            with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
-                # 寫入資料
-                df.to_excel(writer, sheet_name='eRT驗收明細', index=False)
-                
-                # 獲取工作表和工作簿物件
-                workbook = writer.book
-                worksheet = writer.sheets['eRT驗收明細']
-                
-                # 設定標題格式
-                header_format = workbook.add_format({ # type: ignore
-                    'bold': True,
-                    'bg_color': '#D7E4BC',
-                    'border': 1,
-                    'align': 'center',
-                    'valign': 'vcenter'
-                })
-                
-                # 設定資料格式
-                cell_format = workbook.add_format({ # type: ignore
-                    'border': 1,
-                    'align': 'left',
-                    'valign': 'top',
-                    'text_wrap': True
-                })
-                
-                # 應用格式到標題行
-                for col_num, column_name in enumerate(df.columns):
-                    worksheet.write(0, col_num, column_name, header_format)
-                
-                # 自動調整欄位寬度
-                for i, column in enumerate(df.columns):
-                    max_length = max(
-                        df[column].astype(str).apply(len).max(),
-                        len(str(column))
-                    )
-                    # 設定合理的欄位寬度
-                    width = min(max_length + 2, 50)
-                    width = max(width, 10)
-                    worksheet.set_column(i, i, width)
-                
-                # 凍結首行
-                worksheet.freeze_panes(1, 0)
-        
-        except ImportError:
-            # 如果沒有 xlsxwriter，回退到 openpyxl
-            with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                df.to_excel(writer, sheet_name='eRT驗收明細', index=False)
-        
-        excel_buffer.seek(0)
-        
-        # 創建臨時檔案
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
-        temp_file.write(excel_buffer.getvalue())
-        temp_file.close()
-        
-        print(f"✅ 成功創建 Excel 檔案，包含 {len(df)} 行資料，{len(df.columns)} 個欄位")
-        print(f"📋 包含欄位: {', '.join(df.columns)}")
-        
-        # 返回檔案
-        return send_file(
-            temp_file.name,
-            as_attachment=True,
-            download_name='eRT驗收細項資料.xlsx',
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        
-    except Exception as e:
-        print(f"❌ 下載錯誤: {str(e)}")
-        return jsonify({'error': f'檔案處理失敗: {str(e)}'}), 500
-    
-    finally:
-        # 清理臨時檔案（延遲清理）
-        try:
-            if 'temp_file' in locals():
-                # 延遲 10 秒後清理（給下載時間）
-                import threading
-                def delayed_cleanup():
-                    import time
-                    time.sleep(10)
-                    try:
-                        os.unlink(temp_file.name)
-                    except:
-                        pass
-                
-                threading.Thread(target=delayed_cleanup).start()
-        except:
-            pass
-
 
 
 # eRT 功能
@@ -4944,6 +4955,7 @@ def build_greeting(mail_data, backend_file="Backend_data.json"):
     logger.info(f"生成的問候語: {greeting}")
     return greeting
 
+
 @app.route('/api/save-mail', methods=['POST', 'OPTIONS'])
 def save_mail():
     if request.method == 'OPTIONS':
@@ -5011,10 +5023,18 @@ def save_mail():
             logger.info(f"TO 字串: {to_str}")
             logger.info(f"問候語: {greeting}")
             
-            print(f"PO: {po_str}\nTO: {mail_name}\nGreeting: {greeting}")
+            logger.info(f"PO: {po_str}\nTO: {mail_name}\nGreeting: {greeting}")
             
             # 呼叫 send_mail 函數,並傳入 greeting
-            send_mail(mail_data, name, mail_name, ccList, po_str, to_str, greeting)
+            # print(mail_data, "\n")
+            # print(name, "\n")
+            # print(mail_name, "\n")
+            # print(ccList, "\n")
+            # print(po_str, "\n")
+            # print(to_str, "\n")
+            # print(greeting, "\n")
+            # def send_mail(mailList, mail_name, ccList, po_str, to_str, greeting="Dear "):
+            send_mail(mail_data, mail_name, ccList, po_str, to_str, greeting)
             
             logger.info(f"✅ 郵件發送成功,處理了 {len(mail_data)} 筆資料")
             
@@ -5048,6 +5068,7 @@ def save_mail():
             'status': 'error',
             'message': f'處理失敗: {str(e)}'
         }), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -2119,20 +2119,43 @@ const app = Vue.createApp({
             }, 200); // 延遲避免點選建議後被馬上關閉
         },
 
-
+        // 2025/11/02
         handleEPRChange(event) {
             const newVal = event.target.value.replace(/\D/g, '');
-
-            this.editItemData['ePR No.'] = newVal;
-            this.newItem['ePR No.'] = newVal;
-
-            if (this.yourTableData.length > 0) {
-                this.yourTableData[0]['ePR No.'] = newVal;
+            
+            // ⭐ 判斷當前模式，分別處理
+            if (this.showNewItemModal) {
+                // 新增模式
+                this.newItem['ePR No.'] = newVal;
+                
+                // 同步到細項表格
+                if (this.yourTableData && this.yourTableData.length > 0) {
+                    this.yourTableData[0]['ePR No.'] = newVal;
+                }
+                
+                // 解析 ePR
+                this.parseEPR(this.newItem["ePR No."], this.newItem);
+                
+            } else if (this.editingIndex !== null) {
+                // 修正模式
+                if (this.editItemData) {
+                    this.editItemData['ePR No.'] = newVal;
+                }
+                
+                // 同步到細項表格
+                if (this.editTableRows && this.editTableRows.length > 0) {
+                    this.editTableRows = this.editTableRows.map(row => ({
+                        ...row,
+                        'ePR No.': newVal
+                    }));
+                }
+                
+                // 解析 ePR
+                if (this.editItemData) {
+                    this.parseEPR(this.editItemData["ePR No."], this.editItemData);
+                }
             }
-
-            this.parseEPR(this.newItem["ePR No."], this.newItem);
         },
-
         
         handleEPRChangeEdit() {
             this.parseEPR(this.editItemData["ePR No."], this.editItemData);
@@ -2410,8 +2433,9 @@ const app = Vue.createApp({
             event.preventDefault();
             // 取得網頁上的文字當作整體事件，再來把文字單獨抓出
             const clipboardData = event.clipboardData || window.clipboardData;
-            let pastedData = clipboardData.getData('Text').replace(/[\r\n\t]/g, '').trim();
-
+            // let pastedData = clipboardData.getData('Text').replace(/[\r\n\t]/g, '').trim();
+            let pastedData = clipboardData.getData('text/plain');
+            
             // 事件抓取
             const input = event.target;
             // 中途改字與複製

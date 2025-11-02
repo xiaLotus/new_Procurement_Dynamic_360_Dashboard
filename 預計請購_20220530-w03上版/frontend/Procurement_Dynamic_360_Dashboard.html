@@ -1305,7 +1305,7 @@
                                     <!-- ✅ 使用 textarea 處理品項欄位 -->
                                     <textarea
                                         v-if="row.isEditing && field.key === '品項'"
-                                        :value="getDisplayValue(row, field.key)"
+                                        v-model="row['品項']"
                                         @input="handleCellInput($event, row, field.key, { recalculateTotal: true }); handleItemLimit(row)"
                                         @keydown="preventTypingOverLimit($event, row)"
                                         @paste="handlePaste($event, row, '品項')"

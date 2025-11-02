@@ -49,6 +49,9 @@ const app = Vue.createApp({
 
             showWBSFilter: false,        // 新增
             showDEMANDDATEFilter: false, // 新增
+            showRTFilter: false,
+            showReceiveStatusFilter: false,
+            showRTTOTALFilter: false,
 
             checkedAcceptances: [],
             checkedEPRs: [],
@@ -68,6 +71,9 @@ const app = Vue.createApp({
             checkedInvoices: [],
             checkedWBSs: [],        // 新增
             checkedDemandDates: [], // 新增
+            checkedRTs: [],
+            checkedReceiveStatuses: [],
+            checkedRTTotals: [],
 
             unaccounted_amount: 0,
             accounting_summary: {}, // 3.py
@@ -130,10 +136,21 @@ const app = Vue.createApp({
                 "RT總金額",
                 "備註"
             ], // 預設顯示的欄位
+            // 編輯功能相關
+            // 修改後：
+            showEditModal: false,
+            editingItems: [],  // ⭐ 改成陣列，存放同 Id 的所有資料
+            editingId: null,   // ⭐ 記錄當前編輯的 Id
+            editingIndex: -1,
         };
     },
 
     computed: {
+        // 判斷是否為 admin
+        isAdmin() {
+            return this.admins.includes(this.username);
+        },
+
         filteredData() {
             const baseData = this.items;
             return baseData.filter(i => {
@@ -170,7 +187,22 @@ const app = Vue.createApp({
                         matchEPR = true;
                     }
                 }
-                const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
+                let matchPO = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPO = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPO = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPO = true;
+                    }
+                }
                 // Item 的匹配邏輯
                 let matchItem = false;
                 if (this.checkedItems.length === 0) {
@@ -196,46 +228,105 @@ const app = Vue.createApp({
                         matchName = true;
                     }
                 }
-                const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
+                let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const specValue = i['規格'];
+                    if ((specValue === null || specValue === undefined || specValue === '') 
+                        && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(String(specValue).trim())) {
+                        matchSpec = true;
+                    }
+                }
                 const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
                 const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
                 const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
                 const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
                 const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
+                let matchDelivery = false;
+                const raw = i['Delivery Date 廠商承諾交期'];
+
+                if (this.checkedDeliverys.length === 0) {
+                    matchDelivery = true;
+                } else if (!raw || String(raw).trim() === '') {
+                    matchDelivery = this.checkedDeliverys.includes('(空白)');
+                } else {
+                    const str = String(raw).trim();
+                    let formatted = '';
+
+                    if (/^\d{8}$/.test(str)) {
+                        const year = str.slice(0, 4);
+                        const month = parseInt(str.slice(4, 6), 10);
+                        formatted = `${year}/${month}`;
+                    } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                        const [y, m] = str.split('/');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                        const [y, m] = str.split('-');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                        formatted = str;
+                    }
+
+                    matchDelivery = this.checkedDeliverys.includes(formatted);
+                }
                 const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
                 const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
                 const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                let matchReceiveStatus = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatus = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if (val === null || val === undefined || val === '') {
+                        matchReceiveStatus = this.checkedReceiveStatuses.includes('(空白)');
+                    } else {
+                        matchReceiveStatus = this.checkedReceiveStatuses.includes(val);
+                    }
+                }
+                let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
                 let matchInvoice = false;
                 if (this.checkedInvoices.length === 0) {
                     matchInvoice = true;
                 } else {
                     const invoiceValue = i['發票月份'];
-                    
-                    // 處理空值
+
                     if ((invoiceValue === null || invoiceValue === undefined || invoiceValue === '') 
                         && this.checkedInvoices.includes('(空白)')) {
                         matchInvoice = true;
                     } else if (invoiceValue) {
-                        // 格式化發票日期以進行比較
-                        const dateStr = String(invoiceValue);
-                        let formattedDate = '';
-                        
-                        if (/^\d{8}$/.test(dateStr)) {
-                            const year = dateStr.slice(0, 4);
-                            const month = parseInt(dateStr.slice(4, 6), 10);
-                            const day = parseInt(dateStr.slice(6, 8), 10);
-                            formattedDate = `${year}/${month}/${day}`;
-                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
-                            formattedDate = dateStr;
-                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                            const [year, month, day] = dateStr.split('-');
-                            formattedDate = `${year}/${parseInt(month, 10)}/${parseInt(day, 10)}`;
-                        } else {
-                            formattedDate = dateStr;
+                        // 格式轉換：轉成 YYYY/M
+                        const str = String(invoiceValue).trim();
+                        let yearMonth = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            yearMonth = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            yearMonth = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            yearMonth = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            yearMonth = str; // 已經是 YYYY/M 格式
                         }
-                        
-                        if (this.checkedInvoices.includes(formattedDate)) {
+
+                        if (this.checkedInvoices.includes(yearMonth)) {
                             matchInvoice = true;
                         }
                     }
@@ -258,804 +349,4675 @@ const app = Vue.createApp({
                 if (this.checkedDemandDates.length === 0) {
                     matchDemandDate = true;
                 } else {
-                    const demandDateValue = i['需求日'];
-                    if ((demandDateValue === null || demandDateValue === undefined || demandDateValue === '') 
-                        && this.checkedDemandDates.includes('(空白)')) {
-                        matchDemandDate = true;
-                    } else if (this.checkedDemandDates.includes(demandDateValue)) {
-                        matchDemandDate = true;
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+                let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
                     }
                 }
                 return matchAcceptance && matchEPR && matchPO && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice 
                     && matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject
-                    && matchInvoice && matchWBS && matchDemandDate;
+                    && matchInvoice && matchWBS && matchDemandDate && matchRT
+                    && matchReceiveStatus && matchRTTotal;
             });
         },
 
-        uniqueAcceptance(){
-                const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
+// ========== 21個互相連動的 Unique 函數 ==========
 
-                            return matchPO && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice &&
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice;
-                        })
-                        .map(i => {
-                            const value = i['交貨驗證'];
-                            // 將 null、undefined、空字串統一顯示為 "(空白)"
-                            if (value === null || value === undefined || value === '') {
-                                return '(空白)';
-                            }
-                            return value;
-                        })
-            )).sort();
-        },
-
-
-        uniqueEpr() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-
-                            return matchAcceptance && matchPO && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice &&
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice;
-                    })
-                    .map(i => {
-                        const value = i['ePR No.'];
-                        if (value === null || value === undefined || value === '') {
-                            return '(空白)';   // ✅ 顯示成 (空白)
-                        }
-                        return String(value).trim();
-                    })
-            )).sort((a, b) => {
-                // ✅ 排序時把 (空白) 放最後
-                if (a === '(空白)') return -1;
-                if (b === '(空白)') return 1;
-                return a.localeCompare(b, 'zh-TW');
-            });
-        },
-
-
-        uniquePo() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-
-                            return matchAcceptance && matchEPR && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice &&
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice;
-                        })
-                .map(i => i['PO No.'] || '')
-            )).sort();
-        },
-
-        // Item
-        uniqueItem() {
-            const baseData = this.items;
-            return Array.from(new Set(
-                baseData
-                    .filter(i => {
-                        // 修正交貨驗證的匹配邏輯
-                        let matchAcceptance = false;
-                        if (this.checkedAcceptances.length === 0) {
-                            matchAcceptance = true;
-                        } else {
-                            const actualValue = i['交貨驗證'];
-                            if ((actualValue === null || actualValue === undefined || actualValue === '') 
-                                && this.checkedAcceptances.includes('(空白)')) {
-                                matchAcceptance = true;
-                            } else if (this.checkedAcceptances.includes(actualValue)) {
-                                matchAcceptance = true;
-                            }
-                        }
-                        
-                        const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                        // 修正這裡：原本錯誤地檢查了 checkedEPRs 而不是 checkedPOs
-                        const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                        const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                        const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                        const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                        const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                        const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                        const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                        const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                        const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                        const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                        const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                        const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                        const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                        const matchWBS = this.checkedWBSs.length === 0 || 
-                            (i['WBS'] === null || i['WBS'] === undefined || i['WBS'] === '' ? 
-                                this.checkedWBSs.includes('(空白)') : 
-                                this.checkedWBSs.includes(String(i['WBS'])));
-                        const matchDemandDate = this.checkedDemandDates.length === 0 || 
-                            (i['需求日'] === null || i['需求日'] === undefined || i['需求日'] === '' ? 
-                                this.checkedDemandDates.includes('(空白)') : 
-                                this.checkedDemandDates.includes(String(i['需求日'])));
-
-                        return matchAcceptance && matchEPR && matchPO && matchName && matchSpec && matchQty && 
-                            matchTotalQty && matchPrice && matchTotal && matchRemark && matchDelivery && 
-                            matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                    })
-                    .map(i => {
-                        const value = i['Item'];
-                        // 處理空值
-                        if (value === null || value === undefined || value === '') {
-                            return '(空白)';
-                        }
-                        return String(value).trim();
-                    })
-                    .filter(v => v !== '') // 過濾掉空字串
-            )).sort((a, b) => {
-                // 將 (空白) 排在最後
-                if (a === '(空白)') return 1;
-                if (b === '(空白)') return -1;
-                // 其他按字母排序
-                return a.localeCompare(b);
-            });
-        },
-
-        // 品項
-        uniqueName() {
-            const baseData = this.items;
-            return Array.from(new Set(
-                baseData
-                    .filter(i => {
-                        // 修正交貨驗證的匹配邏輯
-                        let matchAcceptance = false;
-                        if (this.checkedAcceptances.length === 0) {
-                            matchAcceptance = true;
-                        } else {
-                            const actualValue = i['交貨驗證'];
-                            if ((actualValue === null || actualValue === undefined || actualValue === '') 
-                                && this.checkedAcceptances.includes('(空白)')) {
-                                matchAcceptance = true;
-                            } else if (this.checkedAcceptances.includes(actualValue)) {
-                                matchAcceptance = true;
-                            }
-                        }
-                        
-                        const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                        const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                        const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                        const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                        const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(String(i['數量']));
-                        const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(String(i['總數']));
-                        const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(String(i['單價']));
-                        const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(String(i['總價']));
-                        const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                        const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                        const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                        const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(String(i['驗收數量']));
-                        const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(String(i['拒收數量']));
-                        
-                        // 處理發票月份
-                        let matchInvoice = false;
-                        if (this.checkedInvoices.length === 0) {
-                            matchInvoice = true;
-                        } else {
-                            const invoiceValue = i['發票月份'];
-                            if ((invoiceValue === null || invoiceValue === undefined || invoiceValue === '') 
-                                && this.checkedInvoices.includes('(空白)')) {
-                                matchInvoice = true;
-                            } else if (invoiceValue) {
-                                const dateStr = String(invoiceValue);
-                                let formattedDate = '';
-                                
-                                if (/^\d{8}$/.test(dateStr)) {
-                                    const year = dateStr.slice(0, 4);
-                                    const month = parseInt(dateStr.slice(4, 6), 10);
-                                    const day = parseInt(dateStr.slice(6, 8), 10);
-                                    formattedDate = `${year}/${month}/${day}`;
-                                } else {
-                                    formattedDate = dateStr;
-                                }
-                                
-                                if (this.checkedInvoices.includes(formattedDate)) {
-                                    matchInvoice = true;
-                                }
-                            }
-                        }
-                        
-                        const matchWBS = this.checkedWBSs.length === 0 || 
-                            (i['WBS'] === null || i['WBS'] === undefined || i['WBS'] === '' ? 
-                                this.checkedWBSs.includes('(空白)') : 
-                                this.checkedWBSs.includes(String(i['WBS'])));
-                        const matchDemandDate = this.checkedDemandDates.length === 0 || 
-                            (i['需求日'] === null || i['需求日'] === undefined || i['需求日'] === '' ? 
-                                this.checkedDemandDates.includes('(空白)') : 
-                                this.checkedDemandDates.includes(String(i['需求日'])));
-
-                        return matchAcceptance && matchEPR && matchPO && matchItem && matchSpec && matchQty && 
-                            matchTotalQty && matchPrice && matchTotal && matchRemark && matchDelivery && 
-                            matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                    })
-                    .map(i => {
-                        const value = i['品項'];
-                        // 處理空值
-                        if (value === null || value === undefined || value === '') {
-                            return '(空白)';
-                        }
-                        return String(value).trim();
-                    })
-                    .filter(v => v !== '') // 過濾掉空字串
-            )).sort((a, b) => {
-                // 將 (空白) 排在最後
-                if (a === '(空白)') return 1;
-                if (b === '(空白)') return -1;
-                // 其他按字母排序
-                return a.localeCompare(b, 'zh-TW');
-            });
-        },
-
-        // 規格
-        uniqueSpec() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchQty && matchTotalQty && matchPrice &&
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-                .map(i => i['規格'] || '')
-            )).sort();
-        },
-
-        // 數量
-        uniqueQty() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchTotalQty && matchPrice &&
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-                .map(i => i['數量'] || '')
-            ))
-            .filter(v => v !== '') // 移除空字串
-            .sort((a, b) => {
-                const numA = parseFloat(a);
-                const numB = parseFloat(b);
-                if (isNaN(numA) && isNaN(numB)) return 0;
-                if (isNaN(numA)) return 1; // 非數字排後面
-                if (isNaN(numB)) return -1;
-                return numB - numA; // ✅ 大到小
-            });
-        },
-
-        // 總數
-        uniqueTotalQty() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchQty && matchPrice &&
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-                .map(i => i['總數'] || '')
-            ))
-            .filter(v => v !== '') // 移除空字串
-            .sort((a, b) => {
-                const numA = parseFloat(a);
-                const numB = parseFloat(b);
-                if (isNaN(numA) && isNaN(numB)) return 0;
-                if (isNaN(numA)) return 1; // 非數字排後面
-                if (isNaN(numB)) return -1;
-                return numB - numA; // ✅ 大到小
-            });
-        },
-
-        // 單價
-        uniquePrice() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchQty && matchTotalQty &&
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-            .map(i => {
-                const raw = i['單價'];
-                const num = parseFloat(String(raw).replace(/,/g, '')) || 0;
-                return num; // 先存成純數字
-            })
-            )).sort((a, b) => b - a) // 由大到小
-            .map(num => num.toLocaleString()); // ✅ 顯示時轉回千分位格式
-        },
-
-        // 總價
-        uniqueTotal() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice &&
-                                matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-            .map(i => {
-                const raw = i['總價'];
-                const num = parseFloat(String(raw).replace(/,/g, '')) || 0;
-                return num; // 先存成純數字
-            })
-            )).sort((a, b) => b - a) // 由大到小
-            .map(num => num.toLocaleString()); // ✅ 顯示時轉回千分位格式
-        },
-
-        // 備註
-        uniqueRemark() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && 
-                                matchTotal && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-                .map(i => i['備註'] || '')
-            )).sort();
-        },
-
-        // Delivery Date 廠商承諾交期
-        uniqueDelivery() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && 
-                                matchTotal && matchRemark && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-                .map(i => i['Delivery Date 廠商承諾交期'] || '')
-            )).sort();
-        },
-
-        // SOD Qty 廠商承諾數量
-        uniqueSod() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && 
-                                matchTotal && matchRemark && matchDelivery && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-                .map(i => i['SOD Qty 廠商承諾數量'] || '')
-            )).sort();
-        },
-
-        // 驗收數量
-        uniqueAccept() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                             const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && 
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchReject && matchInvoice && matchWBS && matchDemandDate;
-                        })
-                .map(i => i['驗收數量'] || '')
-            )).sort();
-        },
-
-        // 拒收數量
-        uniqueReject() {
-            const baseData = this.items;
-                return Array.from(new Set(
-                    baseData
-                        .filter(i => {
-                            const matchAcceptance = this.checkedAcceptances.length === 0 || this.checkedAcceptances.includes(i['交貨驗證']);
-                            const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                            const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                            const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                            const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                            const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                            const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                            const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                            const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                            const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                            const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                            const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                            const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                            const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                            const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                            const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-                            const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
-
-                            return matchAcceptance && matchEPR && matchPO &&matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && 
-                                matchTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchInvoice && matchWBS && matchDemandDate;
-                        })
-                .map(i => i['拒收數量'] || '')
-            )).sort();
-        },
-
-        // 發票月份
-        uniqueInvoice() {
-            const baseData = this.items;
-            return Array.from(new Set(
-                baseData
-                    .filter(i => {
-                        const matchAcceptance = this.checkedAcceptances.length === 0 || 
-                            (i['交貨驗證'] === null || i['交貨驗證'] === undefined || i['交貨驗證'] === '' ? 
-                                this.checkedAcceptances.includes('(空白)') : 
-                                this.checkedAcceptances.includes(i['交貨驗證']));
-                        const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                        const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                        const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                        const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                        const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                        const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                        const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                        const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                        const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                        const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                        const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                        const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                        const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                        const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                        const matchWBS = this.checkedWBSs.length === 0 || 
-                            (i['WBS'] === null || i['WBS'] === undefined || i['WBS'] === '' ? 
-                                this.checkedWBSs.includes('(空白)') : 
-                                this.checkedWBSs.includes(String(i['WBS'])));
-                        const matchDemandDate = this.checkedDemandDates.length === 0 || 
-                            (i['需求日'] === null || i['需求日'] === undefined || i['需求日'] === '' ? 
-                                this.checkedDemandDates.includes('(空白)') : 
-                                this.checkedDemandDates.includes(String(i['需求日'])));
-
-                        return matchAcceptance && matchEPR && matchPO && matchItem && matchName && matchSpec && 
-                            matchQty && matchTotalQty && matchPrice && matchTotal && matchRemark && 
-                            matchDelivery && matchSod && matchAccept && matchReject && matchWBS && matchDemandDate;
-                    })
-                    .map(i => {
-                        const date = i['發票月份'];
-                        
-                        // 處理空值
-                        if (date === null || date === undefined || date === '') {
-                            return '(空白)';
-                        }
-                        
-                        // 將數值轉為字串
-                        const dateStr = String(date);
-                        
-                        // 處理不同的日期格式
-                        // 格式1: YYYYMMDD (例如: 20250702)
-                        if (/^\d{8}$/.test(dateStr)) {
-                            const year = dateStr.slice(0, 4);
-                            const month = dateStr.slice(4, 6);
-                            const day = dateStr.slice(6, 8);
-                            // 移除月份和日期的前導零
-                            const monthNum = parseInt(month, 10);
-                            const dayNum = parseInt(day, 10);
-                            return `${year}/${monthNum}/${dayNum}`;
-                        }
-                        // 格式2: YYYY/MM/DD 或 YYYY/M/D (已經是正確格式)
-                        else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(dateStr)) {
-                            return dateStr;
-                        }
-                        // 格式3: YYYY-MM-DD
-                        else if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-                            const [year, month, day] = dateStr.split('-');
-                            const monthNum = parseInt(month, 10);
-                            const dayNum = parseInt(day, 10);
-                            return `${year}/${monthNum}/${dayNum}`;
-                        }
-                        // 其他格式直接返回原值
-                        else {
-                            return dateStr;
-                        }
-                    })
-                    .filter(Boolean) // 過濾掉空值
-            )).sort((a, b) => {
-                // 將 (空白) 排在最後
-                if (a === '(空白)') return 1;
-                if (b === '(空白)') return -1;
-                
-                // 解析日期進行排序
-                const parseDate = (dateStr) => {
-                    const parts = dateStr.split('/');
-                    if (parts.length === 3) {
-                        return new Date(parts[0], parts[1] - 1, parts[2]);
+    // uniqueAcceptance (交貨驗證)
+    uniqueAcceptance() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
                     }
-                    return new Date(dateStr);
-                };
-                
-                // 降序排列（最新的在前）
-                return parseDate(b) - parseDate(a);
-            });
-        },
-            // WBS 唯一值
-        uniqueWBS() {
-            const baseData = this.items;
-            return Array.from(new Set(
-                baseData
-                    .filter(i => {
-                        const matchAcceptance = this.checkedAcceptances.length === 0 || 
-                            (i['交貨驗證'] === null || i['交貨驗證'] === undefined || i['交貨驗證'] === '' ? 
-                                this.checkedAcceptances.includes('(空白)') : 
-                                this.checkedAcceptances.includes(i['交貨驗證']));
-                        const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                        const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                        const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                        const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                        const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                        const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                        const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                        const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                        const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                        const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                        const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                        const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                        const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                        const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                        const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                        const matchDemandDate = this.checkedDemandDates.length === 0 || this.checkedDemandDates.includes(i['需求日']);
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                let matchDelivery = false;
+                const raw = i['Delivery Date 廠商承諾交期'];
 
-                        return matchAcceptance && matchEPR && matchPO && matchItem && matchName && matchSpec && 
-                            matchQty && matchTotalQty && matchPrice && matchTotal && matchRemark && 
-                            matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchDemandDate;
-                    })
-                    .map(i => {
-                        const value = i['WBS'];
-                        if (value === null || value === undefined || value === '') {
-                            return '(空白)';
+                if (this.checkedDeliverys.length === 0) {
+                    matchDelivery = true;
+                } else if (!raw || String(raw).trim() === '') {
+                    matchDelivery = this.checkedDeliverys.includes('(空白)');
+                } else {
+                    const str = String(raw).trim();
+                    let formatted = '';
+
+                    if (/^\d{8}$/.test(str)) {
+                        const year = str.slice(0, 4);
+                        const month = parseInt(str.slice(4, 6), 10);
+                        formatted = `${year}/${month}`;
+                    } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                        const [y, m] = str.split('/');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                        const [y, m] = str.split('-');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                        formatted = str;
+                    }
+
+                    matchDelivery = this.checkedDeliverys.includes(formatted);
+                }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
                         }
-                        return value;
-                    })
-            )).sort();
-        },
-
-        // 需求日唯一值
-        uniqueDemandDate() {
-            const baseData = this.items;
-            return Array.from(new Set(
-                baseData
-                    .filter(i => {
-                        const matchAcceptance = this.checkedAcceptances.length === 0 || 
-                            (i['交貨驗證'] === null || i['交貨驗證'] === undefined || i['交貨驗證'] === '' ? 
-                                this.checkedAcceptances.includes('(空白)') : 
-                                this.checkedAcceptances.includes(i['交貨驗證']));
-                        const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
-                        const matchPO = this.checkedPOs.length === 0 || this.checkedPOs.includes(i['PO No.']);
-                        const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['Item']);
-                        const matchName = this.checkedNames.length === 0 || this.checkedNames.includes(i['品項']);
-                        const matchSpec = this.checkedSpecs.length === 0 || this.checkedSpecs.includes(i['規格']);
-                        const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
-                        const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
-                        const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
-                        const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
-                        const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
-                        const matchDelivery = this.checkedDeliverys.length === 0 || this.checkedDeliverys.includes(i['Delivery Date 廠商承諾交期']);
-                        const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
-                        const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
-                        const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
-                        const matchInvoice = this.checkedInvoices.length === 0 || this.checkedInvoices.includes(i['發票月份']);
-                        const matchWBS = this.checkedWBSs.length === 0 || this.checkedWBSs.includes(i['WBS']);
-
-                        return matchAcceptance && matchEPR && matchPO && matchItem && matchName && matchSpec && 
-                            matchQty && matchTotalQty && matchPrice && matchTotal && matchRemark && 
-                            matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS;
-                    })
-                    .map(i => {
-                        const value = i['需求日'];
-                        if (value === null || value === undefined || value === '') {
-                            return '(空白)';
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
                         }
-                        // 如果是日期格式，可以進行格式化
-                        return value;
-                    })
-            )).sort((a, b) => {
-                // 將 (空白) 排在最後
-                if (a === '(空白)') return 1;
-                if (b === '(空白)') return -1;
-                // 其他按日期排序
-                return new Date(a) - new Date(b);
-            });
-        },
+                    }
+                }
+
+                    return matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['交貨驗證'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueReceiveStatuses (驗收狀態)
+    uniqueReceiveStatuses() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['驗收狀態'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueEPR (ePR No.)
+    uniqueEPR() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                let matchDelivery = false;
+                const raw = i['Delivery Date 廠商承諾交期'];
+
+                if (this.checkedDeliverys.length === 0) {
+                    matchDelivery = true;
+                } else if (!raw || String(raw).trim() === '') {
+                    matchDelivery = this.checkedDeliverys.includes('(空白)');
+                } else {
+                    const str = String(raw).trim();
+                    let formatted = '';
+
+                    if (/^\d{8}$/.test(str)) {
+                        const year = str.slice(0, 4);
+                        const month = parseInt(str.slice(4, 6), 10);
+                        formatted = `${year}/${month}`;
+                    } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                        const [y, m] = str.split('/');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                        const [y, m] = str.split('-');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                        formatted = str;
+                    }
+
+                    matchDelivery = this.checkedDeliverys.includes(formatted);
+                }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['ePR No.'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return String(value).trim();
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniquePo (PO No.)
+    uniquePo() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                let matchDelivery = false;
+                const raw = i['Delivery Date 廠商承諾交期'];
+
+                if (this.checkedDeliverys.length === 0) {
+                    matchDelivery = true;
+                } else if (!raw || String(raw).trim() === '') {
+                    matchDelivery = this.checkedDeliverys.includes('(空白)');
+                } else {
+                    const str = String(raw).trim();
+                    let formatted = '';
+
+                    if (/^\d{8}$/.test(str)) {
+                        const year = str.slice(0, 4);
+                        const month = parseInt(str.slice(4, 6), 10);
+                        formatted = `${year}/${month}`;
+                    } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                        const [y, m] = str.split('/');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                        const [y, m] = str.split('-');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                        formatted = str;
+                    }
+
+                    matchDelivery = this.checkedDeliverys.includes(formatted);
+                }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .flatMap(i => {
+                    const poValue = i['PO No.'];
+                    if (poValue === null || poValue === undefined || poValue === '') {
+                        return ['(空白)'];
+                    }
+                    return String(poValue)
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueItem (Item)
+    uniqueItem() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['Item'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return String(value).trim();
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueName (品項)
+    uniqueName() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                let matchDelivery = false;
+                const raw = i['Delivery Date 廠商承諾交期'];
+
+                if (this.checkedDeliverys.length === 0) {
+                    matchDelivery = true;
+                } else if (!raw || String(raw).trim() === '') {
+                    matchDelivery = this.checkedDeliverys.includes('(空白)');
+                } else {
+                    const str = String(raw).trim();
+                    let formatted = '';
+
+                    if (/^\d{8}$/.test(str)) {
+                        const year = str.slice(0, 4);
+                        const month = parseInt(str.slice(4, 6), 10);
+                        formatted = `${year}/${month}`;
+                    } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                        const [y, m] = str.split('/');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                        const [y, m] = str.split('-');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                        formatted = str;
+                    }
+
+                    matchDelivery = this.checkedDeliverys.includes(formatted);
+                }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['品項'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueSpec (規格)
+    uniqueSpec() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['規格'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueQty (數量)
+    uniqueQty() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['數量'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueTotalQty (總數)
+    uniqueTotalQty() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['總數'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniquePrice (單價)
+    uniquePrice() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['單價'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueTotal (總價)
+    uniqueTotal() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['總價'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueRT (RT金額)
+    uniqueRT() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['RT金額'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return (parseFloat(String(value).replace(/,/g, '')) || 0).toLocaleString();
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            const numA = parseFloat(a.replace(/,/g, '')) || 0;
+            const numB = parseFloat(b.replace(/,/g, '')) || 0;
+            return numA - numB;
+        });
+    },
+
+    // uniqueRTTotal (RT總金額)
+    uniqueRTTotal() {
+        const baseData = this.items;
+        console.log("點")
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && 
+                    matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && 
+                    matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const raw = i['RT總金額'];
+                    // 🚨 強化空值與無效值處理（包含 "nan" 字串）
+                    if (raw == null || raw === '' || String(raw).trim() === '') {
+                        return '(空白)';
+                    }
+                    const str = String(raw).trim().toLowerCase();
+                    if (str === 'nan' || str === 'null' || str === 'undefined') {
+                        return '(空白)';
+                    }
+                    const num = parseFloat(str.replace(/,/g, ''));
+                    if (isNaN(num)) {
+                        return '(空白)';
+                    }
+                    return num.toLocaleString();
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            const numA = parseFloat(a.replace(/,/g, '')) || 0;
+            const numB = parseFloat(b.replace(/,/g, '')) || 0;
+            return numA - numB;
+        });
+        
+    },
+
+    // uniqueRemark (備註)
+    uniqueRemark() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                let matchDelivery = false;
+                const raw = i['Delivery Date 廠商承諾交期'];
+
+                if (this.checkedDeliverys.length === 0) {
+                    matchDelivery = true;
+                } else if (!raw || String(raw).trim() === '') {
+                    matchDelivery = this.checkedDeliverys.includes('(空白)');
+                } else {
+                    const str = String(raw).trim();
+                    let formatted = '';
+
+                    if (/^\d{8}$/.test(str)) {
+                        const year = str.slice(0, 4);
+                        const month = parseInt(str.slice(4, 6), 10);
+                        formatted = `${year}/${month}`;
+                    } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                        const [y, m] = str.split('/');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                        const [y, m] = str.split('-');
+                        formatted = `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                        formatted = str;
+                    }
+
+                    matchDelivery = this.checkedDeliverys.includes(formatted);
+                }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['備註'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueDelivery (Delivery Date 廠商承諾交期)
+    uniqueDelivery() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchSod && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const raw = i['Delivery Date 廠商承諾交期'];
+                    if (!raw || String(raw).trim() === '') return '(空白)';
+
+                    const str = String(raw).trim();
+                    if (/^\d{8}$/.test(str)) {
+                        const year = str.slice(0, 4);
+                        const month = parseInt(str.slice(4, 6), 10);
+                        return `${year}/${month}`;
+                    } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                        const [y, m] = str.split('/');
+                        return `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                        const [y, m] = str.split('-');
+                        return `${y}/${parseInt(m, 10)}`;
+                    } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                        return str;
+                    }
+
+                    return '(空白)';
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            const [ay, am] = a.split('/').map(Number);
+            const [by, bm] = b.split('/').map(Number);
+            return by - ay || bm - am; // 最新在上
+        });
+    },
+
+    // uniqueSod (SOD Qty 廠商承諾數量)
+    uniqueSod() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchAccept && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['SOD Qty 廠商承諾數量'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueAccept (驗收數量)
+    uniqueAccept() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchReject && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['驗收數量'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueReject (拒收數量)
+    uniqueReject() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchInvoice && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['拒收數量'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueInvoice (發票月份)
+    uniqueInvoice() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchWBS && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['發票月份'];
+                    if (!value || String(value).trim() === '') return '(空白)';
+
+                    const str = String(value).trim();
+                    const parts = str.split('/');
+                    if (parts.length >= 2) {
+                        const year = parts[0];
+                        const month = parseInt(parts[1], 10); // 去除前導 0
+                        return `${year}/${month}`;
+                    }
+
+                    return '(空白)';
+                })
+        )).sort((a, b) => {
+            // ✅ 將 '(空白)' 排在最後
+            if (a === '(空白)') return 1;
+            if (b === '(空白)') return -1;
+
+            const [ay, am] = a.split('/').map(Number);
+            const [by, bm] = b.split('/').map(Number);
+
+            // ✅ 年份大 → 前面，年份相同 月份大 → 前面
+            if (ay !== by) return by - ay;
+            return bm - am;
+        });
+    },
+
+    // uniqueWBS (WBS)
+    uniqueWBS() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                let matchDemandDate = false;
+                if (this.checkedDemandDates.length === 0) {
+                    matchDemandDate = true;
+                } else {
+                    const raw = i['需求日'];
+                    if (raw === null || raw === undefined || String(raw).trim() === '') {
+                        matchDemandDate = this.checkedDemandDates.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = str.slice(4, 6);
+                            const formatted = `${year}/${month}`;
+                            matchDemandDate = this.checkedDemandDates.includes(formatted);
+                        } else {
+                            matchDemandDate = false;
+                        }
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchDemandDate;
+                })
+                .map(i => {
+                    const value = i['WBS'];
+                    if (value === null || value === undefined || value === '') {
+                        return '(空白)';
+                    }
+                    return value;
+                })
+        )).sort((a, b) => {
+            if (a === '(空白)') return -1;
+            if (b === '(空白)') return 1;
+            return a.localeCompare(b, 'zh-TW');
+        });
+    },
+
+    // uniqueDemandDate (需求日)
+    uniqueDemandDate() {
+        const baseData = this.items;
+        return Array.from(new Set(
+            baseData
+                .filter(i => {
+                    let matchAcceptance = false;
+                if (this.checkedAcceptances.length === 0) {
+                    matchAcceptance = true;
+                } else {
+                    const val = i['交貨驗證'];
+                    if ((val === null || val === undefined || val === '') && this.checkedAcceptances.includes('(空白)')) {
+                        matchAcceptance = true;
+                    } else if (this.checkedAcceptances.includes(val)) {
+                        matchAcceptance = true;
+                    }
+                }
+                    let matchReceiveStatuses = false;
+                if (this.checkedReceiveStatuses.length === 0) {
+                    matchReceiveStatuses = true;
+                } else {
+                    const val = i['驗收狀態'];
+                    if ((val === null || val === undefined || val === '') && this.checkedReceiveStatuses.includes('(空白)')) {
+                        matchReceiveStatuses = true;
+                    } else if (this.checkedReceiveStatuses.includes(val)) {
+                        matchReceiveStatuses = true;
+                    }
+                }
+                    let matchEPR = false;
+                if (this.checkedEPRs.length === 0) {
+                    matchEPR = true;
+                } else {
+                    const val = i['ePR No.'];
+                    if ((val === null || val === undefined || val === '') && this.checkedEPRs.includes('(空白)')) {
+                        matchEPR = true;
+                    } else if (this.checkedEPRs.includes(String(val).trim())) {
+                        matchEPR = true;
+                    }
+                }
+                    let matchPo = false;
+                if (this.checkedPOs.length === 0) {
+                    matchPo = true;
+                } else {
+                    const poValues = String(i['PO No.'] || '')
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .split(/\n|,|;/)
+                        .map(v => v.trim())
+                        .filter(v => v !== '');
+                    if (poValues.length === 0 && this.checkedPOs.includes('(空白)')) {
+                        matchPo = true;
+                    } else if (poValues.some(v => this.checkedPOs.includes(v))) {
+                        matchPo = true;
+                    }
+                }
+                    let matchItem = false;
+                if (this.checkedItems.length === 0) {
+                    matchItem = true;
+                } else {
+                    const val = i['Item'];
+                    if ((val === null || val === undefined || val === '') && this.checkedItems.includes('(空白)')) {
+                        matchItem = true;
+                    } else if (this.checkedItems.includes(String(val).trim())) {
+                        matchItem = true;
+                    }
+                }
+                    let matchName = false;
+                if (this.checkedNames.length === 0) {
+                    matchName = true;
+                } else {
+                    const val = i['品項'];
+                    if ((val === null || val === undefined || val === '') && this.checkedNames.includes('(空白)')) {
+                        matchName = true;
+                    } else if (this.checkedNames.includes(val)) {
+                        matchName = true;
+                    }
+                }
+                    let matchSpec = false;
+                if (this.checkedSpecs.length === 0) {
+                    matchSpec = true;
+                } else {
+                    const val = i['規格'];
+                    if ((val === null || val === undefined || val === '') && this.checkedSpecs.includes('(空白)')) {
+                        matchSpec = true;
+                    } else if (this.checkedSpecs.includes(val)) {
+                        matchSpec = true;
+                    }
+                }
+                    const matchQty = this.checkedQtys.length === 0 || this.checkedQtys.includes(i['數量']);
+                    const matchTotalQty = this.checkedTotalQtys.length === 0 || this.checkedTotalQtys.includes(i['總數']);
+                    const matchPrice = this.checkedPrices.length === 0 || this.checkedPrices.includes(i['單價']);
+                    const matchTotal = this.checkedTotals.length === 0 || this.checkedTotals.includes(i['總價']);
+                    let matchRT = false;
+                if (this.checkedRTs.length === 0) {
+                    matchRT = true;
+                } else {
+                    const val = i['RT金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRT = this.checkedRTs.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRT = this.checkedRTs.includes(formatted);
+                    }
+                }
+                    let matchRTTotal = false;
+                if (this.checkedRTTotals.length === 0) {
+                    matchRTTotal = true;
+                } else {
+                    const val = i['RT總金額'];
+                    if (val === null || val === undefined || val === '') {
+                        matchRTTotal = this.checkedRTTotals.includes('(空白)');
+                    } else {
+                        const formatted = (parseFloat(String(val).replace(/,/g, '')) || 0).toLocaleString();
+                        matchRTTotal = this.checkedRTTotals.includes(formatted);
+                    }
+                }
+                    const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    let matchDelivery = false;
+                    const raw = i['Delivery Date 廠商承諾交期'];
+
+                    if (this.checkedDeliverys.length === 0) {
+                        matchDelivery = true;
+                    } else if (!raw || String(raw).trim() === '') {
+                        matchDelivery = this.checkedDeliverys.includes('(空白)');
+                    } else {
+                        const str = String(raw).trim();
+                        let formatted = '';
+
+                        if (/^\d{8}$/.test(str)) {
+                            const year = str.slice(0, 4);
+                            const month = parseInt(str.slice(4, 6), 10);
+                            formatted = `${year}/${month}`;
+                        } else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                            const [y, m] = str.split('/');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                            const [y, m] = str.split('-');
+                            formatted = `${y}/${parseInt(m, 10)}`;
+                        } else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                            formatted = str;
+                        }
+
+                        matchDelivery = this.checkedDeliverys.includes(formatted);
+                    }
+                    const matchSod = this.checkedSods.length === 0 || this.checkedSods.includes(i['SOD Qty 廠商承諾數量']);
+                    const matchAccept = this.checkedAccepts.length === 0 || this.checkedAccepts.includes(i['驗收數量']);
+                    const matchReject = this.checkedRejects.length === 0 || this.checkedRejects.includes(i['拒收數量']);
+                    let matchInvoice = false;
+
+                    if (this.checkedInvoices.length === 0) {
+                        matchInvoice = true;
+                    } else {
+                        const raw = i['發票月份'];
+
+                        if (!raw || String(raw).trim() === '') {
+                            matchInvoice = this.checkedInvoices.includes('(空白)');
+                        } else {
+                            const str = String(raw).trim();
+                            let ym = '';
+
+                            // 20250812 → 2025/8
+                            if (/^\d{8}$/.test(str)) {
+                                ym = `${str.slice(0, 4)}/${parseInt(str.slice(4, 6), 10)}`;
+                            }
+                            // 2025/08/12 → 2025/8
+                            else if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(str)) {
+                                const [y, m] = str.split('/');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 2025-08-12 → 2025/8
+                            else if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                                const [y, m] = str.split('-');
+                                ym = `${y}/${parseInt(m, 10)}`;
+                            }
+                            // 如果已經是 YYYY/M 或 YYYY/MM → 直接用
+                            else if (/^\d{4}\/\d{1,2}$/.test(str)) {
+                                ym = str;
+                            }
+
+                            matchInvoice = this.checkedInvoices.includes(ym);
+                        }
+                    }
+                    let matchWBS = false;
+                if (this.checkedWBSs.length === 0) {
+                    matchWBS = true;
+                } else {
+                    const val = i['WBS'];
+                    if ((val === null || val === undefined || val === '') && this.checkedWBSs.includes('(空白)')) {
+                        matchWBS = true;
+                    } else if (this.checkedWBSs.includes(val)) {
+                        matchWBS = true;
+                    }
+                }
+
+                    return matchAcceptance && matchReceiveStatuses && matchEPR && matchPo && matchItem && matchName && matchSpec && matchQty && matchTotalQty && matchPrice && matchTotal && matchRT && matchRTTotal && matchRemark && matchDelivery && matchSod && matchAccept && matchReject && matchInvoice && matchWBS;
+                })
+            .map(i => {
+                const value = i['需求日'];
+                if (!value || String(value).trim() === '') return '(空白)';
+
+                const str = String(value).trim();
+                if (/^\d{8}$/.test(str)) {
+                    const year = str.slice(0, 4);
+                    const month = str.slice(4, 6);
+                    return `${year}/${month}`;
+                }
+                return '(空白)';
+            })
+        )).sort((a, b) => {
+            if (a === '(空白)') return 1;
+            if (b === '(空白)') return -1;
+            return a.localeCompare(b, 'zh-TW');
+        }).reverse()
+    },
 
         // 修正：上限管制 = 預算上限 - 100,000 (預留管制額度)
         budgetControlAmount() {
@@ -1687,6 +5649,9 @@ const app = Vue.createApp({
             const isINVOICE = this.$refs.INVOICEFilter?.contains(event.target);
             const isWBS = this.$refs.WBSFilter?.contains(event.target);
             const isDEMANDDATE = this.$refs.DEMANDDATEFilter?.contains(event.target);
+            const isRT = this.$refs.RTFilter?.contains(event.target);
+            const isReceiveStatus = this.$refs.ReceiveStatusFilter?.contains(event.target);
+            const isRTTOTAL = this.$refs.RTTOTALFilter?.contains(event.target);
 
             if (!isACCEPTANCE) this.showAcceptanceFilter = false;
             if (!isEPR) this.showEPRFilter = false;
@@ -1706,6 +5671,9 @@ const app = Vue.createApp({
             if (!isINVOICE) this.showINVOICEFilter = false;
             if (!isWBS) this.showWBSFilter = false;
             if (!isDEMANDDATE) this.showDEMANDDATEFilter = false;
+            if (!isRT) this.showRTFilter = false;
+            if (!isReceiveStatus) this.showReceiveStatusFilter = false;
+            if (!isRTTOTAL) this.showRTTOTALFilter = false;
         },
 
         beforeUnmount() {
@@ -1732,6 +5700,9 @@ const app = Vue.createApp({
             this.showINVOICEFilter = false;
             this.showWBSFilter = false;
             this.showDEMANDDATEFilter = false;
+            this.showRTFilter = false;
+            this.showReceiveStatusFilter = false;
+            this.showRTTOTALFilter = false;
         },
 
         toggleDropdown(target) {
@@ -1808,87 +5779,453 @@ const app = Vue.createApp({
             window.location.href = 'accCheck.html';
         },
 
-        // 在 methods 區塊中添加這個方法
+
         async downloadDetailData() {
-            try {
-                // 顯示載入狀態
-                const loadingToast = document.createElement('div');
-                loadingToast.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                loadingToast.textContent = '正在準備下載檔案...';
-                document.body.appendChild(loadingToast);
-
-                // 獲取後端 CSV 資料並轉換為 XLSX
-                const response = await fetch('http://127.0.0.1:5000/api/download_buyer_detail_xlsx', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            const tableData = this.filteredData.map(row => {
+                const newRow = {};
+                for (const key of this.tableHeaders) {
+                    newRow[key] = row[key];
                 }
+                return newRow;
+            });
 
-                // 獲取檔案 blob
-                const blob = await response.blob();
-                
-                // 創建下載連結
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                
-                // 設定檔案名稱（加上時間戳記）
-                const now = new Date();
-                const timestamp = now.getFullYear() + 
-                                String(now.getMonth() + 1).padStart(2, '0') + 
-                                String(now.getDate()).padStart(2, '0') + '_' +
-                                String(now.getHours()).padStart(2, '0') + 
-                                String(now.getMinutes()).padStart(2, '0');
-                link.download = `eRT驗收細項資料_${timestamp}_(Security C).xlsx`;
-                
-                // 觸發下載
-                document.body.appendChild(link);
-                link.click();
-                
-                // 清理
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(loadingToast);
-                
-                // 顯示成功訊息
-                const successToast = document.createElement('div');
-                successToast.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                successToast.textContent = '檔案下載完成！';
-                document.body.appendChild(successToast);
-                
-                setTimeout(() => {
-                    if (document.body.contains(successToast)) {
-                        document.body.removeChild(successToast);
-                    }
-                }, 3000);
-                
-            } catch (error) {
-                console.error('下載失敗:', error);
-                
-                // 移除載入提示
-                const loadingToast = document.querySelector('.fixed.top-4.right-4.bg-blue-500');
-                if (loadingToast) {
-                    document.body.removeChild(loadingToast);
-                }
-                
-                // 顯示錯誤訊息
-                const errorToast = document.createElement('div');
-                errorToast.className = 'fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                errorToast.textContent = '下載失敗，請稍後再試！';
-                document.body.appendChild(errorToast);
-                
-                setTimeout(() => {
-                    if (document.body.contains(errorToast)) {
-                        document.body.removeChild(errorToast);
-                    }
-                }, 3000);
+            const ws = XLSX.utils.json_to_sheet(tableData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "篩選結果");
+
+            const filename = `ERT清單_${new Date().toISOString().slice(0, 10)}_(Security C).xlsx`;
+            XLSX.writeFile(wb, filename);
+        },
+
+        // ========== Lucide Icons 初始化 ==========
+        initLucideIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
             }
         },
+        
+        refreshLucideIcons() {
+            this.$nextTick(() => {
+                this.initLucideIcons();
+            });
+        },
+        
+        // ========== 編輯功能 ==========
+// 開啟編輯卡片 - 抓取同 Id 的所有資料
+openEditModal(item) {
+    try {
+        if (!item || !item.Id) {
+            console.error('Item is undefined or missing Id');
+            return;
+        }
+        
+        const itemId = item.Id;
+        console.log('開啟編輯，Id:', itemId);
+        
+        // ⭐ 找出所有相同 Id 的資料
+        const sameIdItems = this.items.filter(i => i.Id === itemId);
+        console.log(`找到 ${sameIdItems.length} 筆相同 Id 的資料`);
+        
+        // ⭐ 深拷貝所有資料
+        this.editingItems = sameIdItems.map(originalItem => {
+            const copiedItem = { Id: originalItem.Id };
+            
+            for (let key in originalItem) {
+                if (originalItem.hasOwnProperty(key)) {
+                    // 跳過特殊欄位
+                    if (key === 'backup' || key === 'isEditing' || key === '_alertedItemLimit') {
+                        continue;
+                    }
+                    const value = originalItem[key];
+                    copiedItem[key] = (value !== undefined && value !== null) ? value : '';
+                }
+            }
+            
+            return copiedItem;
+        });
+        
+        this.editingId = itemId;
+        this.showEditModal = true;
+        
+        this.$nextTick(() => {
+            this.refreshLucideIcons();
+        });
+        
+        console.log('編輯項目:', this.editingItems);
+        
+    } catch (error) {
+        console.error('Error opening edit modal:', error);
+        Swal.fire({
+            icon: 'error',
+            title: '❌ 開啟失敗',
+            text: '無法開啟編輯視窗：' + error.message
+        });
+    }
+},
+                
+// 關閉編輯卡片
+closeEditModal() {
+    this.showEditModal = false;
+    this.editingItems = [];  // ⭐ 改成清空陣列
+    this.editingId = null;
+    this.refreshLucideIcons();
+},
+
+// 儲存編輯
+async saveEdit() {
+    try {
+        console.log('=== 開始儲存 ===');
+        
+        if (!this.editingId || this.editingItems.length === 0) {
+            throw new Error('資料錯誤：缺少 Id 或資料為空');
+        }
+        
+        // ⭐ 準備要更新的資料
+        const updateData = {
+            Id: this.editingId,
+            items: this.editingItems,  // ⭐ 發送所有同 Id 的資料
+            username: this.username
+        };
+        
+        console.log(`準備更新 Id: ${this.editingId}，共 ${this.editingItems.length} 筆資料`);
+        
+        // 顯示載入中
+        Swal.fire({
+            title: '處理中...',
+            text: `正在儲存 ${this.editingItems.length} 筆資料...`,
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // ⭐ 呼叫後端 API
+        const response = await axios.post('http://127.0.0.1:5000/api/update-buyer-items', updateData, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('後端回應:', response);
+        
+        // 處理回應
+        let responseData = response.data;
+        if (typeof responseData === 'string') {
+            responseData = JSON.parse(responseData);
+        }
+        
+        const isSuccess = responseData.status === 'success' || responseData.success === true;
+        
+        if (isSuccess) {
+            console.log('✅ 更新成功');
+            
+            // ⭐ 從本地數據中移除舊的同 Id 資料
+            this.items = this.items.filter(item => item.Id !== this.editingId);
+            
+            // ⭐ 加入新的資料
+            this.items.push(...this.editingItems);
+            
+            Swal.fire({
+                icon: 'success',
+                title: '✅ 儲存成功',
+                text: `已更新 ${this.editingItems.length} 筆資料`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            this.closeEditModal();
+            this.refreshLucideIcons();
+            
+        } else {
+            throw new Error(responseData.message || '更新失敗');
+        }
+        
+    } catch (error) {
+        console.error('=== 儲存錯誤 ===', error);
+        
+        let errorMessage = '發生未知錯誤';
+        let errorTitle = '❌ 儲存失敗';
+        
+        if (error.response?.status === 503) {
+            errorTitle = '⏱️ 系統忙碌中';
+            errorMessage = '檔案正在被其他程序使用，請稍後再試';
+        } else if (error.response?.data) {
+            const errorData = typeof error.response.data === 'string' 
+                ? JSON.parse(error.response.data) 
+                : error.response.data;
+            errorMessage = errorData.message || errorData.msg || '更新失敗';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        Swal.fire({
+            icon: 'error',
+            title: errorTitle,
+            text: errorMessage,
+            confirmButtonText: '確定'
+        });
+    }
+},
+
+// 執行刪除
+async deleteItem(item) {
+    try {
+        console.log('=== 開始刪除 ===');
+        
+        if (!item || !item.Id) {
+            throw new Error('資料錯誤：缺少 Id');
+        }
+        
+        // 顯示載入中
+        Swal.fire({
+            title: '處理中...',
+            text: '正在刪除資料',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // 呼叫後端 API
+        const response = await axios.post('http://127.0.0.1:5000/api/delete-buyer-item', {
+            Id: item.Id,
+            username: this.username
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('後端回應:', response);
+        
+        // 處理可能的 JSON 字串回應
+        let responseData = response.data;
+        if (typeof responseData === 'string') {
+            console.log('回應是字串，嘗試解析...');
+            responseData = JSON.parse(responseData);
+        }
+        
+        console.log('解析後的 responseData:', responseData);
+        
+        // 檢查 status 或 success
+        const isSuccess = responseData.status === 'success' || responseData.success === true;
+        
+        if (isSuccess) {
+            console.log('✅ 刪除成功');
+            
+            // 從本地數據中移除
+            const itemsIndex = this.items.findIndex(i => i.Id === item.Id);
+            if (itemsIndex > -1) {
+                this.items.splice(itemsIndex, 1);
+            }
+            
+            Swal.fire({
+                icon: 'success',
+                title: '🗑️ 刪除成功',
+                text: responseData.msg || responseData.message || '資料已成功刪除',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            this.refreshLucideIcons();
+            
+        } else {
+            throw new Error(responseData.message || '刪除失敗');
+        }
+        
+    } catch (error) {
+        console.error('=== 刪除錯誤 ===', error);
+        
+        let errorMessage = '發生未知錯誤';
+        let errorTitle = '❌ 刪除失敗';
+        
+        if (error.response?.status === 503) {
+            errorTitle = '⏱️ 系統忙碌中';
+            errorMessage = '檔案正在被其他程序使用，請稍後再試';
+        } else if (error.response?.data) {
+            const errorData = typeof error.response.data === 'string' 
+                ? JSON.parse(error.response.data) 
+                : error.response.data;
+            errorMessage = errorData.message || errorData.msg || '刪除失敗';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        Swal.fire({
+            icon: 'error',
+            title: errorTitle,
+            text: errorMessage,
+            confirmButtonText: '確定'
+        });
+    }
+},
+        
+        // ========== 刪除功能 ==========
+// 確認刪除 - 精確比對所有欄位
+confirmDelete(item) {
+    if (!item || !item.Id) {
+        Swal.fire({
+            icon: 'error',
+            title: '❌ 錯誤',
+            text: '資料錯誤：缺少 Id'
+        });
+        return;
+    }
+    
+    Swal.fire({
+        title: '⚠️ 確認刪除',
+        html: `
+            <div class="text-left">
+                <p class="text-lg mb-3">您確定要刪除這筆資料嗎？</p>
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-3">
+                    <p class="text-red-700 font-semibold">⚠️ 重要提醒：</p>
+                    <p class="text-red-600 mt-1">刪除後將<span class="font-bold underline">無法復原</span>！</p>
+                </div>
+                <div class="bg-gray-50 p-3 rounded text-sm">
+                    <p class="text-gray-700"><strong>Id:</strong> ${item.Id}</p>
+                    <p class="text-gray-700"><strong>Item:</strong> ${item.Item || '-'}</p>
+                    <p class="text-gray-700"><strong>ePR No.:</strong> ${item['ePR No.'] || '-'}</p>
+                    <p class="text-gray-700"><strong>PO No.:</strong> ${(item['PO No.'] || '-').replace(/<br\s*\/?>/gi, ', ')}</p>
+                    <p class="text-gray-700"><strong>品項:</strong> ${item['品項'] || '-'}</p>
+                    <p class="text-gray-700"><strong>總價:</strong> ${item['總價'] || '-'}</p>
+                </div>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: '🗑️ 確定刪除',
+        cancelButtonText: '✖️ 取消',
+        reverseButtons: true,
+        width: '600px'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            this.deleteItem(item);
+        }
+    });
+},
+
+// 執行刪除 - 精確比對所有欄位
+async deleteItem(item) {
+    try {
+        console.log('=== 開始刪除 ===');
+        console.log('item:', item);
+        
+        if (!item || !item.Id) {
+            throw new Error('資料錯誤：缺少 Id');
+        }
+        
+        // 顯示載入中
+        Swal.fire({
+            title: '處理中...',
+            text: '正在刪除資料...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        // ⭐ 準備要刪除的資料（移除前端特殊欄位）
+        const itemToDelete = {};
+        for (let key in item) {
+            if (item.hasOwnProperty(key)) {
+                // 跳過前端特殊欄位
+                if (key === 'backup' || key === 'isEditing' || key === '_alertedItemLimit') {
+                    continue;
+                }
+                itemToDelete[key] = item[key];
+            }
+        }
+        
+        console.log('準備刪除的資料:', itemToDelete);
+        
+        // ⭐ 呼叫後端 API
+        const response = await axios.post('http://127.0.0.1:5000/api/delete-buyer-item-exact', {
+            item: itemToDelete,
+            username: this.username
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('後端回應:', response);
+        
+        // 處理回應
+        let responseData = response.data;
+        if (typeof responseData === 'string') {
+            responseData = JSON.parse(responseData);
+        }
+        
+        console.log('解析後的 responseData:', responseData);
+        
+        // 檢查成功
+        const isSuccess = responseData.status === 'success' || responseData.success === true;
+        
+        if (isSuccess) {
+            console.log('✅ 刪除成功');
+            
+            // ⭐ 從本地數據中移除該筆資料
+            // 使用精確比對找到要刪除的項目
+            const indexToRemove = this.items.findIndex(i => {
+                // 比對所有重要欄位
+                return i.Id === item.Id && 
+                       i.Item === item.Item && 
+                       i['品項'] === item['品項'];
+            });
+            
+            if (indexToRemove > -1) {
+                this.items.splice(indexToRemove, 1);
+            }
+            
+            Swal.fire({
+                icon: 'success',
+                title: '🗑️ 刪除成功',
+                text: '資料已成功刪除',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+            this.refreshLucideIcons();
+            
+        } else {
+            throw new Error(responseData.message || '刪除失敗');
+        }
+        
+    } catch (error) {
+        console.error('=== 刪除錯誤 ===', error);
+        
+        let errorMessage = '發生未知錯誤';
+        let errorTitle = '❌ 刪除失敗';
+        
+        if (error.response?.status === 503) {
+            errorTitle = '⏱️ 系統忙碌中';
+            errorMessage = '檔案正在被其他程序使用，請稍後再試';
+        } else if (error.response?.status === 404) {
+            errorTitle = '❌ 找不到資料';
+            errorMessage = '找不到完全符合的資料，可能已被刪除或修改';
+        } else if (error.response?.data) {
+            const errorData = typeof error.response.data === 'string' 
+                ? JSON.parse(error.response.data) 
+                : error.response.data;
+            errorMessage = errorData.message || errorData.msg || '刪除失敗';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        Swal.fire({
+            icon: 'error',
+            title: errorTitle,
+            text: errorMessage,
+            confirmButtonText: '確定'
+        });
+    }
+},
+
     },
 
     async mounted(){
@@ -1902,6 +6239,16 @@ const app = Vue.createApp({
         await this.fetchMonthlyActualAccounting();
         await this.fetchgetrestofmoney()
         document.addEventListener('click', this.handleClickOutside);
+        // ========== 初始化 Lucide Icons ==========
+        this.initLucideIcons();
+        // 監聽數據變化，自動重新初始化 icons
+        this.$watch('items', () => {
+            this.refreshLucideIcons();
+        }, { deep: true });
+        
+        this.$watch('filteredData', () => {
+            this.refreshLucideIcons();
+        });
     },
 
     // 修改 watch 監聽器：
@@ -1924,6 +6271,11 @@ const app = Vue.createApp({
             },
             deep: true
         }
+    },
+
+    updated() {
+        // 每次組件更新後重新初始化 Lucide icons
+        this.refreshLucideIcons();
     },
 
 })

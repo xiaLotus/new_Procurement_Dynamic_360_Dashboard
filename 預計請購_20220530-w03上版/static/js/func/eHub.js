@@ -1284,30 +1284,6 @@
         window.location.href = 'merge_confirmation.html';
     },
 
-    // // 🆕 記錄已覆蓋的正常項目
-    // recordProcessedNormalItem(po_no) {
-    //     let processedItems = JSON.parse(
-    //         localStorage.getItem('processed_batch_items') || '[]'
-    //     );
-        
-    //     // 檢查是否已存在
-    //     const exists = processedItems.some(item => 
-    //         item.po_no === po_no && item.type === 'normal'
-    //     );
-        
-    //     if (!exists) {
-    //         processedItems.push({
-    //             po_no: po_no,
-    //             type: 'normal',  // 🔴 標記為正常項目
-    //             status: 'completed',
-    //             timestamp: new Date().toISOString()
-    //         });
-            
-    //         localStorage.setItem('processed_batch_items', JSON.stringify(processedItems));
-    //         console.log(`📝 已記錄正常項目: ${po_no}`);
-    //     }
-    // },
-
 
     // 🆕 記錄已覆蓋的正常項目 (簡化版,使用通用方法)
     recordProcessedNormalItem(po_no) {
