@@ -142,6 +142,9 @@ const app = Vue.createApp({
             editingItems: [],  // ⭐ 改成陣列，存放同 Id 的所有資料
             editingId: null,   // ⭐ 記錄當前編輯的 Id
             editingIndex: -1,
+            // ========== 新增：防止載入時觸發保存的標記 ==========
+            _isLoadingFilters: false,
+            _saveTimeout: null,
         };
     },
 
@@ -150,6 +153,42 @@ const app = Vue.createApp({
         isAdmin() {
             return this.admins.includes(this.username);
         },
+            // ========== 加在這裡 ========== 
+    hasFilterActive() {
+        return {
+            '交貨驗證': this.checkedAcceptances.length > 0,
+            '驗收狀態': this.checkedReceiveStatuses.length > 0,
+            'ePR No.': this.checkedEPRs.length > 0,
+            'PO No.': this.checkedPOs.length > 0,
+            'Item': this.checkedItems.length > 0,
+            '品項': this.checkedNames.length > 0,
+            '規格': this.checkedSpecs.length > 0,
+            '數量': this.checkedQtys.length > 0,
+            '總數': this.checkedTotalQtys.length > 0,
+            '單價': this.checkedPrices.length > 0,
+            '總價': this.checkedTotals.length > 0,
+            'RT金額': this.checkedRTs.length > 0,
+            'RT總金額': this.checkedRTTotals.length > 0,
+            '備註': this.checkedRemarks.length > 0,
+            'Delivery Date 廠商承諾交期': this.checkedDeliverys.length > 0,
+            'SOD Qty 廠商承諾數量': this.checkedSods.length > 0,
+            '驗收數量': this.checkedAccepts.length > 0,
+            '拒收數量': this.checkedRejects.length > 0,
+            '發票月份': this.checkedInvoices.length > 0,
+            'WBS': this.checkedWBSs.length > 0,
+            '需求日': this.checkedDemandDates.length > 0
+        };
+    },
+
+    getHeaderClass() {
+        return (columnName) => {
+            const baseClass = 'relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30';
+            const filteredClass = 'bg-blue-200 text-blue-900 shadow-inner';
+            return this.hasFilterActive[columnName] 
+                ? `${baseClass} ${filteredClass}` 
+                : baseClass;
+        };
+    },
 
         filteredData() {
             const baseData = this.items;
@@ -5705,6 +5744,127 @@ const app = Vue.createApp({
             this.showRTTOTALFilter = false;
         },
 
+        // 251104
+
+            
+    // ========== 加在這裡 ==========
+async saveERTFilters() {
+    try {
+        // 讀取現有的 filters（包含主頁面的篩選條件）
+        let allFilters = {};
+        
+        try {
+            const response = await axios.get(`http://127.0.0.1:5000/api/get-filters-json/${this.username}`);
+            if (response.data) {
+                allFilters = response.data;
+            }
+        } catch (error) {
+            // 如果檔案不存在，就用空物件
+            console.log('建立新的篩選條件檔案');
+        }
+        
+        // 先移除所有舊的 eRT 篩選條件（避免累積重複）
+        const cleanedFilters = {};
+        for (let key in allFilters) {
+            if (!key.startsWith('ert_')) {
+                cleanedFilters[key] = allFilters[key];
+            }
+        }
+        
+        // 加入新的 eRT 篩選條件（用 ert_ 開頭區分）
+        cleanedFilters.username = this.username;
+        cleanedFilters.ert_checkedAcceptances = this.checkedAcceptances;
+        cleanedFilters.ert_checkedEPRs = this.checkedEPRs;
+        cleanedFilters.ert_checkedPOs = this.checkedPOs;
+        cleanedFilters.ert_checkedItems = this.checkedItems;
+        cleanedFilters.ert_checkedNames = this.checkedNames;
+        cleanedFilters.ert_checkedSpecs = this.checkedSpecs;
+        cleanedFilters.ert_checkedQtys = this.checkedQtys;
+        cleanedFilters.ert_checkedTotalQtys = this.checkedTotalQtys;
+        cleanedFilters.ert_checkedPrices = this.checkedPrices;
+        cleanedFilters.ert_checkedTotals = this.checkedTotals;
+        cleanedFilters.ert_checkedRemarks = this.checkedRemarks;
+        cleanedFilters.ert_checkedDeliverys = this.checkedDeliverys;
+        cleanedFilters.ert_checkedSods = this.checkedSods;
+        cleanedFilters.ert_checkedAccepts = this.checkedAccepts;
+        cleanedFilters.ert_checkedRejects = this.checkedRejects;
+        cleanedFilters.ert_checkedInvoices = this.checkedInvoices;
+        cleanedFilters.ert_checkedWBSs = this.checkedWBSs;
+        cleanedFilters.ert_checkedDemandDates = this.checkedDemandDates;
+        cleanedFilters.ert_checkedRTs = this.checkedRTs;
+        cleanedFilters.ert_checkedReceiveStatuses = this.checkedReceiveStatuses;
+        cleanedFilters.ert_checkedRTTotals = this.checkedRTTotals;
+        
+        // 保存回去
+        await axios.post('http://127.0.0.1:5000/api/save-filters-json', cleanedFilters);
+        
+        console.log('✅ eRT 篩選條件已保存（保留主頁面篩選）');
+    } catch (error) {
+        console.error('❌ 保存 eRT 篩選條件失敗:', error);
+    }
+},
+
+    // ========== 新增：防抖保存方法 ==========
+    debounceSaveERTFilters() {
+        // 清除之前的計時器
+        if (this._saveTimeout) {
+            clearTimeout(this._saveTimeout);
+        }
+        
+        // 500ms 後才保存（防止頻繁保存）
+        this._saveTimeout = setTimeout(() => {
+            this.saveERTFilters();
+        }, 500);
+    },
+    
+
+
+    async loadERTFilters() {
+    try {
+        // ========== 新增：設置載入標記，防止 watch 觸發保存 ==========
+        this._isLoadingFilters = true;
+        
+        const response = await axios.get(`http://127.0.0.1:5000/api/get-filters-json/${this.username}`);
+        
+        if (response.data) {
+            const filters = response.data;
+            
+            // 讀取 eRT 的篩選條件
+            this.checkedAcceptances = filters.ert_checkedAcceptances || [];
+            this.checkedEPRs = filters.ert_checkedEPRs || [];
+            this.checkedPOs = filters.ert_checkedPOs || [];
+            this.checkedItems = filters.ert_checkedItems || [];
+            this.checkedNames = filters.ert_checkedNames || [];
+            this.checkedSpecs = filters.ert_checkedSpecs || [];
+            this.checkedQtys = filters.ert_checkedQtys || [];
+            this.checkedTotalQtys = filters.ert_checkedTotalQtys || [];
+            this.checkedPrices = filters.ert_checkedPrices || [];
+            this.checkedTotals = filters.ert_checkedTotals || [];
+            this.checkedRemarks = filters.ert_checkedRemarks || [];
+            this.checkedDeliverys = filters.ert_checkedDeliverys || [];
+            this.checkedSods = filters.ert_checkedSods || [];
+            this.checkedAccepts = filters.ert_checkedAccepts || [];
+            this.checkedRejects = filters.ert_checkedRejects || [];
+            this.checkedInvoices = filters.ert_checkedInvoices || [];
+            this.checkedWBSs = filters.ert_checkedWBSs || [];
+            this.checkedDemandDates = filters.ert_checkedDemandDates || [];
+            this.checkedRTs = filters.ert_checkedRTs || [];
+            this.checkedReceiveStatuses = filters.ert_checkedReceiveStatuses || [];
+            this.checkedRTTotals = filters.ert_checkedRTTotals || [];
+            
+            console.log('✅ eRT 篩選條件已恢復');
+        }
+    } catch (error) {
+        console.log('ℹ️ 沒有找到保存的 eRT 篩選條件');
+    } finally {
+        // ========== 新增：等待一下再解除標記，確保所有 watch 都已執行 ==========
+        setTimeout(() => {
+            this._isLoadingFilters = false;
+        }, 100);
+    }
+},
+
+
         toggleDropdown(target) {
             const wasOpen = this[target];
             this.closeAllDropdowns();
@@ -6232,12 +6392,17 @@ async deleteItem(item) {
         const username = localStorage.getItem('username');
         this.username = username
         console.log("👤 使用者名稱：", this.username);
+        
+        // ========== 修正：提前載入 eRT 篩選條件（在 fetchData 之前）==========
+        await this.loadERTFilters();
+        
         await this.fetchAdmins();
         await this.fetchData();
         await this.fetchUnaccountedData();
         await this.fetchAccountingSummary();
         await this.fetchMonthlyActualAccounting();
         await this.fetchgetrestofmoney()
+        
         document.addEventListener('click', this.handleClickOutside);
         // ========== 初始化 Lucide Icons ==========
         this.initLucideIcons();
@@ -6270,7 +6435,93 @@ async deleteItem(item) {
                 }
             },
             deep: true
-        }
+        },
+    // ========== 監聽所有篩選條件（加上防抖）==========
+    checkedAcceptances() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedEPRs() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedPOs() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedItems() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedNames() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedSpecs() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedQtys() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedTotalQtys() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedPrices() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedTotals() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedRemarks() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedDeliverys() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedSods() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedAccepts() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedRejects() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedInvoices() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedWBSs() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedDemandDates() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedRTs() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedReceiveStatuses() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    },
+    checkedRTTotals() { 
+        if (this._isLoadingFilters) return;
+        this.debounceSaveERTFilters(); 
+    }
+  
     },
 
     updated() {

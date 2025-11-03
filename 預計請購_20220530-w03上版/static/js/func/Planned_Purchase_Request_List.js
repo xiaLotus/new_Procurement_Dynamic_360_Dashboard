@@ -1046,53 +1046,76 @@ const app = Vue.createApp({
     },
 
         // === 新增方法 2: 儲存篩選狀態到 JSON ===
-    async saveFiltersToJSON() {
-        const filters = {
-            username: this.username,
-            filterPurchaseStatus: this.filterPurchaseStatus,
-            checkedPeople: [...this.checkedPeople],
-            checkedReceivingResults: [...this.checkedReceivingResults],
-            checkedStates: [...this.checkedStates],
-            checkedWBS: [...this.checkedWBS],
-            checkedOrders: [...this.checkedOrders],
-            checkedNeedDates: [...this.checkedNeedDates],
-            checkedIssuedMonths: [...this.checkedIssuedMonths],
-            checkedEPRs: [...this.checkedEPRs],
-            checkedPONos: [...this.checkedPONos],
-            checkedItems: [...this.checkedItems],
-            checkedReasons: [...this.checkedReasons],
-            checkedAmounts: [...this.checkedAmounts],
-            checkedStages: [...this.checkedStages],
-            checkedStatuses: [...this.checkedStatuses],
-            checkedRemarks: [...this.checkedRemarks],
-            itemSearchText: this.itemSearchText,
-            reasonSearchText: this.reasonSearchText,
-            sortField: this.sortField,
-            sortOrder: this.sortOrder,
-            selectedMonth: this.selectedMonth,
-            selectedIssuedMonth: this.selectedIssuedMonth,
-            filterStartDate: this.filterStartDate,
-            filterEndDate: this.filterEndDate,
-            dateFilterActive: this.dateFilterActive,
-            lastUpdated: new Date().toISOString()
-        };
-
-        try {
-            const response = await fetch('http://127.0.0.1:5000/api/save-filters-json', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(filters)
-            });
-
-            if (response.ok) {
-                console.log('✅ 篩選狀態已自動儲存');
-            }
-        } catch (error) {
-            console.error('❌ 儲存篩選狀態失敗:', error);
-            // 儲存到 localStorage 作為備份
-            localStorage.setItem(`filters_${this.username}`, JSON.stringify(filters));
+async saveFiltersToJSON() {
+    // 先讀取現有的 filters（包含 eRT 的篩選條件）
+    let existingFilters = {};
+    
+    try {
+        const getResponse = await fetch(`http://127.0.0.1:5000/api/get-filters-json/${this.username}`);
+        if (getResponse.ok) {
+            existingFilters = await getResponse.json();
         }
-    },
+    } catch (error) {
+        console.log('建立新的篩選條件檔案');
+    }
+    
+    // 準備主頁面的篩選條件
+    const mainPageFilters = {
+        username: this.username,
+        filterPurchaseStatus: this.filterPurchaseStatus,
+        checkedPeople: this.checkedPeople,
+        checkedReceivingResults: this.checkedReceivingResults,
+        checkedStates: this.checkedStates,
+        checkedWBS: this.checkedWBS,
+        checkedOrders: this.checkedOrders,
+        checkedNeedDates: this.checkedNeedDates,
+        checkedIssuedMonths: this.checkedIssuedMonths,
+        checkedEPRs: this.checkedEPRs,
+        checkedPONos: this.checkedPONos,
+        checkedItems: this.checkedItems,
+        checkedReasons: this.checkedReasons,
+        checkedAmounts: this.checkedAmounts,
+        checkedStages: this.checkedStages,
+        checkedStatuses: this.checkedStatuses,
+        checkedRemarks: this.checkedRemarks,
+        itemSearchText: this.itemSearchText,
+        reasonSearchText: this.reasonSearchText,
+        sortField: this.sortField,
+        sortOrder: this.sortOrder,
+        selectedMonth: this.selectedMonth,
+        selectedIssuedMonth: this.selectedIssuedMonth,
+        filterStartDate: this.filterStartDate,
+        filterEndDate: this.filterEndDate,
+        dateFilterActive: this.dateFilterActive,
+        lastUpdated: new Date().toISOString()
+    };
+
+    // 合併：先加入主頁面的欄位，再保留 eRT 的欄位
+    const allFilters = { ...mainPageFilters };
+    
+    // 保留所有 ert_ 開頭的欄位
+    for (let key in existingFilters) {
+        if (key.startsWith('ert_')) {
+            allFilters[key] = existingFilters[key];
+        }
+    }
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/api/save-filters-json', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(allFilters)
+        });
+
+        if (response.ok) {
+            console.log('✅ 主頁面篩選狀態已儲存（保留 eRT 篩選）');
+        }
+    } catch (error) {
+        console.error('❌ 儲存篩選狀態失敗:', error);
+        // 儲存到 localStorage 作為備份
+        localStorage.setItem(`filters_${this.username}`, JSON.stringify(allFilters));
+    }
+},
 
     // === 新增方法 3: 從 JSON 載入篩選狀態 ===
     async loadFiltersFromJSON() {

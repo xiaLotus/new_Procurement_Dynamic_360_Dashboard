@@ -284,7 +284,7 @@
                                 <span>編輯</span>
                             </th>
                             <!-- 交貨驗證 -->
-                            <th v-if="visibleColumns.includes('交貨驗證')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('交貨驗證')" :class="getHeaderClass('交貨驗證')">                               
                                 <div ref="ACCEPTANCEFilter">
                                     <div @click="toggleDropdown('showAcceptanceFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -333,7 +333,7 @@
                             </th>
 
                             <!-- 驗收狀態 -->
-                            <th v-if="visibleColumns.includes('驗收狀態')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('驗收狀態')" :class="getHeaderClass('驗收狀態')"> 
                                 <div ref="ReceiveStatusFilter">
                                     <div @click="toggleDropdown('showReceiveStatusFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -382,7 +382,7 @@
                             </th>
 
                             <!-- ePR No. -->
-                            <th v-if="visibleColumns.includes('ePR No.')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('ePR No.')" :class="getHeaderClass('ePR No.')"> 
                                 <div ref="EPRFilter">
                                     <div @click="toggleDropdown('showEPRFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -431,7 +431,7 @@
                             </th>
 
                             <!-- PO No. -->
-                            <th v-if="visibleColumns.includes('PO No.')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('PO No.')" :class="getHeaderClass('PO No.')"> 
                                 <div ref="POFilter">
                                     <div @click="toggleDropdown('showPOFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -480,7 +480,7 @@
                             </th>
 
                             <!-- Item -->
-                            <th v-if="visibleColumns.includes('Item')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('Item')" :class="getHeaderClass('Item')"> 
                                 <div ref="ITEMFilter">
                                     <div @click="toggleDropdown('showITEMFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -529,7 +529,7 @@
                             </th>
 
                             <!-- 品項 -->
-                            <th v-if="visibleColumns.includes('品項')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('品項')" :class="getHeaderClass('品項')">
                                 <div ref="NAMEFilter">
                                     <div @click="toggleDropdown('showNAMEFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -578,7 +578,7 @@
                             </th>
 
                             <!-- 規格 -->
-                            <th v-if="visibleColumns.includes('規格')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('規格')" :class="getHeaderClass('規格')">
                                 <div ref="SPECFilter">
                                     <div @click="toggleDropdown('showSPECFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -628,7 +628,7 @@
                             </th>
 
                             <!-- 數量 -->
-                            <th v-if="visibleColumns.includes('數量')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('數量')" :class="getHeaderClass('數量')">
                                 <div ref="QTYFilter">
                                     <div @click="toggleDropdown('showQTYFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -677,7 +677,7 @@
                             </th>
 
                             <!-- 總數 -->
-                            <th v-if="visibleColumns.includes('總數')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('總數')" :class="getHeaderClass('總數')">
                                 <div ref="TOTALQTYFilter">
                                     <div @click="toggleDropdown('showTOTALQTYFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -726,7 +726,7 @@
                             </th>
 
                             <!-- 單價 -->
-                            <th v-if="visibleColumns.includes('單價')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('單價')" :class="getHeaderClass('單價')">
                                 <div ref="PRICEFilter">
                                     <div @click="toggleDropdown('showPRICEFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -775,7 +775,7 @@
                             </th>
 
                             <!-- 總價 -->
-                            <th v-if="visibleColumns.includes('總價')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('總價')" :class="getHeaderClass('總價')">
                                 <div ref="TOTALFilter">
                                     <div @click="toggleDropdown('showTOTALFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -824,7 +824,7 @@
                             </th>
 
                             <!-- RT金額 -->
-                            <th v-if="visibleColumns.includes('RT金額')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('RT金額')" :class="getHeaderClass('RT金額')">
                                 <div ref="RTFilter">
                                     <div @click="toggleDropdown('showRTFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -874,7 +874,7 @@
 
                             
                             <!-- RT總金額 -->
-                            <th v-if="visibleColumns.includes('RT總金額')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('RT總金額')" :class="getHeaderClass('RT總金額')">
                                 <div ref="RTTOTALFilter">
                                     <div @click="toggleDropdown('showRTTOTALFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -923,7 +923,7 @@
                             </th>
 
                             <!-- 備註 -->
-                            <th v-if="visibleColumns.includes('備註')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('備註')" :class="getHeaderClass('備註')">
                                 <div ref="REMARKFilter">
                                     <div @click="toggleDropdown('showREMARKFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -972,7 +972,7 @@
                             </th>
 
                             <!-- Delivery Date 廠商承諾交期 -->
-                            <th v-if="visibleColumns.includes('Delivery Date 廠商承諾交期')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('Delivery Date 廠商承諾交期')" :class="getHeaderClass('Delivery Date 廠商承諾交期')">
                                 <div ref="DELIVERYFilter">
                                     <div @click="toggleDropdown('showDELIVERYFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -1021,7 +1021,7 @@
                             </th>
 
                             <!-- SOD Qty 廠商承諾數量 -->
-                            <th v-if="visibleColumns.includes('SOD Qty 廠商承諾數量')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('SOD Qty 廠商承諾數量')" :class="getHeaderClass('SOD Qty 廠商承諾數量')">
                                 <div ref="SODFilter">
                                     <div @click="toggleDropdown('showSODFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -1070,7 +1070,7 @@
                             </th>
 
                             <!-- 驗收數量 -->
-                            <th v-if="visibleColumns.includes('驗收數量')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('驗收數量')" :class="getHeaderClass('驗收數量')">
                                 <div ref="ACCEPTFilter">
                                     <div @click="toggleDropdown('showACCEPTFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -1119,7 +1119,7 @@
                             </th>
 
                             <!-- 拒收數量 -->
-                            <th v-if="visibleColumns.includes('拒收數量')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('拒收數量')" :class="getHeaderClass('拒收數量')">
                                 <div ref="REJECTFilter">
                                     <div @click="toggleDropdown('showREJECTFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -1168,7 +1168,7 @@
                             </th>
 
                             <!-- 發票月份 -->
-                            <th v-if="visibleColumns.includes('發票月份')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('發票月份')" :class="getHeaderClass('發票月份')">
                                 <div ref="INVOICEFilter">
                                     <div @click="toggleDropdown('showINVOICEFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -1217,7 +1217,7 @@
                             </th>
 
                             <!-- WBS -->
-                            <th v-if="visibleColumns.includes('WBS')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('WBS')" :class="getHeaderClass('WBS')">
                                 <div ref="WBSFilter">
                                     <div @click="toggleDropdown('showWBSFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
@@ -1266,7 +1266,7 @@
                             </th>
 
                             <!-- 需求日 -->
-                            <th v-if="visibleColumns.includes('需求日')" class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30">
+                            <th v-if="visibleColumns.includes('需求日')" :class="getHeaderClass('需求日')">
                                 <div ref="DEMANDDATEFilter">
                                     <div @click="toggleDropdown('showDEMANDDATEFilter')"
                                         class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">

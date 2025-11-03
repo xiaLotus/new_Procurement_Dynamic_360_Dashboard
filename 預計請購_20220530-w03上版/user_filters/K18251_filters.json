@@ -1,9 +1,7 @@
 {
   "username": "K18251",
   "filterPurchaseStatus": "ALL",
-  "checkedPeople": [
-    "詹睿穎"
-  ],
+  "checkedPeople": [],
   "checkedReceivingResults": [],
   "checkedStates": [],
   "checkedWBS": [],
@@ -22,10 +20,35 @@
   "reasonSearchText": "",
   "sortField": "",
   "sortOrder": "asc",
-  "selectedMonth": "202511",
-  "selectedIssuedMonth": "202510",
+  "selectedMonth": "",
+  "selectedIssuedMonth": "",
   "filterStartDate": "",
   "filterEndDate": "",
   "dateFilterActive": false,
-  "lastUpdated": "2025-11-02T12:24:05.533Z"
+  "lastUpdated": "2025-11-03T13:50:26.767Z",
+  "ert_checkedAcceptances": [],
+  "ert_checkedAccepts": [],
+  "ert_checkedDeliverys": [],
+  "ert_checkedDemandDates": [],
+  "ert_checkedEPRs": [],
+  "ert_checkedInvoices": [],
+  "ert_checkedItems": [],
+  "ert_checkedNames": [],
+  "ert_checkedPOs": [
+    "6100775199",
+    "6100781022",
+    "6100781453"
+  ],
+  "ert_checkedPrices": [],
+  "ert_checkedQtys": [],
+  "ert_checkedRTTotals": [],
+  "ert_checkedRTs": [],
+  "ert_checkedReceiveStatuses": [],
+  "ert_checkedRejects": [],
+  "ert_checkedRemarks": [],
+  "ert_checkedSods": [],
+  "ert_checkedSpecs": [],
+  "ert_checkedTotalQtys": [],
+  "ert_checkedTotals": [],
+  "ert_checkedWBSs": []
 }
