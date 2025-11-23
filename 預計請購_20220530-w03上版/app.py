@@ -2900,7 +2900,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger("BuyerDetailUpdater")
 
-
 # 2025/11/03修正
 @app.route('/api/update-buyer-items', methods=['POST'])
 def update_buyer_items():
@@ -2909,9 +2908,9 @@ def update_buyer_items():
     """
     try:
         data = request.json
-        item_id = data.get('Id')
-        new_items = data.get('items', [])
-        username = data.get('username', '')
+        item_id = data.get('Id') # type: ignore
+        new_items = data.get('items', []) # type: ignore
+        username = data.get('username', '') # type: ignore
         
         if not item_id:
             return jsonify({'status': 'error', 'success': False, 'message': '缺少 Id'}), 400
@@ -3009,8 +3008,8 @@ def delete_buyer_item_exact():
     """
     try:
         data = request.json
-        item_to_delete = data.get('item', {})
-        username = data.get('username', '')
+        item_to_delete = data.get('item', {}) # type: ignore
+        username = data.get('username', '') # type: ignore
         
         if not item_to_delete or not item_to_delete.get('Id'):
             return jsonify({'status': 'error', 'success': False, 'message': '缺少資料或 Id'}), 400
@@ -3106,7 +3105,6 @@ def delete_buyer_item_exact():
         traceback.print_exc()
         return jsonify({'status': 'error', 'success': False, 'message': error_msg}), 500
     
-
 
 @app.route("/api/update_delivery_receipt", methods=["POST"])
 def upload_buyer_detail():
@@ -5069,6 +5067,391 @@ def save_mail():
             'message': f'處理失敗: {str(e)}'
         }), 500
 
+
+# ========== 長官審核相關 API（完整版）==========
+# ========== 長官審核相關 API（完整版 - 修正 datetime 錯誤）==========
+
+@app.route('/api/add-item-with-notification', methods=['POST'])
+def add_item_with_notification():
+    """新增資料（不發送郵件）"""
+    try:
+        data = request.json
+        
+        # 讀取現有 CSV
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        df = df.fillna('')  # ⭐ 避免 nan 問題
+        
+        # 確保「長官確認」欄位存在
+        if '長官確認' not in df.columns:
+            df['長官確認'] = 'X'
+        
+        # 準備新增的資料
+        new_row = {}
+        for col in df.columns:
+            new_row[col] = data.get(col, '')
+        
+        # 預設長官確認為 X (未確認)
+        new_row['長官確認'] = 'X'
+        
+        # 新增到 DataFrame
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        
+        # 儲存 CSV
+        df = df.fillna('')  # ⭐ 寫入前確保沒有 nan
+        df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+        
+        return jsonify({
+            'status': 'success',
+            'message': '資料新增成功',
+            'new_item_id': new_row.get('Id', '')
+        })
+        
+    except Exception as e:
+        print(f"新增資料失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/get-pending-approval-items', methods=['GET'])
+def get_pending_approval_items():
+    """取得所有待長官確認的資料"""
+    try:
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        df = df.fillna('')  # ⭐ 避免 nan 問題
+        
+        # 確保「長官確認」欄位存在
+        if '長官確認' not in df.columns:
+            df['長官確認'] = 'X'
+            df = df.fillna('')  # ⭐ 寫入前確保沒有 nan
+            df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+        
+        # 篩選出未確認的資料 (長官確認 == 'X')
+        pending_items = df[df['長官確認'].fillna('X').str.strip() == 'X']
+        
+        # 轉換為 dict list
+        items_list = []
+        for _, row in pending_items.iterrows():
+            item_dict = {}
+            for col in df.columns:
+                val = row[col]
+                # 處理 NaN
+                if pd.isna(val):
+                    item_dict[col] = ''
+                else:
+                    item_dict[col] = str(val)
+            items_list.append(item_dict)
+        
+        return jsonify({
+            'status': 'success',
+            'items': items_list,
+            'count': len(items_list)
+        })
+        
+    except Exception as e:
+        print(f"取得待審核資料失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/approve-items', methods=['POST'])
+def approve_items():
+    """批次確認資料（支援任何狀態改為確認）"""
+    try:
+        data = request.json
+        item_ids = data.get('item_ids', [])
+        clear_remarks = data.get('clear_remarks', False)  # 是否清空退回原因
+        
+        if not item_ids:
+            return jsonify({
+                'status': 'error',
+                'message': '未提供要確認的資料 ID'
+            }), 400
+        
+        # 讀取 CSV
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        df = df.fillna('')  # ⭐ 避免 nan 問題
+        
+        # 確保「長官確認」和「備註」欄位存在
+        if '長官確認' not in df.columns:
+            df['長官確認'] = 'X'
+        if '備註' not in df.columns:
+            df['備註'] = ''
+        
+        # 更新指定 ID 的長官確認狀態
+        updated_count = 0
+        for item_id in item_ids:
+            mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
+            if mask.any():
+                # 設定為確認狀態
+                df.loc[mask, '長官確認'] = 'V'
+                
+                # 選擇性清空退回原因
+                if clear_remarks:
+                    current_remark = df.loc[mask, '備註'].values[0]
+                    current_remark = str(current_remark) if not pd.isna(current_remark) else ''
+                    
+                    # 移除所有【退回】的部分
+                    import re
+                    new_remark = re.sub(r'；*【退回】[^；]*', '', current_remark)
+                    new_remark = new_remark.strip('；').strip()
+                    
+                    df.loc[mask, '備註'] = new_remark
+                
+                updated_count += 1
+        
+        # 儲存 CSV
+        df = df.fillna('')  # ⭐ 寫入前確保沒有 nan
+        df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'成功確認 {updated_count} 筆資料',
+            'updated_count': updated_count
+        })
+        
+    except Exception as e:
+        print(f"確認資料失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/reject-items', methods=['POST'])
+def reject_items():
+    """批次退回資料"""
+    try:
+        data = request.json
+        item_ids = data.get('item_ids', [])
+        reject_reason = data.get('reject_reason', '長官退回')
+        
+        if not item_ids:
+            return jsonify({
+                'status': 'error',
+                'message': '未提供要退回的資料 ID'
+            }), 400
+        
+        # 讀取 CSV
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        df = df.fillna('')  # ⭐ 避免 nan 問題（關鍵！）
+        
+        # 確保「備註」和「長官確認」欄位存在
+        if '備註' not in df.columns:
+            df['備註'] = ''
+        if '長官確認' not in df.columns:
+            df['長官確認'] = 'X'
+        
+        # 更新指定 ID 的備註欄位
+        updated_count = 0
+        for item_id in item_ids:
+            mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
+            if mask.any():
+                # ⭐ 關鍵修正：確保 current_remark 不是 nan
+                current_remark = df.loc[mask, '備註'].values[0]
+                current_remark = '' if (pd.isna(current_remark) or 
+                                       str(current_remark).strip() == '' or 
+                                       str(current_remark) == 'nan') else str(current_remark)
+                
+                # 在備註中加入退回原因
+                new_remark = f"{current_remark}；【退回】{reject_reason}" if current_remark else f"【退回】{reject_reason}"
+                df.loc[mask, '備註'] = new_remark
+                # 設定長官確認為退回標記
+                df.loc[mask, '長官確認'] = 'R'  # R = Rejected
+                updated_count += 1
+        
+        # 儲存 CSV
+        df = df.fillna('')  # ⭐ 寫入前確保沒有 nan
+        df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'成功退回 {updated_count} 筆資料',
+            'updated_count': updated_count
+        })
+        
+    except Exception as e:
+        print(f"退回資料失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/resubmit-items', methods=['POST'])
+def resubmit_items():
+    """重新提交（將退回的資料改為待審核）"""
+    try:
+        data = request.json
+        item_ids = data.get('item_ids', [])
+        
+        if not item_ids:
+            return jsonify({
+                'status': 'error',
+                'message': '未提供要重新提交的資料 ID'
+            }), 400
+        
+        # 讀取 CSV
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        df = df.fillna('')  # ⭐ 避免 nan 問題
+        
+        # 確保「長官確認」欄位存在
+        if '長官確認' not in df.columns:
+            df['長官確認'] = 'X'
+        
+        # 更新指定 ID 的長官確認狀態
+        updated_count = 0
+        for item_id in item_ids:
+            mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
+            if mask.any():
+                # 改回待審核狀態
+                df.loc[mask, '長官確認'] = 'X'
+                updated_count += 1
+        
+        # 儲存 CSV
+        df = df.fillna('')  # ⭐ 寫入前確保沒有 nan
+        df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'成功重新提交 {updated_count} 筆資料',
+            'updated_count': updated_count
+        })
+        
+    except Exception as e:
+        print(f"重新提交失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/get-all-items-with-approval', methods=['GET'])
+def get_all_items_with_approval():
+    """取得所有資料（自動更新有 ePR No. 的為已確認）"""
+    try:
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        df = df.fillna('')
+        
+        # 確保「長官確認」欄位存在
+        if '長官確認' not in df.columns:
+            df['長官確認'] = 'X'
+        
+        # ⭐ 自動更新：有 ePR No. 的資料改為 V
+        if 'ePR No.' in df.columns:
+            # 找出有 ePR No. 但長官確認不是 V 的資料
+            has_epr = df['ePR No.'].astype(str).str.strip() != ''
+            not_approved = df['長官確認'].astype(str).str.strip() != 'V'
+            need_update = has_epr & not_approved
+            
+            if need_update.any():
+                # 自動更新為 V
+                df.loc[need_update, '長官確認'] = 'V'
+                
+                # 儲存更新
+                df = df.fillna('')
+                df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+                
+                updated_count = need_update.sum()
+                print(f"✅ 自動更新 {updated_count} 筆已開單資料為已確認")
+        
+        # 轉換為 dict list
+        items_list = []
+        for _, row in df.iterrows():
+            item_dict = {}
+            for col in df.columns:
+                val = row[col]
+                if pd.isna(val):
+                    item_dict[col] = ''
+                else:
+                    item_dict[col] = str(val)
+            items_list.append(item_dict)
+        
+        return jsonify({
+            'status': 'success',
+            'items': items_list,
+            'count': len(items_list)
+        })
+        
+    except Exception as e:
+        print(f"取得資料失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/clear-remark-and-approve', methods=['POST'])
+def clear_remark_and_approve():
+    """清空備註並改為已確認（用於已退回資料的處理完成）"""
+    try:
+        data = request.json
+        item_id = data.get('item_id')
+        
+        if not item_id:
+            return jsonify({
+                'status': 'error',
+                'message': '未提供資料 ID'
+            }), 400
+        
+        # 讀取 CSV
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        df = df.fillna('')  # 避免 nan 問題
+        
+        # 確保「備註」和「長官確認」欄位存在
+        if '備註' not in df.columns:
+            df['備註'] = ''
+        if '長官確認' not in df.columns:
+            df['長官確認'] = 'X'
+        
+        # 找到對應的資料
+        mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
+        
+        if not mask.any():
+            return jsonify({
+                'status': 'error',
+                'message': f'找不到 ID 為 {item_id} 的資料'
+            }), 404
+        
+        # 清空備註並改為已確認
+        df.loc[mask, '備註'] = ''
+        df.loc[mask, '長官確認'] = 'V'
+        
+        # 儲存 CSV
+        df = df.fillna('')  # 寫入前確保沒有 nan
+        df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+        
+        print(f"✅ 成功清空 ID {item_id} 的備註並改為已確認")
+        
+        return jsonify({
+            'status': 'success',
+            'message': '備註已清空，狀態已改為已確認',
+            'item_id': item_id
+        })
+        
+    except Exception as e:
+        print(f"❌ 處理失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+    
 
 if __name__ == "__main__":
     app.run(debug=True)

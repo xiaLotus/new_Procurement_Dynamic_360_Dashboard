@@ -1,7 +1,9 @@
 {
   "username": "K18251",
   "filterPurchaseStatus": "ALL",
-  "checkedPeople": [],
+  "checkedPeople": [
+    "黃郁文"
+  ],
   "checkedReceivingResults": [],
   "checkedStates": [],
   "checkedWBS": [],
@@ -20,12 +22,12 @@
   "reasonSearchText": "",
   "sortField": "",
   "sortOrder": "asc",
-  "selectedMonth": "",
-  "selectedIssuedMonth": "",
+  "selectedMonth": "202511",
+  "selectedIssuedMonth": "202510",
   "filterStartDate": "",
   "filterEndDate": "",
   "dateFilterActive": false,
-  "lastUpdated": "2025-11-03T13:50:26.767Z",
+  "lastUpdated": "2025-11-23T10:50:39.079Z",
   "ert_checkedAcceptances": [],
   "ert_checkedAccepts": [],
   "ert_checkedDeliverys": [],
@@ -35,9 +37,7 @@
   "ert_checkedItems": [],
   "ert_checkedNames": [],
   "ert_checkedPOs": [
-    "6100775199",
-    "6100781022",
-    "6100781453"
+    "6100753889"
   ],
   "ert_checkedPrices": [],
   "ert_checkedQtys": [],
@@ -50,5 +50,6 @@
   "ert_checkedSpecs": [],
   "ert_checkedTotalQtys": [],
   "ert_checkedTotals": [],
-  "ert_checkedWBSs": []
+  "ert_checkedWBSs": [],
+  "ert_globalSearch": ""
 }

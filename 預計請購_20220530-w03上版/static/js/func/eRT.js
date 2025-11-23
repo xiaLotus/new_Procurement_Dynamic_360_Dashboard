@@ -5794,6 +5794,9 @@ async saveERTFilters() {
         cleanedFilters.ert_checkedRTs = this.checkedRTs;
         cleanedFilters.ert_checkedReceiveStatuses = this.checkedReceiveStatuses;
         cleanedFilters.ert_checkedRTTotals = this.checkedRTTotals;
+
+        // ====== 新增：保存 globalSearch ======
+        cleanedFilters.ert_globalSearch = this.globalSearch;
         
         // 保存回去
         await axios.post('http://127.0.0.1:5000/api/save-filters-json', cleanedFilters);
@@ -5818,7 +5821,6 @@ async saveERTFilters() {
     },
     
 
-
     async loadERTFilters() {
     try {
         // ========== 新增：設置載入標記，防止 watch 觸發保存 ==========
@@ -5828,7 +5830,11 @@ async saveERTFilters() {
         
         if (response.data) {
             const filters = response.data;
-            
+
+            // 還原 globalSearch
+            if (filters.ert_globalSearch !== undefined) {
+                this.globalSearch = filters.ert_globalSearch;
+            }
             // 讀取 eRT 的篩選條件
             this.checkedAcceptances = filters.ert_checkedAcceptances || [];
             this.checkedEPRs = filters.ert_checkedEPRs || [];

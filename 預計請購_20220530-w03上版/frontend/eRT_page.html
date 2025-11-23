@@ -150,6 +150,7 @@
                     <div class="relative">
                         <input
                             v-model="globalSearch"
+                            @input="debounceSaveERTFilters"
                             type="text"
                             placeholder="🔍 全欄位模糊搜尋"
                             class="w-80 px-4 py-2 pr-10 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
