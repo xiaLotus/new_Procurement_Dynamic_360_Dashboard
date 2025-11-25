@@ -1,9 +1,7 @@
 {
   "username": "K18251",
   "filterPurchaseStatus": "ALL",
-  "checkedPeople": [
-    "黃郁文"
-  ],
+  "checkedPeople": [],
   "checkedReceivingResults": [],
   "checkedStates": [],
   "checkedWBS": [],
@@ -23,11 +21,11 @@
   "sortField": "",
   "sortOrder": "asc",
   "selectedMonth": "202511",
-  "selectedIssuedMonth": "202510",
+  "selectedIssuedMonth": "202511",
   "filterStartDate": "",
   "filterEndDate": "",
   "dateFilterActive": false,
-  "lastUpdated": "2025-11-23T10:50:39.079Z",
+  "lastUpdated": "2025-11-25T13:38:18.299Z",
   "ert_checkedAcceptances": [],
   "ert_checkedAccepts": [],
   "ert_checkedDeliverys": [],

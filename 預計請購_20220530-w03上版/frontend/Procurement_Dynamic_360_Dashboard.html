@@ -235,7 +235,7 @@
                             <div ref="stateDropdownWrapper">
                                 <div @click="toggleDropdown('showStateFilter')"
                                     class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
-                                    <span>開單狀態</span>
+                                    <span>開單<br>狀態</span>
                                     <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showStateFilter }">⏷</span>
                                 </div>
 
@@ -285,7 +285,7 @@
                             <div ref="ReceivingResultDropdownWrapper">
                                 <div @click="toggleDropdown('showReceivingResultFilter')"
                                     class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
-                                    <span>驗收狀態</span>
+                                    <span>驗收<br>狀態</span>
                                     <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showReceivingResultFilter }">⏷</span>
                                 </div>
 
@@ -331,6 +331,56 @@
                             </div>
                         </th>
                         <!-- 驗收狀態 -->
+                        <!-- 長官確認 -->
+                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isApprovalFiltered }">
+                            <div ref="ApprovalDropdownWrapper">
+                                <div @click="toggleDropdown('showApprovalFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>長官<br>確認</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showApprovalFilter }">⏷</span>
+                                </div>
+
+                                <!-- 下拉篩選卡片 -->
+                                <transition name="fade">
+                                    <div v-if="showApprovalFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
+                                        
+                                        <!-- 標題 -->
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+
+                                        <!-- 多選清單 -->
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="val in uniqueApprovals" 
+                                                :key="val" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="val" 
+                                                    v-model="checkedApprovals" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ val || '—' }}</span>
+                                            </label>
+                                        </div>
+
+                                        <!-- 清除按鈕 -->
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedApprovals = []; showApprovalFilter = false"
+                                                    class="text-gray-500 text-xs hover:text-red-500">
+                                                清除篩選
+                                            </button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 長官確認 -->
                         <!-- WBS -->
                         <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
                             :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isWBSFiltered }">
@@ -898,24 +948,31 @@
                         >
                         <td class="py-2 px-4 text-sm text-center"
                             :class="{
-                                'text-red-500 text-5xl font-bold': item['開單狀態'] === 'X',
-                                'text-green-500 text-5xl font-bold': item['開單狀態'] === 'V'
+                                'text-red-500 text-4xl font-bold': item['開單狀態'] === 'X',
+                                'text-green-500 text-4xl font-bold': item['開單狀態'] === 'V'
                             }">
                             {{ item['開單狀態'] }}
                         </td>
                         <td class="py-2 px-4 text-sm text-center"
                             :class="{
-                                'text-red-500 text-5xl font-bold': item['驗收狀態'] === 'X',
-                                'text-green-500 text-5xl font-bold': item['驗收狀態'] === 'V'
+                                'text-red-500 text-4xl font-bold': item['驗收狀態'] === 'X',
+                                'text-green-500 text-4xl font-bold': item['驗收狀態'] === 'V'
                             }">
                             {{ item.驗收狀態 }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center"
+                            :class="{
+                                'text-red-500 text-4xl font-bold': item['長官確認'] === 'X',
+                                'text-green-500 text-4xl font-bold': item['長官確認'] === 'V'
+                            }">
+                            {{ item['長官確認'] || '' }}
                         </td>
                         <td class="py-2 px-4 text-sm text-center">{{ item.WBS }}</td>
                         <td class="py-2 px-4 text-sm font-bold text-center" 
                             :class="{
-                                'text-red-500 text-5xl text-center': Number(item.請購順序) === 1,
-                                'text-yellow-500 text-5xl text-center': Number(item.請購順序) === 2,
-                                'text-green-500 text-5xl text-center': Number(item.請購順序) === 3
+                                'text-red-500 text-4xl text-center': Number(item.請購順序) === 1,
+                                'text-yellow-500 text-4xl text-center': Number(item.請購順序) === 2,
+                                'text-green-500 text-4xl text-center': Number(item.請購順序) === 3
                             }">
                             {{ item.請購順序 }}
                         </td>
@@ -1020,6 +1077,11 @@
                     class="bg-purple-500 hover:bg-purple-600 text-white text-lg px-5 py-3 rounded-full shadow-lg cursor-pointer flex items-center justify-center h-12"
                     @click="goDetailPage">
                     <span> 📋 eRT 驗收總表</span>
+                </div>
+                    <div 
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-lg px-5 py-3 rounded-full shadow-lg cursor-pointer flex items-center justify-center h-12"
+                    @click="goApprovalPage">
+                    📝 長官簽核
                 </div>
                 <div 
                     class="bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-3 rounded-full shadow-lg text-lg cursor-pointer flex items-center justify-center h-12"

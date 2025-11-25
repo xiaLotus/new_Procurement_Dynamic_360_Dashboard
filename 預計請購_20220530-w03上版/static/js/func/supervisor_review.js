@@ -6,7 +6,8 @@ createApp({
             allItems: [],
             selectedIds: [],
             currentTab: 'pending', // pending, all, approved, rejected
-            loading: false
+            loading: false,
+            username: localStorage.getItem('username') || '',
         };
     },
     
@@ -146,6 +147,13 @@ createApp({
                     console.log('已確認筆數:', this.approvedItems.length);
                     console.log('已退回筆數:', this.rejectedItems.length);
                     console.log('全部筆數:', this.allFilteredItems.length);
+                    
+                    // 重新初始化 Lucide 圖標
+                    this.$nextTick(() => {
+                        if (typeof lucide !== 'undefined') {
+                            lucide.createIcons();
+                        }
+                    });
                     
                     // 如果沒有資料，顯示提示
                     if (this.allItems.length === 0) {
@@ -500,12 +508,24 @@ createApp({
             } catch (e) {
                 return dateStr;
             }
-        }
+        },
+        async goBackToPurchaseHome() {
+            localStorage.setItem('username', this.username);
+            window.location.href = 'Procurement_Dynamic_360_Dashboard.html';
+        },
     },
     
     mounted() {
         // 頁面載入時自動載入資料
         this.loadData();
+        
+        // 初始化 Lucide 圖標
+        this.$nextTick(() => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+                console.log('✅ Lucide 圖標已初始化');
+            }
+        });
         
         // 每30秒自動重新整理一次
         setInterval(() => {

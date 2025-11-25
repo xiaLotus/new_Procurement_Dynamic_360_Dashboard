@@ -5068,9 +5068,9 @@ def save_mail():
         }), 500
 
 
-# ========== 長官審核相關 API（完整版）==========
-# ========== 長官審核相關 API（完整版 - 修正 datetime 錯誤）==========
 
+# 11/25 更新
+# ========== 長官審核相關 API（完整版 - 修正 datetime 錯誤）==========
 @app.route('/api/add-item-with-notification', methods=['POST'])
 def add_item_with_notification():
     """新增資料（不發送郵件）"""
@@ -5451,10 +5451,7 @@ def clear_remark_and_approve():
             'status': 'error',
             'message': str(e)
         }), 500
-    
+
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-    # 165

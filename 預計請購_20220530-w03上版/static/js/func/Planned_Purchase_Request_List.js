@@ -17,6 +17,7 @@ const app = Vue.createApp({
             editableFields: {
                 '開單狀態': '開單狀態',
                 'WBS': 'WBS',
+                "長官確認": "長官確認",
                 '請購順序': '請購順序',
                 '需求者': '需求者',
                 '請購項目': '請購項目',
@@ -49,6 +50,7 @@ const app = Vue.createApp({
             showStatusFilter: false,
             // 驗收狀態
             showReceivingResultFilter: false,
+            
             checkedReceivingResults: [],
             // PO No 過濾
             showPONoFilter: false,
@@ -71,6 +73,10 @@ const app = Vue.createApp({
             checkedItems: [],
             checkedReasons: [],
             checkedAmounts: [],
+
+            checkedApprovals: [],
+            showApprovalFilter: false,
+
             itemSearchText: '',
             reasonSearchText: '',
             ePRsSearchText: '',
@@ -161,6 +167,7 @@ const app = Vue.createApp({
         checkedStages: { handler() { this.onFilterChange(); }, deep: true },
         checkedStatuses: { handler() { this.onFilterChange(); }, deep: true },
         checkedRemarks: { handler() { this.onFilterChange(); }, deep: true },
+        checkedApprovals: { handler() { this.onFilterChange(); }, deep: true },
         itemSearchText() { this.onFilterChange(); },
         reasonSearchText() { this.onFilterChange(); },
         ePRsSearchText() { this.onFilterChange(); },
@@ -226,9 +233,11 @@ const app = Vue.createApp({
                 const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(item['簽核中關卡']);
                 const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(item['Status']);
                 const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(item['備註']);
+                const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                 return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && 
-                matchNeedDate && matchIssuedMonth && matchEPR && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                matchNeedDate && matchIssuedMonth && matchEPR && matchPONo && matchItem && matchReason && 
+                matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
             });
         },
 
@@ -262,10 +271,12 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
+
 
 
                         return matchState && matchReceivingResult && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth && matchEPR 
-                        && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                        && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => i['需求者'])
                     .filter(Boolean)
@@ -303,9 +314,11 @@ const app = Vue.createApp({
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchPONo = this.checkedPONos.length === 0 || this.checkedPONos.includes(i['PO No.']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
+
 
                         return matchReceivingResult && matchPerson && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth && matchEPR 
-                        && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                        && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => i['開單狀態'])
                     .filter(Boolean)
@@ -342,9 +355,10 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchState && matchPerson && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth && matchEPR 
-                        && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                        && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                 .map(i => (i['驗收狀態'] ?? '').trim())
                 .filter(val => ['V', 'X', ''].includes(val))
@@ -381,10 +395,11 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
 
                         return matchReceivingResult && matchPerson && matchState && matchOrder && matchNeedDate && matchIssuedMonth && matchEPR && 
-                        matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                        matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => i['WBS'])
                     .filter(Boolean)
@@ -421,9 +436,10 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchNeedDate && matchIssuedMonth && matchEPR &&
-                        matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                        matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => String(i['請購順序']).trim())
                     .filter(v => v !== undefined && v !== null)
@@ -456,9 +472,10 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchIssuedMonth && matchEPR 
-                        && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                        && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => {
                         const date = String(i['需求日']);
@@ -494,10 +511,11 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchNeedDate && matchEPR && matchPONo 
-                        && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                        && matchItem && matchReason && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => String(i['已開單日期']))
                     .filter(v => v.length === 8)
@@ -533,9 +551,11 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchNeedDate &&  matchText &&
-                        matchPONo &&matchIssuedMonth && matchItem && matchReason &&　matchAmount && matchStage && matchStatus && matchRemark;
+                        matchPONo &&matchIssuedMonth && matchItem && matchReason &&　matchAmount && matchStage && matchStatus && matchRemark
+                        && matchApproval;
                     })
                     .map(i => i['ePR No.'] || '')
             )).sort();
@@ -570,10 +590,11 @@ const app = Vue.createApp({
                     const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                     const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                     const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                    const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                     return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder &&
                         matchNeedDate && matchIssuedMonth && matchEPR && matchItem && matchReason &&
-                        matchAmount && matchStage && matchStatus && matchRemark;
+                        matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                 })
                 .forEach(i => {
                     const raw = String(i['PO No.'] || '').trim();
@@ -616,9 +637,10 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth && matchEPR && matchPONo 
-                        && matchReason && matchText && matchAmount && matchStage && matchStatus && matchRemark;
+                        && matchReason && matchText && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => i['請購項目'] || '')
                     .filter(Boolean)
@@ -654,9 +676,10 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth && matchEPR 
-                        && matchPONo && matchItem &&　matchText && matchAmount && matchStage && matchStatus && matchRemark;
+                        && matchPONo && matchItem &&　matchText && matchAmount && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => i['需求原因'] || '')
                     .filter(Boolean)
@@ -693,9 +716,10 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth && matchEPR && matchPONo 
-                        && matchItem &&　matchText && matchReason && matchStage && matchStatus && matchRemark;
+                        && matchItem &&　matchText && matchReason && matchStage && matchStatus && matchRemark && matchApproval;
                     })
                 .map(i => String(i['總金額']).trim()) 
                 .filter(v => v !== '')
@@ -731,9 +755,10 @@ const app = Vue.createApp({
                         const matchAmount = this.checkedAmounts.length === 0 || this.checkedAmounts.includes(String(i['總金額']).trim());
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth 
-                            && matchEPR && matchPONo && matchItem && matchReason && matchAmount && matchStatus && matchRemark;
+                            && matchEPR && matchPONo && matchItem && matchReason && matchAmount && matchStatus && matchRemark && matchApproval;
                     })
                     .map(i => i['簽核中關卡'] || '')
                     .filter(Boolean)
@@ -768,9 +793,10 @@ const app = Vue.createApp({
                         const matchAmount = this.checkedAmounts.length === 0 || this.checkedAmounts.includes(String(i['總金額']).trim());
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth 
-                            && matchEPR && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchRemark;
+                            && matchEPR && matchPONo && matchItem && matchReason && matchAmount && matchStage && matchRemark && matchApproval;
                     })
                     .map(i => i['Status'] || '')
                     .filter(Boolean)
@@ -806,11 +832,50 @@ const app = Vue.createApp({
                         const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
                         const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
                         const matchText = this.remarkSearchText === '' || i['備註']?.includes(this.remarkSearchText.trim());
+                        const matchApproval = this.checkedApprovals.length === 0 || this.checkedApprovals.includes(item['長官確認'] || '');
 
                         return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder && matchNeedDate && matchIssuedMonth 
-                            && matchEPR && matchPONo && matchItem && matchReason && matchAmount && matchStatus && matchStage && matchText;
+                            && matchEPR && matchPONo && matchItem && matchReason && matchAmount && matchStatus && matchStage && matchText && matchApproval;
                     })
                     .map(i => i['備註'] || '')
+                    .filter(Boolean)
+            )).sort();
+        },
+
+        uniqueApprovals() {
+            const baseData = this.dateFilterActive ? this.dateFilteredItems : this.items;
+            return Array.from(new Set(
+                baseData
+                    .filter(i => {
+                        // 套用所有現有篩選條件（同 uniqueStates 等）
+                        if (this.filterPurchaseStatus === 'ORDERED' && i['開單狀態'] !== 'V') return false;
+                        if (this.filterPurchaseStatus === 'UNORDERED' && i['開單狀態'] === 'V') return false;
+                        const matchReceivingResult = this.checkedReceivingResults.length === 0 || this.checkedReceivingResults.includes((i['驗收狀態'] ?? '').trim());
+                        const matchPerson = this.checkedPeople.length === 0 || this.checkedPeople.includes(i['需求者']);
+                        const matchState = this.checkedStates.length === 0 || this.checkedStates.includes(i['開單狀態']);
+                        const matchWBS = this.checkedWBS.length === 0 || this.checkedWBS.includes(i['WBS']);
+                        const matchOrder = this.checkedOrders.length === 0 || this.checkedOrders.includes(String(i['請購順序']).trim());
+                        const formattedNeedDate = String(i['需求日']).length === 8
+                            ? `${String(i['需求日']).slice(0, 4)}/${String(i['需求日']).slice(4, 6)}/${String(i['需求日']).slice(6, 8)}`
+                            : i['需求日'];
+                        const matchNeedDate = this.checkedNeedDates.length === 0 || this.checkedNeedDates.includes(formattedNeedDate);
+                        const formattedIssuedMonth = String(i['已開單日期']).length === 8
+                            ? String(i['已開單日期']).slice(0, 6)
+                            : i['已開單日期'];
+                        const matchIssuedMonth = this.checkedIssuedMonths.length === 0 || this.checkedIssuedMonths.includes(formattedIssuedMonth);
+                        const matchEPR = this.checkedEPRs.length === 0 || this.checkedEPRs.includes(i['ePR No.']);
+                        const matchPONo = this.checkedPONos.length === 0 || this.checkedPONos.includes(i['PO No.']);
+                        const matchItem = this.checkedItems.length === 0 || this.checkedItems.includes(i['請購項目']);
+                        const matchReason = this.checkedReasons.length === 0 || this.checkedReasons.includes(i['需求原因']);
+                        const matchAmount = this.checkedAmounts.length === 0 || this.checkedAmounts.includes(String(i['總金額']).trim());
+                        const matchStage = this.checkedStages.length === 0 || this.checkedStages.includes(i['簽核中關卡']);
+                        const matchStatus = this.checkedStatuses.length === 0 || this.checkedStatuses.includes(i['Status']);
+                        const matchRemark = this.checkedRemarks.length === 0 || this.checkedRemarks.includes(i['備註']);
+                        return matchReceivingResult && matchPerson && matchState && matchWBS && matchOrder 
+                            && matchNeedDate && matchIssuedMonth && matchEPR && matchPONo && matchItem && 
+                            matchReason && matchAmount && matchStage && matchStatus && matchRemark;
+                    })
+                    .map(i => i['長官確認'] || '')
                     .filter(Boolean)
             )).sort();
         },
@@ -977,7 +1042,10 @@ const app = Vue.createApp({
         },
         isRemarksFiltered(){
             return this.checkedRemarks.length > 0;
-        }
+        },
+        isApprovalFiltered() {
+            return this.checkedApprovals.length > 0;
+        },
     },
 
 
@@ -1220,6 +1288,7 @@ const app = Vue.createApp({
             const isStage = this.$refs.CheckDropdownWrapper?.contains(event.target);
             const isStatus = this.$refs.StatusDropdownWrapper?.contains(event.target);
             const isRemark = this.$refs.RemarksDropdownWrapper?.contains(event.target);
+            const isApproval = this.$refs.ApprovalDropdownWrapper?.contains(event.target);
 
             if (!isInState) this.showStateFilter = false;
             if (!isReceivingResult) this.showReceivingResultFilter = false;
@@ -1236,6 +1305,7 @@ const app = Vue.createApp({
             if (!isStage) this.showStageFilter = false;
             if (!isStatus) this.showStatusFilter = false;
             if (!isRemark) this.showRemarkFilter = false;
+            if (!isApproval) this.showApprovalFilter = false; // 👈 新增這行
         },
         
         async fetchData() {
@@ -2973,6 +3043,18 @@ const app = Vue.createApp({
             localStorage.setItem('username', this.username);
             window.location.href = 'eRT_page.html';
         },
+
+        async goApprovalPage(){
+            try{
+                this.toggleFilterhis.saveCurrentFilters();
+            }catch (err) {
+                console.error("❌ 沒有任何選擇，直接跳轉至 📋 eRT 驗收總表", err);
+            }
+
+            localStorage.setItem('username', this.username);
+            window.location.href = 'Supervisor_review.html';
+        },
+
     }
 });
 
