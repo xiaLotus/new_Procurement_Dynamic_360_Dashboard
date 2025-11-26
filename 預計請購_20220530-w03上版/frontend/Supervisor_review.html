@@ -15,7 +15,7 @@
     <script src="../static/js/tailwinds.js"></script>
     
     <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="../static/js/lucide.js"></script>
     
     <style>
         html, body {
@@ -97,10 +97,16 @@
             background-color: #f3f4f6;
         }
         
-        .content-cell {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        /* 允許內容完整顯示 */
+        .full-content {
+            min-width: 120px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        
+        /* 不換行欄位 */
+        .nowrap-cell {
             white-space: nowrap;
         }
         
@@ -132,7 +138,6 @@
             line-height: 1.5;
         }
         
-        /* 備註欄位樣式 */
         .remark-display {
             font-size: 12px;
             line-height: 1.5;
@@ -141,9 +146,8 @@
             padding: 4px;
         }
     
-        /* 表格內容換行 */
         table {
-            table-layout: fixed;
+            table-layout: auto;
         }
         
         td, th {
@@ -152,6 +156,57 @@
             overflow-wrap: break-word;
         }
         
+        .mini-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        /* 下拉篩選動畫 */
+        .fade-enter-active, .fade-leave-active {
+            transition: opacity 0.2s;
+        }
+        .fade-enter-from, .fade-leave-to {
+            opacity: 0;
+        }
+        
+        /* 篩選高亮 */
+        .filter-active {
+            background-color: #fbbf24 !important;
+            color: #dc2626 !important;
+        }
+        
+        /* 下拉篩選卡片 */
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 50;
+            min-width: 200px;
+            padding: 8px;
+        }
+        
+        .filter-dropdown-wide {
+            min-width: 280px;
+        }
+        
+        /* 表頭可點擊樣式 */
+        .th-clickable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        
+        .th-clickable:hover {
+            background-color: #1e3a8a;
+        }
     </style>
 </head>
 <body class="h-full bg-gray-50">
@@ -164,13 +219,23 @@
                         <i data-lucide="clipboard-check" class="w-8 h-8 ml-2" style="display: inline-block; flex-shrink: 0;"></i>
                         <div>
                             <h1 class="text-2xl font-bold">長官審核系統</h1>
-                            <p class="text-blue-200 text-sm">請購申請審核管理（已開單的不需再審核）</p>
+                            <p class="text-blue-200 text-sm">請購申請審核管理（需主任 & 叔叔雙重簽核）</p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm">待審核件數</div>
-                        <div class="text-3xl font-bold">{{ pendingItems.length }}</div>
-                        <div class="text-xs text-blue-200 mt-1">未開單且待確認</div>
+                    <div class="flex items-center gap-4">
+                        <!-- 清除篩選按鈕 -->
+                        <button 
+                            v-if="hasAnyFilter"
+                            @click="resetAllFilters"
+                            class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition text-sm flex items-center">
+                            <i data-lucide="filter-x" class="w-4 h-4 mr-1"></i>
+                            清除篩選
+                        </button>
+                        <div class="text-right">
+                            <div class="text-sm">待審核件數</div>
+                            <div class="text-3xl font-bold">{{ pendingItems.length }}</div>
+                            <div class="text-xs text-blue-200 mt-1">未開單且待確認</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -267,20 +332,161 @@
                                         <input type="checkbox" @change="toggleSelectAll" :checked="isAllSelected" class="w-4 h-4">
                                     </th>
                                     <th class="px-2 py-3 text-center" style="width: 3%;">#</th>
-                                    <th class="px-3 py-3 text-center" style="width: 6%;">長官確認</th>
-                                    <th class="px-3 py-3 text-center" style="width: 6%;">WBS</th>
-                                    <th class="px-3 py-3 text-center" style="width: 5%;">請購順序</th>
-                                    <th class="px-3 py-3 text-left" style="width: 6%;">需求者</th>
-                                    <th class="px-3 py-3 text-left" style="width: 12%;">請購項目</th>
-                                    <th class="px-3 py-3 text-left" style="width: 12%;">需求原因</th>
-                                    <th class="px-3 py-3 text-right" style="width: 6%;">總金額</th>
-                                    <th class="px-3 py-3 text-center" style="width: 6%;">需求日</th>
-                                    <th class="px-3 py-3 text-center" style="width: 7%;">進度追蹤</th>
-                                    <th class="px-3 py-3 text-left" style="width: 15%;">報告路徑</th>
-                                    <th class="px-3 py-3 text-left" style="width: 8%;">合作廠商</th>
-                                    <th class="px-3 py-3 text-left" style="width: 12%;">備註</th>
-                                    <!-- 操作欄：待審核和已退回都顯示 -->
-                                    <th v-if="currentTab === 'pending' || currentTab === 'rejected'" class="px-3 py-3 text-center" style="width: 7%;">操作</th>
+                                    <th class="px-3 py-3 text-center" style="width: 6%;">總體狀態</th>
+                                    <th class="px-3 py-3 text-center" style="width: 5%;">WBS</th>
+                                    
+                                    <!-- 請購順序（可篩選）-->
+                                    <th class="px-3 py-3 text-center th-clickable filter-dropdown-wrapper" 
+                                        style="width: 5%;"
+                                        :class="{ 'filter-active': isOrdersFiltered }">
+                                        <div @click.stop="toggleDropdown('showOrderFilter')" class="flex items-center justify-center gap-1">
+                                            <span>請購<br>順序</span>
+                                            <span class="text-xs" :class="{ 'rotate-180': showOrderFilter }">▼</span>
+                                        </div>
+                                        <!-- 下拉篩選 -->
+                                        <transition name="fade">
+                                            <div v-if="showOrderFilter" @click.stop class="filter-dropdown text-left text-gray-700 font-normal">
+                                                <div class="flex justify-between items-center mb-2">
+                                                    <span class="text-sm font-medium">篩選</span>
+                                                </div>
+                                                <hr class="mb-2">
+                                                <div class="max-h-52 overflow-y-auto space-y-1">
+                                                    <label v-for="order in uniqueOrders" :key="order" 
+                                                           class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded">
+                                                        <input type="checkbox" :value="order" v-model="checkedOrders" class="rounded">
+                                                        <span class="text-sm">{{ order }}</span>
+                                                    </label>
+                                                </div>
+                                                <div class="pt-2 text-right border-t mt-2">
+                                                    <button @click="clearOrderFilter" class="text-xs text-gray-500 hover:text-red-500">清除篩選</button>
+                                                </div>
+                                            </div>
+                                        </transition>
+                                    </th>
+                                    
+                                    <!-- 需求者（可篩選）-->
+                                    <th class="px-3 py-3 text-left th-clickable filter-dropdown-wrapper" 
+                                        style="width: 6%;"
+                                        :class="{ 'filter-active': isPeopleFiltered }">
+                                        <div @click.stop="toggleDropdown('showPersonFilter')" class="flex items-center gap-1">
+                                            <span>需求者</span>
+                                            <span class="text-xs" :class="{ 'rotate-180': showPersonFilter }">▼</span>
+                                        </div>
+                                        <!-- 下拉篩選 -->
+                                        <transition name="fade">
+                                            <div v-if="showPersonFilter" @click.stop class="filter-dropdown text-left text-gray-700 font-normal">
+                                                <div class="flex justify-between items-center mb-2">
+                                                    <span class="text-sm font-medium">篩選</span>
+                                                </div>
+                                                <hr class="mb-2">
+                                                <div class="max-h-52 overflow-y-auto space-y-1">
+                                                    <label v-for="person in uniquePeople" :key="person" 
+                                                           class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded">
+                                                        <input type="checkbox" :value="person" v-model="checkedPeople" class="rounded">
+                                                        <span class="text-sm">{{ person }}</span>
+                                                    </label>
+                                                </div>
+                                                <div class="pt-2 text-right border-t mt-2">
+                                                    <button @click="clearPersonFilter" class="text-xs text-gray-500 hover:text-red-500">清除篩選</button>
+                                                </div>
+                                            </div>
+                                        </transition>
+                                    </th>
+                                    
+                                    <!-- 請購項目（可篩選 + 模糊搜尋）-->
+                                    <th class="px-3 py-3 text-left th-clickable filter-dropdown-wrapper" 
+                                        style="width: 10%;"
+                                        :class="{ 'filter-active': isItemsFiltered }">
+                                        <div @click.stop="toggleDropdown('showItemFilter')" class="flex items-center gap-1">
+                                            <span>請購項目</span>
+                                            <span class="text-xs" :class="{ 'rotate-180': showItemFilter }">▼</span>
+                                        </div>
+                                        <!-- 下拉篩選 -->
+                                        <transition name="fade">
+                                            <div v-if="showItemFilter" @click.stop class="filter-dropdown filter-dropdown-wide text-left text-gray-700 font-normal">
+                                                <input v-model="itemSearchText" placeholder="模糊搜尋..." 
+                                                       class="w-full border border-gray-300 px-2 py-1 text-sm rounded mb-2">
+                                                <div class="max-h-52 overflow-y-auto space-y-1">
+                                                    <label v-for="item in uniqueItems" :key="item" 
+                                                           class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded">
+                                                        <input type="checkbox" :value="item" v-model="checkedItems" class="rounded">
+                                                        <span class="text-sm">{{ item || '(空白)' }}</span>
+                                                    </label>
+                                                </div>
+                                                <div class="pt-2 text-right border-t mt-2">
+                                                    <button @click="clearItemFilter" class="text-xs text-gray-500 hover:text-red-500">清除篩選</button>
+                                                </div>
+                                            </div>
+                                        </transition>
+                                    </th>
+                                    
+                                    <!-- 需求原因（可篩選 + 模糊搜尋）-->
+                                    <th class="px-3 py-3 text-left th-clickable filter-dropdown-wrapper" 
+                                        style="width: 10%;"
+                                        :class="{ 'filter-active': isReasonsFiltered }">
+                                        <div @click.stop="toggleDropdown('showReasonFilter')" class="flex items-center gap-1">
+                                            <span>需求原因</span>
+                                            <span class="text-xs" :class="{ 'rotate-180': showReasonFilter }">▼</span>
+                                        </div>
+                                        <!-- 下拉篩選 -->
+                                        <transition name="fade">
+                                            <div v-if="showReasonFilter" @click.stop class="filter-dropdown filter-dropdown-wide text-left text-gray-700 font-normal">
+                                                <input v-model="reasonSearchText" placeholder="模糊搜尋..." 
+                                                       class="w-full border border-gray-300 px-2 py-1 text-sm rounded mb-2">
+                                                <div class="max-h-52 overflow-y-auto space-y-1">
+                                                    <label v-for="reason in uniqueReasons" :key="reason" 
+                                                           class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded">
+                                                        <input type="checkbox" :value="reason" v-model="checkedReasons" class="rounded">
+                                                        <span class="text-sm">{{ reason || '(空白)' }}</span>
+                                                    </label>
+                                                </div>
+                                                <div class="pt-2 text-right border-t mt-2">
+                                                    <button @click="clearReasonFilter" class="text-xs text-gray-500 hover:text-red-500">清除篩選</button>
+                                                </div>
+                                            </div>
+                                        </transition>
+                                    </th>
+                                    
+                                    <!-- 總金額（可篩選）-->
+                                    <th class="px-3 py-3 text-right th-clickable filter-dropdown-wrapper" 
+                                        style="width: 6%;"
+                                        :class="{ 'filter-active': isAmountsFiltered }">
+                                        <div @click.stop="toggleDropdown('showAmountFilter')" class="flex items-center justify-end gap-1">
+                                            <span>總金額</span>
+                                            <span class="text-xs" :class="{ 'rotate-180': showAmountFilter }">▼</span>
+                                        </div>
+                                        <!-- 下拉篩選 -->
+                                        <transition name="fade">
+                                            <div v-if="showAmountFilter" @click.stop class="filter-dropdown text-left text-gray-700 font-normal" style="right: 0; left: auto;">
+                                                <div class="flex justify-between items-center mb-2">
+                                                    <span class="text-sm font-medium">篩選</span>
+                                                </div>
+                                                <hr class="mb-2">
+                                                <div class="max-h-52 overflow-y-auto space-y-1">
+                                                    <label v-for="amount in uniqueAmounts" :key="amount" 
+                                                           class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded">
+                                                        <input type="checkbox" :value="amount" v-model="checkedAmounts" class="rounded">
+                                                        <span class="text-sm">{{ formatMoney(amount) }}</span>
+                                                    </label>
+                                                </div>
+                                                <div class="pt-2 text-right border-t mt-2">
+                                                    <button @click="clearAmountFilter" class="text-xs text-gray-500 hover:text-red-500">清除篩選</button>
+                                                </div>
+                                            </div>
+                                        </transition>
+                                    </th>
+                                    
+                                    <th class="px-3 py-3 text-center nowrap-cell" style="width: 6%;">需求日</th>
+                                    <th class="px-3 py-3 text-left" style="width: 14%;">報告路徑</th>
+                                    <th class="px-3 py-3 text-left" style="width: 10%;">備註</th>
+                                    <!-- 主任簽核欄位 -->
+                                    <th v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
+                                        class="px-3 py-3 text-center bg-indigo-700" style="width: 7%;">主任簽核</th>
+                                    <!-- 叔叔簽核欄位 -->
+                                    <th v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
+                                        class="px-3 py-3 text-center bg-purple-700" style="width: 7%;">叔叔簽核</th>
+                                    <!-- 已退回的處理欄位 -->
+                                    <th v-if="currentTab === 'rejected'" class="px-3 py-3 text-center" style="width: 6%;">處理</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -300,95 +506,110 @@
                                             class="w-4 h-4">
                                     </td>
                                     <td class="px-2 py-2 text-center font-medium text-gray-600 text-sm">{{ index + 1 }}</td>
+                                    
+                                    <!-- 總體狀態 -->
                                     <td class="px-3 py-2 text-center">
-                                        <span v-if="item['ePR No.'] && item['ePR No.'].trim() !== ''" class="status-badge bg-blue-100 text-blue-800">
-                                            <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i>
+                                        <span 
+                                            v-if="item['ePR No.'] && item['ePR No.'].trim() !== ''" 
+                                            class="status-badge bg-blue-100 text-blue-800"
+                                        >
+                                            <i data-lucide="check-circle" class="w-4 h-4 mr-1 inline-block align-middle"></i>
                                             已開單
                                         </span>
-                                        <span v-else :class="getStatusClass(item['長官確認'])" class="status-badge">
-                                            {{ getStatusText(item['長官確認']) }}
+                                        <span 
+                                            v-else 
+                                            :class="getOverallStatusClass(item)"
+                                        >
+                                            {{ getOverallStatusText(item) }}
                                         </span>
                                     </td>
-                                    <td class="px-3 py-2 text-center text-sm" style="white-space: nowrap;">
-                                        {{ item['WBS'] || '-' }}
+                                    
+                                    <td class="px-3 py-2 text-center text-sm">{{ item['WBS'] || '-' }}</td>
+                                    <td class="px-3 py-2 text-center text-sm">{{ item['請購順序'] || '-' }}</td>
+                                    <td class="px-3 py-2 text-left text-sm">{{ item['需求者'] || '-' }}</td>
+                                    <td class="px-3 py-2 text-left text-sm full-content">{{ item['請購項目'] || '-' }}</td>
+                                    <td class="px-3 py-2 text-left text-sm full-content">{{ item['需求原因'] || '-' }}</td>
+                                    <td class="px-3 py-2 text-right text-sm font-medium nowrap-cell">{{ formatMoney(item['總金額']) }}</td>
+                                    <td class="px-3 py-2 text-center text-sm nowrap-cell">{{ formatDate(item['需求日']) }}</td>
+                                    <td class="px-3 py-2 text-left text-sm full-content">{{ item['報告路徑'] || '-' }}</td>
+                                    <td class="px-3 py-2 text-left">
+                                        <div class="remark-display break-words" :title="item['備註']">{{ item['備註'] || '-' }}</div>
                                     </td>
-                                    <td class="px-3 py-2 text-center text-sm" style="white-space: nowrap;">
-                                        <span :class="item['請購順序'] === '2' ? 'text-red-600 font-bold' : 'text-gray-600'">
-                                            {{ item['請購順序'] === '2' ? '急件' : '一般' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-2 text-sm" style="white-space: nowrap;">{{ item['需求者'] || '-' }}</td>
-                                    <td class="px-3 py-2">
-                                        <div class="text-xs break-words" style="max-width: 300px; white-space: normal;">
-                                            {{ item['請購項目'] || '-' }}
+                                    
+                                    <!-- 主任簽核操作欄 -->
+                                    <td v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
+                                        class="px-2 py-2 text-center">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span :class="getApprovalStatusClass(item['主任簽核'])" class="mini-badge">
+                                                {{ getApprovalStatusText(item['主任簽核']) }}
+                                            </span>
+                                            <div v-if="currentTab === 'pending' && canApprove(item, 'director')" 
+                                                 class="flex gap-1 mt-1">
+                                                <button 
+                                                    @click="approveDirector(item.Id)"
+                                                    class="w-6 h-6 flex items-center justify-center bg-green-500 text-white rounded hover:bg-green-600 transition"
+                                                    title="主任簽核通過">
+                                                    <i data-lucide="check" class="w-3 h-3"></i>
+                                                </button>
+                                                <button 
+                                                    @click="rejectDirector(item.Id)"
+                                                    class="w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                                    title="主任簽核退回">
+                                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td class="px-3 py-2">
-                                        <div class="text-xs break-words" style="max-width: 300px; white-space: normal;">
-                                            {{ item['需求原因'] || '-' }}
+                                    
+                                    <!-- 叔叔簽核操作欄 -->
+                                    <td v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
+                                        class="px-2 py-2 text-center">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span :class="getApprovalStatusClass(item['叔叔簽核'])" class="mini-badge">
+                                                {{ getApprovalStatusText(item['叔叔簽核']) }}
+                                            </span>
+                                            <!-- 等待主任簽核提示 -->
+                                            <div v-if="currentTab === 'pending' && isWaitingForDirector(item)" 
+                                                 class="text-xs text-orange-500 mt-1">
+                                                等待主任
+                                            </div>
+                                            <!-- 操作按鈕 -->
+                                            <div v-if="currentTab === 'pending' && canApprove(item, 'uncle')" 
+                                                 class="flex gap-1 mt-1">
+                                                <button 
+                                                    @click="approveUncle(item.Id)"
+                                                    class="w-6 h-6 flex items-center justify-center bg-green-500 text-white rounded hover:bg-green-600 transition"
+                                                    title="叔叔簽核通過">
+                                                    <i data-lucide="check" class="w-3 h-3"></i>
+                                                </button>
+                                                <button 
+                                                    @click="rejectUncle(item.Id)"
+                                                    class="w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                                    title="叔叔簽核退回">
+                                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td class="px-3 py-2 text-right font-medium text-sm" style="white-space: nowrap;">
-                                        {{ formatMoney(item['總金額']) }}
-                                    </td>
-                                    <td class="px-3 py-2 text-center text-xs" style="white-space: nowrap;">
-                                        {{ formatDate(item['需求日']) }}
-                                    </td>
-                                    <td class="px-3 py-2 text-center">
-                                        <a v-if="item['進度追蹤超連結']" 
-                                           :href="item['進度追蹤超連結']" 
-                                           target="_blank"
-                                           class="text-blue-600 hover:text-blue-800 underline text-xs">
-                                            <i data-lucide="external-link" class="w-3 h-3 mr-1"></i>
-                                            {{ item['ePR No.'] || '查看' }}
-                                        </a>
-                                        <span v-else class="text-gray-400 text-xs">待開單</span>
-                                    </td>
-                                    <td class="px-3 py-2">
-                                        <div class="text-xs text-gray-700 break-all" style="max-width: 400px;">
-                                            {{ item['報告路徑'] || '-' }}
-                                        </div>
-                                    </td>
-                                    <td class="px-3 py-2">
-                                        <div class="content-cell text-xs" :title="item['合作廠商']">
-                                            {{ item['合作廠商'] || '-' }}
-                                        </div>
-                                    </td>
-                                    <!-- 備註欄位（只顯示，不可編輯）-->
-                                    <td class="px-3 py-2">
-                                        <div class="remark-display" :class="item['備註'] ? 'text-red-600' : 'text-gray-400'">
-                                            {{ item['備註'] || '-' }}
-                                        </div>
-                                    </td>
-                                    <!-- 操作欄 -->
-                                    <td v-if="currentTab === 'pending'" class="px-3 py-2 text-center">
-                                        <div class="flex items-center justify-center space-x-1">
-                                            <button 
-                                                @click="approveSingle(item.Id)"
-                                                class="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition flex items-center justify-center">
-                                                <i data-lucide="check" class="w-3 h-3 ml-2" style="display: inline-block; flex-shrink: 0;"></i>
-                                            </button>
-                                            <button 
-                                                @click="rejectSingle(item.Id)"
-                                                class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition flex items-center justify-center">
-                                                <i data-lucide="x" class="w-3 h-3 ml-2" style="display: inline-block; flex-shrink: 0;"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <!-- 已退回的操作欄：清空備註並改為V -->
+                                    
+                                    <!-- 已退回的處理按鈕 -->
                                     <td v-if="currentTab === 'rejected'" class="px-3 py-2 text-center">
                                         <button 
                                             @click="clearRemarkAndApprove(item.Id)"
-                                            class="px-3 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition flex items-center"
-                                            title="清空備註並確認">
+                                            class="px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition flex items-center justify-center"
+                                            title="清空備註並重新送審">
                                             處理完成 <i data-lucide="rotate-ccw" class="w-3 h-3 ml-1"></i>
                                         </button>
                                     </td>
                                 </tr>
                                 <tr v-if="displayItems.length === 0">
-                                    <td :colspan="currentTab === 'pending' || currentTab === 'rejected' ? 15 : 14" class="px-4 py-8 text-center text-gray-500">
-                                        <i data-lucide="inbox" class="w-12 h-12 mb-2 text-gray-400"></i>
-                                        <div>目前沒有資料</div>
+                                    <td :colspan="currentTab === 'approved' ? 12 : (currentTab === 'rejected' ? 16 : 15)"
+                                        class="px-4 py-8 text-center text-gray-500">
+                                        
+                                        <div class="flex flex-col items-center justify-center">
+                                            <i data-lucide="inbox" class="w-12 h-12 mb-2 text-gray-400"></i>
+                                            <div>目前沒有資料</div>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -397,16 +618,19 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Loading Overlay -->
+        <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 shadow-xl flex items-center space-x-3">
+                <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-gray-700">載入中...</span>
+            </div>
+        </div>
     </div>
-
+    
     <script src="../static/js/func/supervisor_review.js"></script>
 </body>
-</html>    <script>
-        // 初始化 Lucide 圖標
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-                console.log('✅ Lucide 圖標已初始化');
-            }
-        });
-    </script>
+</html>

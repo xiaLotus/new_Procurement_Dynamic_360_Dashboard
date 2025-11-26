@@ -5070,7 +5070,7 @@ def save_mail():
 
 
 # 11/25 更新
-# ========== 長官審核相關 API（完整版 - 修正 datetime 錯誤）==========
+# ========== 長官審核相關 API（雙重簽核版 - 主任簽核 + 叔叔簽核，移除長官確認欄位）==========
 @app.route('/api/add-item-with-notification', methods=['POST'])
 def add_item_with_notification():
     """新增資料（不發送郵件）"""
@@ -5081,17 +5081,20 @@ def add_item_with_notification():
         df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
         df = df.fillna('')  # ⭐ 避免 nan 問題
         
-        # 確保「長官確認」欄位存在
-        if '長官確認' not in df.columns:
-            df['長官確認'] = 'X'
+        # 確保簽核欄位存在
+        if '主任簽核' not in df.columns:
+            df['主任簽核'] = 'X'
+        if '叔叔簽核' not in df.columns:
+            df['叔叔簽核'] = 'X'
         
         # 準備新增的資料
         new_row = {}
         for col in df.columns:
             new_row[col] = data.get(col, '')
         
-        # 預設長官確認為 X (未確認)
-        new_row['長官確認'] = 'X'
+        # 預設簽核狀態為 X (未確認)
+        new_row['主任簽核'] = 'X'
+        new_row['叔叔簽核'] = 'X'
         
         # 新增到 DataFrame
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
@@ -5123,14 +5126,31 @@ def get_pending_approval_items():
         df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
         df = df.fillna('')  # ⭐ 避免 nan 問題
         
-        # 確保「長官確認」欄位存在
-        if '長官確認' not in df.columns:
-            df['長官確認'] = 'X'
-            df = df.fillna('')  # ⭐ 寫入前確保沒有 nan
+        # 確保簽核欄位存在
+        if '主任簽核' not in df.columns:
+            df['主任簽核'] = 'X'
+        if '叔叔簽核' not in df.columns:
+            df['叔叔簽核'] = 'X'
+            df = df.fillna('')
             df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
         
-        # 篩選出未確認的資料 (長官確認 == 'X')
-        pending_items = df[df['長官確認'].fillna('X').str.strip() == 'X']
+        # 篩選出待審核的資料：
+        # 1. 主任簽核或叔叔簽核有任一個不是 V
+        # 2. 且沒有被退回（都不是 R）
+        def is_pending(row):
+            director = str(row['主任簽核']).strip() if pd.notna(row['主任簽核']) else 'X'
+            uncle = str(row['叔叔簽核']).strip() if pd.notna(row['叔叔簽核']) else 'X'
+            
+            # 如果有退回就不算待審核
+            if director == 'R' or uncle == 'R':
+                return False
+            # 如果兩個都是 V 就不算待審核
+            if director == 'V' and uncle == 'V':
+                return False
+            # 其他情況都是待審核
+            return True
+        
+        pending_items = df[df.apply(is_pending, axis=1)]
         
         # 轉換為 dict list
         items_list = []
@@ -5138,7 +5158,6 @@ def get_pending_approval_items():
             item_dict = {}
             for col in df.columns:
                 val = row[col]
-                # 處理 NaN
                 if pd.isna(val):
                     item_dict[col] = ''
                 else:
@@ -5163,10 +5182,12 @@ def get_pending_approval_items():
 
 @app.route('/api/approve-items', methods=['POST'])
 def approve_items():
-    """批次確認資料（支援任何狀態改為確認）"""
+    """批次確認資料（支援主任簽核和叔叔簽核）"""
     try:
         data = request.json
         item_ids = data.get('item_ids', [])
+        approve_director = data.get('approve_director', True)  # 是否確認主任簽核
+        approve_uncle = data.get('approve_uncle', True)  # 是否確認叔叔簽核
         clear_remarks = data.get('clear_remarks', False)  # 是否清空退回原因
         
         if not item_ids:
@@ -5179,28 +5200,33 @@ def approve_items():
         df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
         df = df.fillna('')  # ⭐ 避免 nan 問題
         
-        # 確保「長官確認」和「備註」欄位存在
-        if '長官確認' not in df.columns:
-            df['長官確認'] = 'X'
+        # 確保簽核欄位存在
+        if '主任簽核' not in df.columns:
+            df['主任簽核'] = 'X'
+        if '叔叔簽核' not in df.columns:
+            df['叔叔簽核'] = 'X'
         if '備註' not in df.columns:
             df['備註'] = ''
         
-        # 更新指定 ID 的長官確認狀態
+        # 更新指定 ID 的簽核狀態
         updated_count = 0
         for item_id in item_ids:
             mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
             if mask.any():
-                # 設定為確認狀態
-                df.loc[mask, '長官確認'] = 'V'
+                # 根據參數設定對應的簽核狀態
+                if approve_director:
+                    df.loc[mask, '主任簽核'] = 'V'
+                if approve_uncle:
+                    df.loc[mask, '叔叔簽核'] = 'V'
                 
                 # 選擇性清空退回原因
                 if clear_remarks:
                     current_remark = df.loc[mask, '備註'].values[0]
                     current_remark = str(current_remark) if not pd.isna(current_remark) else ''
                     
-                    # 移除所有【退回】的部分
-                    import re
-                    new_remark = re.sub(r'；*【退回】[^；]*', '', current_remark)
+                    # 移除所有【主任退回】和【叔叔退回】的部分
+                    new_remark = re.sub(r'；*【主任退回】[^；]*', '', current_remark)
+                    new_remark = re.sub(r'；*【叔叔退回】[^；]*', '', new_remark)
                     new_remark = new_remark.strip('；').strip()
                     
                     df.loc[mask, '備註'] = new_remark
@@ -5211,9 +5237,17 @@ def approve_items():
         df = df.fillna('')  # ⭐ 寫入前確保沒有 nan
         df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
         
+        # 構建訊息
+        msg_parts = []
+        if approve_director:
+            msg_parts.append('主任簽核')
+        if approve_uncle:
+            msg_parts.append('叔叔簽核')
+        msg = f'成功確認 {updated_count} 筆資料的 {" 和 ".join(msg_parts)}'
+        
         return jsonify({
             'status': 'success',
-            'message': f'成功確認 {updated_count} 筆資料',
+            'message': msg,
             'updated_count': updated_count
         })
         
@@ -5229,11 +5263,12 @@ def approve_items():
 
 @app.route('/api/reject-items', methods=['POST'])
 def reject_items():
-    """批次退回資料"""
+    """批次退回資料（支援指定退回階段：主任簽核或叔叔簽核）"""
     try:
         data = request.json
         item_ids = data.get('item_ids', [])
         reject_reason = data.get('reject_reason', '長官退回')
+        reject_stage = data.get('reject_stage', 'director')  # 'director' 或 'uncle'
         
         if not item_ids:
             return jsonify({
@@ -5243,30 +5278,38 @@ def reject_items():
         
         # 讀取 CSV
         df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
-        df = df.fillna('')  # ⭐ 避免 nan 問題（關鍵！）
+        df = df.fillna('')  # ⭐ 避免 nan 問題
         
-        # 確保「備註」和「長官確認」欄位存在
+        # 確保簽核欄位存在
+        if '主任簽核' not in df.columns:
+            df['主任簽核'] = 'X'
+        if '叔叔簽核' not in df.columns:
+            df['叔叔簽核'] = 'X'
         if '備註' not in df.columns:
             df['備註'] = ''
-        if '長官確認' not in df.columns:
-            df['長官確認'] = 'X'
         
-        # 更新指定 ID 的備註欄位
+        # 決定退回標籤
+        stage_label = '主任' if reject_stage == 'director' else '叔叔'
+        stage_column = '主任簽核' if reject_stage == 'director' else '叔叔簽核'
+        
+        # 更新指定 ID 的備註欄位和簽核狀態
         updated_count = 0
         for item_id in item_ids:
             mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
             if mask.any():
-                # ⭐ 關鍵修正：確保 current_remark 不是 nan
+                # 處理備註
                 current_remark = df.loc[mask, '備註'].values[0]
                 current_remark = '' if (pd.isna(current_remark) or 
                                        str(current_remark).strip() == '' or 
                                        str(current_remark) == 'nan') else str(current_remark)
                 
-                # 在備註中加入退回原因
-                new_remark = f"{current_remark}；【退回】{reject_reason}" if current_remark else f"【退回】{reject_reason}"
+                # 在備註中加入退回原因（包含是哪個階段退回）
+                new_remark = f"{current_remark}；【{stage_label}退回】{reject_reason}" if current_remark else f"【{stage_label}退回】{reject_reason}"
                 df.loc[mask, '備註'] = new_remark
-                # 設定長官確認為退回標記
-                df.loc[mask, '長官確認'] = 'R'  # R = Rejected
+                
+                # 設定對應簽核欄位為退回標記
+                df.loc[mask, stage_column] = 'R'
+                
                 updated_count += 1
         
         # 儲存 CSV
@@ -5275,7 +5318,7 @@ def reject_items():
         
         return jsonify({
             'status': 'success',
-            'message': f'成功退回 {updated_count} 筆資料',
+            'message': f'成功退回 {updated_count} 筆資料（{stage_label}簽核退回）',
             'updated_count': updated_count
         })
         
@@ -5291,7 +5334,7 @@ def reject_items():
 
 @app.route('/api/resubmit-items', methods=['POST'])
 def resubmit_items():
-    """重新提交（將退回的資料改為待審核）"""
+    """重新提交（將退回的資料改為待審核，重置兩個簽核狀態）"""
     try:
         data = request.json
         item_ids = data.get('item_ids', [])
@@ -5306,17 +5349,20 @@ def resubmit_items():
         df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
         df = df.fillna('')  # ⭐ 避免 nan 問題
         
-        # 確保「長官確認」欄位存在
-        if '長官確認' not in df.columns:
-            df['長官確認'] = 'X'
+        # 確保簽核欄位存在
+        if '主任簽核' not in df.columns:
+            df['主任簽核'] = 'X'
+        if '叔叔簽核' not in df.columns:
+            df['叔叔簽核'] = 'X'
         
-        # 更新指定 ID 的長官確認狀態
+        # 更新指定 ID 的簽核狀態
         updated_count = 0
         for item_id in item_ids:
             mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
             if mask.any():
-                # 改回待審核狀態
-                df.loc[mask, '長官確認'] = 'X'
+                # 將所有簽核狀態改回待審核
+                df.loc[mask, '主任簽核'] = 'X'
+                df.loc[mask, '叔叔簽核'] = 'X'
                 updated_count += 1
         
         # 儲存 CSV
@@ -5341,32 +5387,47 @@ def resubmit_items():
 
 @app.route('/api/get-all-items-with-approval', methods=['GET'])
 def get_all_items_with_approval():
-    """取得所有資料（自動更新有 ePR No. 的為已確認）"""
+    """取得所有資料（自動更新有 ePR No. 的為已確認，確保雙簽核欄位存在）"""
     try:
         df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
         df = df.fillna('')
         
-        # 確保「長官確認」欄位存在
-        if '長官確認' not in df.columns:
-            df['長官確認'] = 'X'
+        # 確保簽核欄位存在
+        columns_added = False
+        if '主任簽核' not in df.columns:
+            df['主任簽核'] = 'X'
+            columns_added = True
+        if '叔叔簽核' not in df.columns:
+            df['叔叔簽核'] = 'X'
+            columns_added = True
         
-        # ⭐ 自動更新：有 ePR No. 的資料改為 V
+        # ⭐ 自動更新：有 ePR No. 的資料，兩個簽核都改為 V
         if 'ePR No.' in df.columns:
-            # 找出有 ePR No. 但長官確認不是 V 的資料
             has_epr = df['ePR No.'].astype(str).str.strip() != ''
-            not_approved = df['長官確認'].astype(str).str.strip() != 'V'
-            need_update = has_epr & not_approved
             
-            if need_update.any():
-                # 自動更新為 V
-                df.loc[need_update, '長官確認'] = 'V'
-                
-                # 儲存更新
-                df = df.fillna('')
-                df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
-                
-                updated_count = need_update.sum()
+            # 更新主任簽核
+            director_not_approved = df['主任簽核'].astype(str).str.strip() != 'V'
+            need_update_director = has_epr & director_not_approved
+            if need_update_director.any():
+                df.loc[need_update_director, '主任簽核'] = 'V'
+                columns_added = True
+            
+            # 更新叔叔簽核
+            uncle_not_approved = df['叔叔簽核'].astype(str).str.strip() != 'V'
+            need_update_uncle = has_epr & uncle_not_approved
+            if need_update_uncle.any():
+                df.loc[need_update_uncle, '叔叔簽核'] = 'V'
+                columns_added = True
+            
+            if need_update_director.any() or need_update_uncle.any():
+                updated_count = max(need_update_director.sum(), need_update_uncle.sum())
                 print(f"✅ 自動更新 {updated_count} 筆已開單資料為已確認")
+        
+        # 如果有新增欄位或更新，儲存 CSV
+        if columns_added:
+            df = df.fillna('')
+            df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+            print("✅ 已新增/更新主任簽核和叔叔簽核欄位")
         
         # 轉換為 dict list
         items_list = []
@@ -5395,12 +5456,14 @@ def get_all_items_with_approval():
             'message': str(e)
         }), 500
 
+
 @app.route('/api/clear-remark-and-approve', methods=['POST'])
 def clear_remark_and_approve():
-    """清空備註並改為已確認（用於已退回資料的處理完成）"""
+    """清空退回原因（保留原本備註）並根據退回階段設定簽核狀態"""
     try:
         data = request.json
         item_id = data.get('item_id')
+        reject_stage = data.get('reject_stage', 'unknown')  # 'director' 或 'uncle'
         
         if not item_id:
             return jsonify({
@@ -5412,11 +5475,18 @@ def clear_remark_and_approve():
         df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
         df = df.fillna('')  # 避免 nan 問題
         
-        # 確保「備註」和「長官確認」欄位存在
+        # ⭐ 移除舊的「長官確認」欄位（如果存在）
+        if '長官確認' in df.columns:
+            df = df.drop(columns=['長官確認'])
+            print("✅ 已移除舊的「長官確認」欄位")
+        
+        # 確保所有必要欄位存在
         if '備註' not in df.columns:
             df['備註'] = ''
-        if '長官確認' not in df.columns:
-            df['長官確認'] = 'X'
+        if '主任簽核' not in df.columns:
+            df['主任簽核'] = 'X'
+        if '叔叔簽核' not in df.columns:
+            df['叔叔簽核'] = 'X'
         
         # 找到對應的資料
         mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
@@ -5427,20 +5497,47 @@ def clear_remark_and_approve():
                 'message': f'找不到 ID 為 {item_id} 的資料'
             }), 404
         
-        # 清空備註並改為已確認
-        df.loc[mask, '備註'] = ''
-        df.loc[mask, '長官確認'] = 'V'
+        # ⭐ 只移除【主任退回】和【叔叔退回】的部分，保留原本備註
+        current_remark = df.loc[mask, '備註'].values[0]
+        current_remark = '' if (pd.isna(current_remark) or 
+                               str(current_remark).strip() == '' or 
+                               str(current_remark) == 'nan') else str(current_remark)
+        
+        # 移除退回原因（使用正則表達式）
+        new_remark = re.sub(r'；*【主任退回】[^；]*', '', current_remark)
+        new_remark = re.sub(r'；*【叔叔退回】[^；]*', '', new_remark)
+        new_remark = new_remark.strip('；').strip()
+        
+        df.loc[mask, '備註'] = new_remark
+        
+        # 根據退回階段設定簽核狀態
+        if reject_stage == 'director':
+            # 主任退回 → 處理完成後：主任改為 V，叔叔維持 X（等待叔叔簽核）
+            df.loc[mask, '主任簽核'] = 'V'
+            df.loc[mask, '叔叔簽核'] = 'X'
+            message = '退回原因已清除，主任簽核已通過，請叔叔繼續簽核'
+            print(f"✅ ID {item_id}: 主任退回處理完成 → 主任V, 叔叔X")
+        elif reject_stage == 'uncle':
+            # 叔叔退回 → 處理完成後：主任維持 V，叔叔改為 V（簽核完成）
+            df.loc[mask, '主任簽核'] = 'V'
+            df.loc[mask, '叔叔簽核'] = 'V'
+            message = '退回原因已清除，簽核流程已完成'
+            print(f"✅ ID {item_id}: 叔叔退回處理完成 → 主任V, 叔叔V")
+        else:
+            # 未知狀態，只清空退回原因
+            message = '退回原因已清除'
+            print(f"✅ ID {item_id}: 未知退回階段，僅清除退回原因")
         
         # 儲存 CSV
         df = df.fillna('')  # 寫入前確保沒有 nan
         df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
         
-        print(f"✅ 成功清空 ID {item_id} 的備註並改為已確認")
-        
         return jsonify({
             'status': 'success',
-            'message': '備註已清空，狀態已改為已確認',
-            'item_id': item_id
+            'message': message,
+            'item_id': item_id,
+            'reject_stage': reject_stage,
+            'remaining_remark': new_remark  # 回傳保留的備註內容
         })
         
     except Exception as e:
@@ -5451,7 +5548,6 @@ def clear_remark_and_approve():
             'status': 'error',
             'message': str(e)
         }), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True)
