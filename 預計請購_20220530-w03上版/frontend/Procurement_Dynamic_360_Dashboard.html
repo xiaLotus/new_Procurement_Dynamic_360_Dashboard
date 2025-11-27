@@ -228,8 +228,96 @@
              <table class="min-w-full bg-white">
                 <thead class="sticky top-0 bg-gray-800">
                     <tr class="bg-gray-100">
+                        <!-- 主任簽核 -->
+                        <th class="relative py-3 px-2 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isDirectorApprovalFiltered }">
+                            <div ref="DirectorApprovalDropdownWrapper">
+                                <div @click="toggleDropdown('showDirectorApprovalFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>主任<br>簽核</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showDirectorApprovalFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showDirectorApprovalFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-40 p-2 space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="val in uniqueDirectorApprovals" 
+                                                :key="val" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="val" 
+                                                    v-model="checkedDirectorApprovals" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ val || '—' }}</span>
+                                            </label>
+                                        </div>
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedDirectorApprovals = []; showDirectorApprovalFilter = false"
+                                                    class="text-gray-500 text-xs hover:text-red-500">
+                                                清除篩選
+                                            </button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 主任簽核 -->
+
+                        <!-- 叔叔簽核 -->
+                        <th class="relative py-3 px-2 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isUncleApprovalFiltered }">
+                            <div ref="UncleApprovalDropdownWrapper">
+                                <div @click="toggleDropdown('showUncleApprovalFilter')"
+                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
+                                    <span>叔叔<br>簽核</span>
+                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showUncleApprovalFilter }">⏷</span>
+                                </div>
+
+                                <transition name="fade">
+                                    <div v-if="showUncleApprovalFilter"
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-40 p-2 space-y-2">
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-medium text-gray-700">篩選</label>
+                                        </div>
+                                        <hr class="border-gray-200" />
+                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                            <label 
+                                                v-for="val in uniqueUncleApprovals" 
+                                                :key="val" 
+                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    :value="val" 
+                                                    v-model="checkedUncleApprovals" 
+                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                />
+                                                <span class="text-sm text-gray-700">{{ val || '—' }}</span>
+                                            </label>
+                                        </div>
+                                        <div class="pt-2 text-right">
+                                            <button @click="checkedUncleApprovals = []; showUncleApprovalFilter = false"
+                                                    class="text-gray-500 text-xs hover:text-red-500">
+                                                清除篩選
+                                            </button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </th>
+                        <!-- 叔叔簽核 -->
+
                         <!-- 開單狀態 -->
-                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                        <th class="relative py-3 px-2 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
                             :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isStatesFiltered }"
                             >
                             <div ref="stateDropdownWrapper">
@@ -280,7 +368,7 @@
                         </th>
                         <!-- 開單狀態 -->  
                         <!-- 驗收狀態 -->  
-                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
+                        <th class="relative py-3 px-2 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
                             :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isReceivingResutlFiltered }">
                             <div ref="ReceivingResultDropdownWrapper">
                                 <div @click="toggleDropdown('showReceivingResultFilter')"
@@ -331,56 +419,7 @@
                             </div>
                         </th>
                         <!-- 驗收狀態 -->
-                        <!-- 長官確認 -->
-                        <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
-                            :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isApprovalFiltered }">
-                            <div ref="ApprovalDropdownWrapper">
-                                <div @click="toggleDropdown('showApprovalFilter')"
-                                    class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
-                                    <span>長官<br>確認</span>
-                                    <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showApprovalFilter }">⏷</span>
-                                </div>
 
-                                <!-- 下拉篩選卡片 -->
-                                <transition name="fade">
-                                    <div v-if="showApprovalFilter"
-                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-64 p-2 space-y-2">
-                                        
-                                        <!-- 標題 -->
-                                        <div class="flex justify-between items-center">
-                                            <label class="text-sm font-medium text-gray-700">篩選</label>
-                                        </div>
-                                        <hr class="border-gray-200" />
-
-                                        <!-- 多選清單 -->
-                                        <div class="max-h-52 overflow-y-auto space-y-1">
-                                            <label 
-                                                v-for="val in uniqueApprovals" 
-                                                :key="val" 
-                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
-                                            >
-                                                <input 
-                                                    type="checkbox" 
-                                                    :value="val" 
-                                                    v-model="checkedApprovals" 
-                                                    class="text-blue-600 focus:ring-blue-500 rounded"
-                                                />
-                                                <span class="text-sm text-gray-700">{{ val || '—' }}</span>
-                                            </label>
-                                        </div>
-
-                                        <!-- 清除按鈕 -->
-                                        <div class="pt-2 text-right">
-                                            <button @click="checkedApprovals = []; showApprovalFilter = false"
-                                                    class="text-gray-500 text-xs hover:text-red-500">
-                                                清除篩選
-                                            </button>
-                                        </div>
-                                    </div>
-                                </transition>
-                            </div>
-                        </th>
-                        <!-- 長官確認 -->
                         <!-- WBS -->
                         <th class="relative py-3 px-4 text-sm font-semibold text-gray-700 text-center whitespace-nowrap bg-gray-100 z-30"
                             :class="{ 'bg-yellow-500 text-red-600 rounded px-1': isWBSFiltered }">
@@ -435,7 +474,7 @@
                             <div ref="OrderDropdownWrapper">
                                 <div @click="toggleDropdown('showOrderFilter')"
                                     class="cursor-pointer select-none flex items-center justify-center gap-1 hover:text-blue-600 transition">
-                                    <span>請購順序</span>
+                                    <span>請購<br>順序</span>
                                     <span class="text-xs transform transition-transform" :class="{ 'rotate-180': showOrderFilter }">⏷</span>
                                 </div>
 
@@ -948,6 +987,20 @@
                         >
                         <td class="py-2 px-4 text-sm text-center"
                             :class="{
+                                'text-red-500 text-4xl font-bold': item['主任簽核'] === 'X',
+                                'text-green-500 text-4xl font-bold': item['主任簽核'] === 'V'
+                            }">
+                            {{ item['主任簽核'] || '' }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center"
+                            :class="{
+                                'text-red-500 text-4xl font-bold': item['叔叔簽核'] === 'X',
+                                'text-green-500 text-4xl font-bold': item['叔叔簽核'] === 'V'
+                            }">
+                            {{ item['叔叔簽核'] || '' }}
+                        </td>
+                        <td class="py-2 px-4 text-sm text-center"
+                            :class="{
                                 'text-red-500 text-4xl font-bold': item['開單狀態'] === 'X',
                                 'text-green-500 text-4xl font-bold': item['開單狀態'] === 'V'
                             }">
@@ -959,13 +1012,6 @@
                                 'text-green-500 text-4xl font-bold': item['驗收狀態'] === 'V'
                             }">
                             {{ item.驗收狀態 }}
-                        </td>
-                        <td class="py-2 px-4 text-sm text-center"
-                            :class="{
-                                'text-red-500 text-4xl font-bold': item['長官確認'] === 'X',
-                                'text-green-500 text-4xl font-bold': item['長官確認'] === 'V'
-                            }">
-                            {{ item['長官確認'] || '' }}
                         </td>
                         <td class="py-2 px-4 text-sm text-center">{{ item.WBS }}</td>
                         <td class="py-2 px-4 text-sm font-bold text-center" 
