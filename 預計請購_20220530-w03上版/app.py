@@ -316,6 +316,106 @@ def get_unordered_count():
         }), 500
 
 
+# 12/1
+# ========================================================================
+# 🆕 新增API：月度花費分析（用於新圖表頁面）
+# ========================================================================
+@app.route('/api/monthly_expense_analysis', methods=['POST'])
+def monthly_expense_analysis():
+    """月度費用分析API - 支持範圍查詢"""
+    try:
+        data = request.json
+        start_month = data.get('start_month', '2025-02')
+        end_month = data.get('end_month', '2025-11')
+        
+        # 讀取CSV
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        
+        # 過濾有日期的記錄
+        df_with_date = df[df['已開單日期'].notna()].copy()
+        
+        if len(df_with_date) == 0:
+            return jsonify({'success': False, 'message': 'CSV中沒有有效數據'})
+        
+        # ✅ 正確轉換日期格式 (20250506 -> 202505)
+        df_with_date['已開單日期_str'] = df_with_date['已開單日期'].astype(int).astype(str)
+        df_with_date['年月'] = df_with_date['已開單日期_str'].str[:6]
+        
+        # 轉換查詢月份 (2025-02 -> 202502)
+        start_month_num = start_month.replace('-', '')
+        end_month_num = end_month.replace('-', '')
+        
+        # 數字範圍篩選
+        df_filtered = df_with_date[
+            (df_with_date['年月'] >= start_month_num) & 
+            (df_with_date['年月'] <= end_month_num)
+        ]
+        
+        if len(df_filtered) == 0:
+            return jsonify({'success': False, 'message': f'{start_month} 到 {end_month} 沒有數據'})
+        
+        # 分離正常和WBS
+        df_normal = df_filtered[df_filtered['WBS'].isna()].copy()
+        df_wbs = df_filtered[df_filtered['WBS'].notna()].copy()
+        
+        # 生成所有月份列表
+        all_months = []
+        current = start_month_num
+        while current <= end_month_num:
+            all_months.append(f"{current[:4]}-{current[4:]}")
+            year, month = int(current[:4]), int(current[4:])
+            month = month + 1 if month < 12 else 1
+            year = year + 1 if month == 1 else year
+            current = f"{year}{month:02d}"
+        
+        # 正常花費趨勢
+        normal_trend = []
+        if len(df_normal) > 0:
+            normal_monthly = df_normal.groupby('年月')['總金額'].apply(
+                lambda x: int(x.astype(float).sum())
+            ).to_dict()
+            for month in all_months:
+                month_key = month.replace('-', '')
+                normal_trend.append({'month': month, 'amount': normal_monthly.get(month_key, 0)})
+        else:
+            normal_trend = [{'month': m, 'amount': 0} for m in all_months]
+        
+        # WBS花費趨勢
+        wbs_trend = []
+        if len(df_wbs) > 0:
+            wbs_monthly = df_wbs.groupby('年月')['總金額'].apply(
+                lambda x: int(x.astype(float).sum())
+            ).to_dict()
+            for month in all_months:
+                month_key = month.replace('-', '')
+                wbs_trend.append({'month': month, 'amount': wbs_monthly.get(month_key, 0)})
+        else:
+            wbs_trend = [{'month': m, 'amount': 0} for m in all_months]
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'normal': {
+                    'total': int(df_normal['總金額'].astype(float).sum()) if len(df_normal) > 0 else 0,
+                    'average': int(df_normal['總金額'].astype(float).mean()) if len(df_normal) > 0 else 0,
+                    'count': len(df_normal),
+                    'trend': normal_trend
+                },
+                'wbs': {
+                    'total': int(df_wbs['總金額'].astype(float).sum()) if len(df_wbs) > 0 else 0,
+                    'average': int(df_wbs['總金額'].astype(float).mean()) if len(df_wbs) > 0 else 0,
+                    'count': len(df_wbs),
+                    'trend': wbs_trend
+                }
+            }
+        })
+        
+    except Exception as e:
+        print(f"月度費用分析錯誤: {str(e)}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'錯誤: {str(e)}'}), 500
+    
+
 @app.route('/api/getrestofmoney', methods = ['GET'])
 def getrestofmoney():
     import datetime, re, math
@@ -5110,7 +5210,7 @@ def add_item_with_notification():
         })
         
     except Exception as e:
-        print(f"新增資料失敗: {e}")
+        logger.info(f"新增資料失敗: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -5171,7 +5271,7 @@ def get_pending_approval_items():
         })
         
     except Exception as e:
-        print(f"取得待審核資料失敗: {e}")
+        logger.info(f"取得待審核資料失敗: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -5252,7 +5352,7 @@ def approve_items():
         })
         
     except Exception as e:
-        print(f"確認資料失敗: {e}")
+        logger.info(f"確認資料失敗: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -5323,7 +5423,7 @@ def reject_items():
         })
         
     except Exception as e:
-        print(f"退回資料失敗: {e}")
+        logger.info(f"退回資料失敗: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -5376,7 +5476,7 @@ def resubmit_items():
         })
         
     except Exception as e:
-        print(f"重新提交失敗: {e}")
+        logger.info(f"重新提交失敗: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -5421,13 +5521,13 @@ def get_all_items_with_approval():
             
             if need_update_director.any() or need_update_uncle.any():
                 updated_count = max(need_update_director.sum(), need_update_uncle.sum())
-                print(f"✅ 自動更新 {updated_count} 筆已開單資料為已確認")
+                logger.info(f"✅ 自動更新 {updated_count} 筆已開單資料為已確認")
         
         # 如果有新增欄位或更新，儲存 CSV
         if columns_added:
             df = df.fillna('')
             df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
-            print("✅ 已新增/更新主任簽核和叔叔簽核欄位")
+            logger.info("✅ 已新增/更新主任簽核和叔叔簽核欄位")
         
         # 轉換為 dict list
         items_list = []
@@ -5448,7 +5548,7 @@ def get_all_items_with_approval():
         })
         
     except Exception as e:
-        print(f"取得資料失敗: {e}")
+        logger.info(f"取得資料失敗: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
@@ -5478,7 +5578,7 @@ def clear_remark_and_approve():
         # ⭐ 移除舊的「長官確認」欄位（如果存在）
         if '長官確認' in df.columns:
             df = df.drop(columns=['長官確認'])
-            print("✅ 已移除舊的「長官確認」欄位")
+            logger.info("✅ 已移除舊的「長官確認」欄位")
         
         # 確保所有必要欄位存在
         if '備註' not in df.columns:
@@ -5516,17 +5616,17 @@ def clear_remark_and_approve():
             df.loc[mask, '主任簽核'] = 'V'
             df.loc[mask, '叔叔簽核'] = 'X'
             message = '退回原因已清除，主任簽核已通過，請叔叔繼續簽核'
-            print(f"✅ ID {item_id}: 主任退回處理完成 → 主任V, 叔叔X")
+            logger.info(f"✅ ID {item_id}: 主任退回處理完成 → 主任V, 叔叔X")
         elif reject_stage == 'uncle':
             # 叔叔退回 → 處理完成後：主任維持 V，叔叔改為 V（簽核完成）
             df.loc[mask, '主任簽核'] = 'V'
             df.loc[mask, '叔叔簽核'] = 'V'
             message = '退回原因已清除，簽核流程已完成'
-            print(f"✅ ID {item_id}: 叔叔退回處理完成 → 主任V, 叔叔V")
+            logger.info(f"✅ ID {item_id}: 叔叔退回處理完成 → 主任V, 叔叔V")
         else:
             # 未知狀態，只清空退回原因
             message = '退回原因已清除'
-            print(f"✅ ID {item_id}: 未知退回階段，僅清除退回原因")
+            logger.info(f"✅ ID {item_id}: 未知退回階段，僅清除退回原因")
         
         # 儲存 CSV
         df = df.fillna('')  # 寫入前確保沒有 nan
@@ -5541,13 +5641,14 @@ def clear_remark_and_approve():
         })
         
     except Exception as e:
-        print(f"❌ 處理失敗: {e}")
+        logger.info(f"❌ 處理失敗: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
             'status': 'error',
             'message': str(e)
         }), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

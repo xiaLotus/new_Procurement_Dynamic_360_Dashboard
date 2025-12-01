@@ -1218,6 +1218,8 @@ const app = Vue.createApp({
             checkedStages: this.checkedStages,
             checkedStatuses: this.checkedStatuses,
             checkedRemarks: this.checkedRemarks,
+            checkedDirectorApprovals: this.checkedDirectorApprovals,
+            checkedUncleApprovals: this.checkedUncleApprovals,
             itemSearchText: this.itemSearchText,
             reasonSearchText: this.reasonSearchText,
             sortField: this.sortField,
@@ -1348,44 +1350,6 @@ const app = Vue.createApp({
         this.dateFilterActive = filters.dateFilterActive || false;
     },
 
-        // handleClickOutside(event) {
-        //     const isInState = this.$refs.stateDropdownWrapper?.contains(event.target);
-        //     const isReceivingResult = this.$refs.ReceivingResultDropdownWrapper?.contains(event.target);
-        //     const isWBS = this.$refs.WBSDropdownWrapper?.contains(event.target);
-        //     const isOrder = this.$refs.OrderDropdownWrapper?.contains(event.target);
-        //     const isNeedPerson = this.$refs.NeedPersonDropdownWrapper?.contains(event.target);
-        //     const isItem = this.$refs.NeedItemDropdownWrapper?.contains(event.target);
-        //     const isReason = this.$refs.NeedReasonDropdownWrapper?.contains(event.target);
-        //     const isAmount = this.$refs.TotalMoneyDropdownWrapper?.contains(event.target);
-        //     const isNeedDate = this.$refs.NeedDateDropdownWrapper?.contains(event.target);
-        //     const isIssuedDate = this.$refs.AleadyDateDropdownWrapper?.contains(event.target);
-        //     const isEPR = this.$refs.EPRNODropdownWrapper?.contains(event.target);
-        //     const isPONo = this.$refs.poDropdownWrapper?.contains(event.target);
-        //     const isStage = this.$refs.CheckDropdownWrapper?.contains(event.target);
-        //     const isStatus = this.$refs.StatusDropdownWrapper?.contains(event.target);
-        //     const isRemark = this.$refs.RemarksDropdownWrapper?.contains(event.target);
-        //     const isDirectorApproval = this.$refs.DirectorApprovalDropdownWrapper?.contains(event.target);
-        //     const isUncleApproval = this.$refs.UncleApprovalDropdownWrapper?.contains(event.target);
-            
-        //     if (!isInState) this.showStateFilter = false;
-        //     if (!isReceivingResult) this.showReceivingResultFilter = false;
-        //     if (!isWBS) this.showWBSFilter = false;
-        //     if (!isOrder) this.showOrderFilter = false;
-        //     if (!isNeedPerson) this.showPersonFilter = false;
-        //     if (!isItem) this.showItemFilter = false;
-        //     if (!isReason) this.showReasonFilter = false;
-        //     if (!isAmount) this.showAmountFilter = false;
-        //     if (!isNeedDate) this.showNeedDateFilter = false;
-        //     if (!isIssuedDate) this.showIssuedMonthFilter = false;
-        //     if (!isEPR) this.showEPRFilter = false;
-        //     if (!isPONo) this.showPONoFilter = false;
-        //     if (!isStage) this.showStageFilter = false;
-        //     if (!isStatus) this.showStatusFilter = false;
-        //     if (!isRemark) this.showRemarkFilter = false;
-        //     if (!isDirectorApproval) this.showDirectorApprovalFilter = false;
-        //     if (!isUncleApproval) this.showUncleApprovalFilter = false;
-        // },
-        
 
         handleClickOutside(event) {
             // 檢查是否點擊在任何下拉選單內
