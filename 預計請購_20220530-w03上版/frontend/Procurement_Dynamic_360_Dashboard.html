@@ -1118,7 +1118,7 @@
             </div>
 
             <!-- 右側：三個按鈕群組 -->
-            <div class="flex items-end space-x-4">
+            <div class="flex items-end space-x-5">
                 <div 
                     class="bg-purple-500 hover:bg-purple-600 text-white text-lg px-5 py-3 rounded-full shadow-lg cursor-pointer flex items-center justify-center h-12"
                     @click="goDetailPage">
@@ -1128,6 +1128,11 @@
                     class="bg-indigo-600 hover:bg-indigo-700 text-white text-lg px-5 py-3 rounded-full shadow-lg cursor-pointer flex items-center justify-center h-12"
                     @click="goApprovalPage">
                     📝 長官簽核
+                </div>
+                <div 
+                    class="bg-orange-600 hover:bg-orange-700 text-white px-5 py-3 rounded-full shadow-lg text-lg cursor-pointer flex items-center justify-center h-12"
+                    @click="goMonthlyAnalysis">
+                    📊 查閱歷史
                 </div>
                 <div 
                     class="bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-3 rounded-full shadow-lg text-lg cursor-pointer flex items-center justify-center h-12"

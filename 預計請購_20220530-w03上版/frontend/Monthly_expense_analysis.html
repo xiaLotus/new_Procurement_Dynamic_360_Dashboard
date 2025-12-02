@@ -40,33 +40,65 @@
 
         .page-header {
             margin-bottom: 30px;
+            position: relative;
+            text-align: center;
+            padding: 20px 0;
         }
 
         .page-title {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
-            color: #1a202c;
-            margin-bottom: 10px;
+            color: #2d3748;
+            margin: 0;
         }
-
-        .page-subtitle {
+        
+        .back-button {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
             font-size: 14px;
-            color: #718096;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-50%) translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .back-button:active {
+            transform: translateY(-50%) translateY(0);
         }
 
         .filter-card {
-            background: #f8f9fa;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 30px;
             margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .filter-title {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 18px;
+            font-weight: 700;
             color: #2d3748;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .filter-group {
@@ -80,50 +112,104 @@
             flex: 1;
             min-width: 200px;
         }
+        
+        .filter-buttons {
+            min-width: 240px;
+        }
 
         .filter-label {
             display: block;
             font-size: 13px;
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 8px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
         }
 
         .filter-input {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
             background: white;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #2d3748;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .filter-input:focus {
             outline: none;
-            border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* 自定義月份選擇器容器 */
+        .custom-month-picker {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .custom-month-picker select {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #2d3748;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+        
+        .custom-month-picker select:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+        }
+        
+        .custom-month-picker select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 12px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        /* 美化 select 下拉選項 */
+        .custom-month-picker select option {
+            padding: 10px;
+            font-size: 14px;
+            color: #2d3748;
         }
 
         .filter-separator {
-            font-size: 14px;
-            color: #a0aec0;
-            padding: 0 5px;
+            font-size: 20px;
+            color: #667eea;
+            padding: 0 8px;
             align-self: center;
+            font-weight: bold;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary {
@@ -133,24 +219,43 @@
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        
+        /* 按鈕禁用狀態 */
+        .btn-disabled {
+            opacity: 0.6;
+            cursor: not-allowed !important;
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%) !important;
+            pointer-events: none;
+        }
+        
+        .btn-disabled:hover {
+            transform: none !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
         }
 
         .btn-secondary {
             background: white;
             color: #2d3748;
-            border: 1px solid #cbd5e0;
+            border: 2px solid #e2e8f0;
         }
 
         .btn-secondary:hover {
-            background: #edf2f7;
-            border-color: #a0aec0;
+            background: #f7fafc;
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
         }
 
         .filter-hint {
             font-size: 12px;
-            color: #718096;
-            margin-top: 5px;
+            color: #64748b;
+            margin-top: 6px;
+            font-style: italic;
         }
 
         .stats-grid {
@@ -161,30 +266,48 @@
         }
 
         .stat-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-            transition: all 0.2s;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
         }
 
         .stat-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
         }
 
         .stat-label {
             font-size: 13px;
             color: #718096;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
+            font-weight: 600;
         }
 
         .stat-value {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: bold;
             color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .stat-unit {
@@ -195,15 +318,9 @@
 
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            grid-template-columns: 1fr;  /* 單列布局，圖表上下排列 */
             gap: 30px;
             margin-bottom: 30px;
-        }
-
-        @media (max-width: 1400px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
         }
 
         .chart-card {
@@ -225,8 +342,15 @@
 
         .chart-container {
             position: relative;
-            height: 350px;
+            height: 400px;  /* 增加高度讓圖表更舒適 */
             margin-bottom: 20px;
+            width: 100%;
+            max-width: 100%;
+        }
+        
+        .chart-container canvas {
+            max-width: 100%;
+            height: auto !important;
         }
 
         .loading {
@@ -264,33 +388,42 @@
         }
 
         .error-message {
-            background: #fed7d7;
+            background: linear-gradient(135deg, #fed7d7 0%, #fecaca 100%);
             color: #c53030;
-            padding: 15px;
-            border-radius: 6px;
+            padding: 16px 20px;
+            border-radius: 10px;
             border-left: 4px solid #c53030;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(197, 48, 48, 0.15);
+            font-weight: 500;
         }
 
         .warning-message {
-            background: #feebc8;
+            background: linear-gradient(135deg, #feebc8 0%, #fde68a 100%);
             color: #c05621;
-            padding: 15px;
-            border-radius: 6px;
+            padding: 16px 20px;
+            border-radius: 10px;
             border-left: 4px solid #c05621;
             margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(192, 86, 33, 0.15);
+            font-weight: 500;
         }
 
         .info-message {
-            background: #dbeafe;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
             color: #1e40af;
-            padding: 15px;
-            border-radius: 6px;
+            padding: 16px 20px;
+            border-radius: 10px;
             border-left: 4px solid #1e40af;
             margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.15);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .table-container {
@@ -360,8 +493,10 @@
         <div class="container">
             <!-- 页面标题 -->
             <div class="page-header">
-                <div class="page-title">📊 每月花費分析</div>
-                <div class="page-subtitle">統計每月正常花費與WBS花費趨勢，支援自訂時間範圍查詢</div>
+                <div class="page-title">查閱每月資訊</div>
+                <button class="back-button" @click="goPurchaseRequestSystem">
+                    ← 返回 360請購
+                </button>
             </div>
 
             <!-- 时间范围筛选卡片 -->
@@ -370,33 +505,49 @@
                 <div class="filter-group">
                     <div class="filter-item">
                         <label class="filter-label">開始月份 (YYYY-MM)</label>
-                        <input 
-                            type="month" 
-                            v-model="startMonth" 
-                            class="filter-input"
-                            @change="validateDateRange"
-                            :max="currentMonth"
-                        />
+                        <div class="custom-month-picker">
+                            <select v-model="startYear" @change="updateStartMonth">
+                                <option value="">年份</option>
+                                <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}年</option>
+                            </select>
+                            <select v-model="startMonthNum" @change="updateStartMonth">
+                                <option value="">月份</option>
+                                <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}月</option>
+                            </select>
+                        </div>
                         <div class="filter-hint">選擇查詢開始月份</div>
                     </div>
 
-                    <div class="filter-separator">→</div>
-
                     <div class="filter-item">
                         <label class="filter-label">結束月份 (YYYY-MM)</label>
-                        <input 
-                            type="month" 
-                            v-model="endMonth" 
-                            class="filter-input"
-                            @change="validateDateRange"
-                            :max="currentMonth"
-                        />
+                        <div class="custom-month-picker">
+                            <select v-model="endYear" @change="updateEndMonth">
+                                <option value="">年份</option>
+                                <option v-for="year in yearOptions" :key="year" :value="year">{{ year }}年</option>
+                            </select>
+                            <select v-model="endMonthNum" @change="updateEndMonth">
+                                <option value="">月份</option>
+                                <option v-for="month in monthOptions" :key="month" :value="month">{{ month }}月</option>
+                            </select>
+                        </div>
                         <div class="filter-hint">選擇查詢結束月份</div>
                     </div>
 
-                    <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-primary" @click="applyFilter">📌 套用篩選</button>
-                        <button class="btn btn-secondary" @click="resetFilter">↺ 重設</button>
+                    <div class="filter-item filter-buttons">
+                        <label class="filter-label" style="opacity: 0;">操作</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button 
+                                class="btn btn-primary" 
+                                @click="applyFilter"
+                                :disabled="isButtonDisabled"
+                                :class="{ 'btn-disabled': isButtonDisabled }"
+                            >
+                                <span v-if="!isButtonDisabled">📌 套用篩選</span>
+                                <span v-else>⏳ 請稍候 ({{ countdown }}秒)</span>
+                            </button>
+                            <button class="btn btn-secondary" @click="resetFilter">↺ 重設</button>
+                        </div>
+                        <div class="filter-hint" style="opacity: 0;">佔位</div>
                     </div>
                 </div>
                 <div v-if="dateWarning" class="warning-message" style="margin-top: 15px;">
@@ -500,31 +651,31 @@
                             <tr>
                                 <th>月份</th>
                                 <th class="text-right">正常花費</th>
-                                <th class="text-right">WBS花費</th>
-                                <th class="text-right">合計</th>
                                 <th>正常環比</th>
+                                <th class="text-right">WBS花費</th>
                                 <th>WBS環比</th>
+                                <th class="text-right">合計</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-for="(month, index) in filteredMonths" :key="month">
                                 <td class="month-cell">{{ month }}</td>
                                 <td class="amount-cell">¥{{ formatCurrency(normalData[month] || 0) }}</td>
-                                <td class="amount-cell">¥{{ formatCurrency(wbsData[month] || 0) }}</td>
-                                <td class="amount-cell" style="font-weight: 700; color: #2d3748;">
-                                    ¥{{ formatCurrency((normalData[month] || 0) + (wbsData[month] || 0)) }}
-                                </td>
                                 <td>
                                     <span v-if="index === 0" class="change-neutral">-</span>
                                     <span v-else :class="getChangeClass(getNormalChange(month, index))">
                                         {{ getNormalChangeText(getNormalChange(month, index)) }}
                                     </span>
                                 </td>
+                                <td class="amount-cell">¥{{ formatCurrency(wbsData[month] || 0) }}</td>
                                 <td>
                                     <span v-if="index === 0" class="change-neutral">-</span>
                                     <span v-else :class="getChangeClass(getWBSChange(month, index))">
                                         {{ getWBSChangeText(getWBSChange(month, index)) }}
                                     </span>
+                                </td>
+                                <td class="amount-cell" style="font-weight: 700; color: #2d3748;">
+                                    ¥{{ formatCurrency((normalData[month] || 0) + (wbsData[month] || 0)) }}
                                 </td>
                             </tr>
                         </tbody>
@@ -540,6 +691,7 @@
         const app = Vue.createApp({
             data() {
                 return {
+                    username: '',
                     // 数据
                     normalData: {},  // 正常花费 { '2024-01': 10000, ... }
                     wbsData: {},     // WBS花费
@@ -551,6 +703,14 @@
                     currentMonth: '',
                     filteredMonths: [],
                     
+                    // 自定義月份選擇器
+                    startYear: '',
+                    startMonthNum: '',
+                    endYear: '',
+                    endMonthNum: '',
+                    yearOptions: [],
+                    monthOptions: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'],
+                    
                     // 图表实例
                     normalChart: null,
                     wbsChart: null,
@@ -559,7 +719,14 @@
                     isLoading: false,
                     error: '',
                     info: '',
-                    dateWarning: ''
+                    dateWarning: '',
+                    
+                    // 防止連續操作
+                    isButtonDisabled: false,
+                    countdown: 0,
+                    
+                    // 視窗 resize 處理
+                    resizeTimer: null
                 }
             },
             computed: {
@@ -590,6 +757,45 @@
                 }
             },
             methods: {
+                // 初始化年份選項
+                initYearOptions() {
+                    const currentYear = new Date().getFullYear();
+                    this.yearOptions = [];
+                    for (let year = 2020; year <= currentYear; year++) {
+                        this.yearOptions.push(year);
+                    }
+                },
+                
+                // 更新開始月份
+                updateStartMonth() {
+                    if (this.startYear && this.startMonthNum) {
+                        this.startMonth = `${this.startYear}-${this.startMonthNum}`;
+                        this.validateDateRange();
+                    }
+                },
+                
+                // 更新結束月份
+                updateEndMonth() {
+                    if (this.endYear && this.endMonthNum) {
+                        this.endMonth = `${this.endYear}-${this.endMonthNum}`;
+                        this.validateDateRange();
+                    }
+                },
+                
+                // 從 YYYY-MM 格式解析到選擇器
+                parseMonthToSelectors() {
+                    if (this.startMonth) {
+                        const [year, month] = this.startMonth.split('-');
+                        this.startYear = year;
+                        this.startMonthNum = month;
+                    }
+                    if (this.endMonth) {
+                        const [year, month] = this.endMonth.split('-');
+                        this.endYear = year;
+                        this.endMonthNum = month;
+                    }
+                },
+                
                 // 格式化货币
                 formatCurrency(value) {
                     if (!value) return '0';
@@ -667,8 +873,31 @@
                     this.dateWarning = '';
                 },
 
+                // 生成完整的月份範圍（包含所有月份，即使沒有資料）
+                generateMonthRange(startMonth, endMonth) {
+                    const months = [];
+                    let current = new Date(startMonth + '-01');
+                    const end = new Date(endMonth + '-01');
+                    
+                    while (current <= end) {
+                        const year = current.getFullYear();
+                        const month = String(current.getMonth() + 1).padStart(2, '0');
+                        months.push(`${year}-${month}`);
+                        
+                        // 移到下個月
+                        current.setMonth(current.getMonth() + 1);
+                    }
+                    
+                    return months;
+                },
+
                 // 应用筛选
                 applyFilter() {
+                    // 如果按鈕已被禁用，則不執行
+                    if (this.isButtonDisabled) {
+                        return;
+                    }
+                    
                     this.validateDateRange();
                     
                     if (this.dateWarning) {
@@ -680,10 +909,21 @@
                         return;
                     }
 
-                    // 根据选择的日期范围过滤月份
-                    this.filteredMonths = this.allMonths.filter(month => {
-                        return month >= this.startMonth && month <= this.endMonth;
-                    });
+                    // 禁用按鈕並開始倒數計時
+                    this.isButtonDisabled = true;
+                    this.countdown = 3;
+                    
+                    // 倒數計時
+                    const timer = setInterval(() => {
+                        this.countdown--;
+                        if (this.countdown <= 0) {
+                            clearInterval(timer);
+                            this.isButtonDisabled = false;
+                        }
+                    }, 1000);
+
+                    // 生成完整的月份範圍（包含所有月份，即使沒有資料也顯示為 0）
+                    this.filteredMonths = this.generateMonthRange(this.startMonth, this.endMonth);
 
                     this.error = '';
                     
@@ -731,6 +971,9 @@
 
                 // 从后端获取月度花费数据
                 async fetchMonthlyExpenses() {
+                    // 先銷毀舊圖表
+                    this.destroyCharts();
+                    
                     this.isLoading = true;
                     this.error = '';
 
@@ -787,9 +1030,9 @@
                         if (this.allMonths.length === 0) {
                             this.error = '選定範圍內無數據';
                         } else {
-                            // 顯示所有月份
-                            this.filteredMonths = this.allMonths;
-                            this.info = `共載入 ${this.allMonths.length} 個月的數據`;
+                            // 使用完整的月份範圍（從 startMonth 到 endMonth）
+                            this.filteredMonths = this.generateMonthRange(startMonth, endMonth);
+                            this.info = `共載入 ${this.filteredMonths.length} 個月的數據`;
                             
                             this.$nextTick(() => {
                                 this.updateCharts();
@@ -803,12 +1046,47 @@
                     }
                 },
 
+                // 銷毀所有圖表
+                destroyCharts() {
+                    if (this.normalChart) {
+                        this.normalChart.destroy();
+                        this.normalChart = null;
+                    }
+                    if (this.wbsChart) {
+                        this.wbsChart.destroy();
+                        this.wbsChart = null;
+                    }
+                },
+
                 // 更新图表
                 updateCharts() {
+                    // 先銷毀舊圖表
+                    this.destroyCharts();
+                    
+                    // 等待 DOM 更新後重新創建圖表
                     this.$nextTick(() => {
                         this.updateNormalChart();
                         this.updateWBSChart();
                     });
+                },
+                
+                // 處理視窗大小改變
+                handleResize() {
+                    // 清除之前的計時器
+                    if (this.resizeTimer) {
+                        clearTimeout(this.resizeTimer);
+                    }
+                    
+                    // 設置新的計時器，300ms 後執行
+                    this.resizeTimer = setTimeout(() => {
+                        // 如果圖表存在，調整大小
+                        if (this.normalChart) {
+                            this.normalChart.resize();
+                        }
+                        if (this.wbsChart) {
+                            this.wbsChart.resize();
+                        }
+                    }, 300);
                 },
 
                 // 更新正常花费图表
@@ -826,64 +1104,58 @@
                         return `hsl(${hue}, 75%, 60%)`;
                     });
 
-                    if (this.normalChart) {
-                        this.normalChart.data.labels = labels;
-                        this.normalChart.data.datasets[0].data = data;
-                        this.normalChart.data.datasets[0].backgroundColor = colors;
-                        this.normalChart.update();
-                    } else {
-                        this.normalChart = new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    label: '正常花費 (元)',
-                                    data: data,
-                                    backgroundColor: colors,
-                                    borderColor: colors,
-                                    borderWidth: 1,
-                                    borderRadius: 6
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        display: true,
-                                        position: 'top',
-                                        labels: { font: { size: 12 }, padding: 15 }
+                    // 始終創建新圖表
+                    this.normalChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: '正常花費 (元)',
+                                data: data,
+                                backgroundColor: colors,
+                                borderColor: colors,
+                                borderWidth: 1,
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: { font: { size: 12 }, padding: 15 }
+                                },
+                                datalabels: {
+                                    color: '#1a202c',
+                                    font: { weight: 'bold', size: 13 },
+                                    formatter: (value) => {
+                                        if (value === 0) return '';
+                                        return this.formatCurrency(value / 10000) + '萬';
                                     },
-                                    datalabels: {
-                                        color: '#1a202c',
-                                        font: { weight: 'bold', size: 9 },
-                                        formatter: (value) => {
-                                            if (value === 0) return '';
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 3
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: (value) => {
                                             return this.formatCurrency(value / 10000) + '萬';
                                         },
-                                        anchor: 'end',
-                                        align: 'top',
-                                        offset: 3
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            callback: (value) => {
-                                                return this.formatCurrency(value / 10000) + '萬';
-                                            },
-                                            font: { size: 11 }
-                                        },
-                                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                                        font: { size: 11 }
                                     },
-                                    x: {
-                                        grid: { display: false }
-                                    }
+                                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                                },
+                                x: {
+                                    grid: { display: false }
                                 }
                             }
-                        });
-                    }
+                        }
+                    });
                 },
 
                 // 更新WBS花费图表
@@ -901,67 +1173,73 @@
                         return `hsl(${hue}, 75%, 60%)`;
                     });
 
-                    if (this.wbsChart) {
-                        this.wbsChart.data.labels = labels;
-                        this.wbsChart.data.datasets[0].data = data;
-                        this.wbsChart.data.datasets[0].backgroundColor = colors;
-                        this.wbsChart.update();
-                    } else {
-                        this.wbsChart = new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels: labels,
-                                datasets: [{
-                                    label: 'WBS花費 (元)',
-                                    data: data,
-                                    backgroundColor: colors,
-                                    borderColor: colors,
-                                    borderWidth: 1,
-                                    borderRadius: 6
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        display: true,
-                                        position: 'top',
-                                        labels: { font: { size: 12 }, padding: 15 }
+                    // 始終創建新圖表
+                    this.wbsChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'WBS花費 (元)',
+                                data: data,
+                                backgroundColor: colors,
+                                borderColor: colors,
+                                borderWidth: 1,
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: { font: { size: 12 }, padding: 15 }
+                                },
+                                datalabels: {
+                                    color: '#1a202c',
+                                    font: { weight: 'bold', size: 13 },
+                                    formatter: (value) => {
+                                        if (value === 0) return '';
+                                        return this.formatCurrency(value / 10000) + '萬';
                                     },
-                                    datalabels: {
-                                        color: '#1a202c',
-                                        font: { weight: 'bold', size: 9 },
-                                        formatter: (value) => {
-                                            if (value === 0) return '';
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 3
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: (value) => {
                                             return this.formatCurrency(value / 10000) + '萬';
                                         },
-                                        anchor: 'end',
-                                        align: 'top',
-                                        offset: 3
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            callback: (value) => {
-                                                return this.formatCurrency(value / 10000) + '萬';
-                                            },
-                                            font: { size: 11 }
-                                        },
-                                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                                        font: { size: 11 }
                                     },
-                                    x: {
-                                        grid: { display: false }
-                                    }
+                                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                                },
+                                x: {
+                                    grid: { display: false }
                                 }
                             }
-                        });
+                        }
+                    });
+                },
+
+                goPurchaseRequestSystem() {
+                    if (this.username) {
+                        localStorage.setItem('username', this.username);
                     }
-                }
+                    window.location.href = 'Procurement_Dynamic_360_Dashboard.html';
+                },
             },
             mounted() {
+                this.username = localStorage.getItem('username') || '';
+    
+                // 初始化年份選項
+                this.initYearOptions();
+                
                 // 初始化当前月份
                 this.currentMonth = this.getCurrentMonth();
                 
@@ -969,8 +1247,28 @@
                 this.startMonth = this.getMonthsAgo(8);
                 this.endMonth = this.getCurrentMonth();
                 
+                // 解析到選擇器
+                this.parseMonthToSelectors();
+                
                 // 获取数据
                 this.fetchMonthlyExpenses();
+                
+                // 監聽視窗大小改變
+                window.addEventListener('resize', this.handleResize);
+            },
+            
+            
+            beforeUnmount() {
+                // 移除 resize 事件監聽
+                window.removeEventListener('resize', this.handleResize);
+                
+                // 清除計時器
+                if (this.resizeTimer) {
+                    clearTimeout(this.resizeTimer);
+                }
+                
+                // 銷毀圖表
+                this.destroyCharts();
             }
         });
 
