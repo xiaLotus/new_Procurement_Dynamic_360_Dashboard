@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>請購單範本複製工具</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../static/js/vue.global.js"></script>
+    <script src="../static/js/tailwinds.js"></script>
     <style>
         @keyframes fadeIn {
             0% { opacity: 0; transform: scale(0.95); }
@@ -30,12 +30,14 @@
 
         <!-- 供應商選擇區塊 -->
         <div class="bg-white shadow-md rounded-lg p-6 space-y-4 mb-6">
-            <label class="block text-gray-700 font-medium mb-2">供應商</label>
+            <label class="block text-gray-700 font-medium mb-2">部分</label>
             <select v-model="vendorType" class="border border-gray-300 rounded-lg p-2 w-full mb-4">
-                <option value="">請選擇供應商類型</option>
-                <option value="none">無指定廠商</option>
-                <option value="project">合作開發(專案類)</option>
-                <option value="market">建議廠商(市購品)</option>
+                <option value="">請選擇部分</option>
+                <option value="none">無指定預設</option>
+                <option value="cooperate">合作廠商</option>
+                <option value="cooperate2">2nd合作開發</option>
+                <option value="parts">零件商</option>
+                <option value="suggestion">建議廠商</option>
             </select>
 
             <!-- 搜尋框 (可點選) -->
@@ -52,15 +54,15 @@
                 >
                 
                 <!-- 下拉選單 -->
-                <div v-if="showDropdown && (vendorType === 'project' || vendorType === 'market')" 
+                <div v-if="showDropdown && vendorType !== 'none' && vendorType !== ''" 
                     class="absolute w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-20"
                     @click.stop
                     >
                     <!-- 選單清單 -->
                     <div class="max-h-48 overflow-y-auto">
                         <div 
-                            v-for="v in filteredVenders" 
-                            :key="v"
+                            v-for="(v, index) in filteredVenders" 
+                            :key="index"
                             @click="selectVender(v)"
                             class="px-3 py-2 hover:bg-blue-100 cursor-pointer"
                             >
@@ -193,7 +195,16 @@
                     <li class="text-red-600">前購單單號依照需求輸入</li>
                 </ul>
             </div>
-            <div class="flex justify-center mt-6">
+            <div class="flex justify-center gap-4 mt-6">
+                <button 
+                    @click="saveChanges"
+                    class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md transition flex items-center gap-2"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    💾 儲存修改
+                </button>
                 <button 
                     @click="goBack"
                     class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg shadow-md transition"
@@ -208,3 +219,5 @@
     <script src="../static/js/func/can.js"></script>
 </body>
 </html>
+
+

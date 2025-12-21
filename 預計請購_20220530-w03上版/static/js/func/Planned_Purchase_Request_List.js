@@ -142,6 +142,9 @@ const app = Vue.createApp({
 
             venders: [],  // 廠商清單
             selectedVender: '', // 使用者選擇的廠商
+            venderSearchText: '', // 廠商搜尋文字
+            filteredVenders: [], // 過濾後的廠商清單
+            showVenderSuggestions: false, // 顯示廠商建議列表
             settingType: 'none',  // 預設選擇「無指定預設」
             lasteprno: '',
             // 新增以下兩個屬性
@@ -197,6 +200,13 @@ const app = Vue.createApp({
             if (!val) {
                 this.newFolderName = '';
                 this.showUploadButton = false;
+            }
+        },
+        settingType(val) {
+            if (val === 'none') {
+                this.venderSearchText = '';
+                this.selectedVender = '';
+                this.filteredVenders = [...this.venders]; // 重置過濾列表
             }
         },
     },
@@ -1151,6 +1161,7 @@ const app = Vue.createApp({
         if(this.setRule == 'copymsg'){
             console.log('路徑確認 - copymsg 回來的')
             this.editItemData = JSON.parse(this.editItemData);
+            // 只打開編輯框顯示已儲存的資料，不再次儲存
             await this.editItem(0, this.editItemData)
             this.setRule = ''
             localStorage.setItem('setRule', this.setRule)
@@ -1485,7 +1496,8 @@ const app = Vue.createApp({
             }
 
             this.settingType = this.editItemData['合作類別'] || 'none'
-            this.selectedVender = this.editItemData['合作廠商']
+            this.selectedVender = this.editItemData['合作廠商'] || ''
+            this.venderSearchText = this.editItemData['合作廠商'] || ''
             this.lasteprno = this.editItemData['前購單單號']
 
             this.newFolderName = '';
@@ -1503,8 +1515,10 @@ const app = Vue.createApp({
             this.editTableRows = [];
             this.newFolderName = '';
             this.acceptanceFolderName = '';
-            this.settingType = ''
+            this.settingType = 'none'
             this.selectedVender = '';
+            this.venderSearchText = '';
+            this.showVenderSuggestions = false;
             this.lasteprno = ''
         },
 
@@ -1784,6 +1798,9 @@ const app = Vue.createApp({
         async closeSaveNewItem(){
             this.showNewItemModal = false;
             this.newFolderName = '';
+            this.venderSearchText = '';
+            this.selectedVender = '';
+            this.showVenderSuggestions = false;
         },
 
         // 存新資料
@@ -2231,6 +2248,11 @@ const app = Vue.createApp({
             this.acceptanceFolderName = ''; // 針對 修正區塊 的 驗收路徑 名字
             this.showUploadButton = false; // 新增資料夾按鈕的卡控
             this.showUploadButtonAcceptance = false; // 驗收路徑的 新增資料夾卡控
+            this.settingType = 'none'; // 重置部分選項
+            this.venderSearchText = ''; // 重置廠商搜尋文字
+            this.selectedVender = ''; // 重置選擇的廠商
+            this.showVenderSuggestions = false; // 隱藏廠商建議
+            this.lasteprno = ''; // 重置前購單號
             this.addNewRow(); 
         },
 
@@ -3112,12 +3134,41 @@ const app = Vue.createApp({
                 const data = await res.json();
                 if (Array.isArray(data)) {
                     this.venders = data;
+                    this.filteredVenders = data; // 初始化過濾列表
                 } else {
                     console.error("API 回傳格式錯誤", data);
                 }
             } catch (err) {
                 console.error("❌ 無法載入廠商資料", err);
             }
+        },
+
+        // 廠商模糊搜尋
+        filterVenders() {
+            const searchText = (this.venderSearchText || '').toLowerCase().trim();
+            if (searchText === '') {
+                this.filteredVenders = [...this.venders];
+            } else {
+                this.filteredVenders = this.venders.filter(v => 
+                    v.toLowerCase().includes(searchText)
+                );
+            }
+            console.log('過濾結果:', this.filteredVenders.length, '筆');
+        },
+
+        // 選擇廠商
+        selectVender(vender) {
+            this.selectedVender = vender;
+            this.venderSearchText = vender;
+            this.filteredVenders = [...this.venders]; // 重置過濾列表
+            // 不需要手動設置showVenderSuggestions，blur事件會處理
+        },
+
+        // 隱藏廠商建議列表
+        hideVenderSuggestions() {
+            setTimeout(() => {
+                this.showVenderSuggestions = false;
+            }, 200);
         },
 
         async goDetailPage(){

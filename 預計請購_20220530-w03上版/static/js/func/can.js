@@ -21,14 +21,15 @@ const app = Vue.createApp({
       prevOrderNo: "", // 新增「前購單單號」
       vendorType: "",   // "none" | "project" | "market"
       editItemData: [],
+      tableRows: [], // ✅ 儲存細項資料
     };
   },
   watch: {
     vendorType(newVal, oldVal) {
-      // 如果從 project/market 切換到 none，就清空供應商名稱
+      // 如果切換到 none，就清空供應商名稱
       if (newVal === 'none') {
-        this.vender = '';           // 清空名稱
-        this.showDropdown = false;  // 關閉下拉選單
+        this.vender = '';
+        this.showDropdown = false;
       }
 
       // 如果回到未選擇狀態，也清空供應商
@@ -46,9 +47,13 @@ const app = Vue.createApp({
       let venderText = '';
       const venderTrimmed = (this.vender ?? '').trim();
 
-      if (this.vendorType === 'project' && venderTrimmed) {
-        venderText = `合作開發：${venderTrimmed}`;
-      } else if (this.vendorType === 'market' && venderTrimmed) {
+      if (this.vendorType === 'cooperate' && venderTrimmed) {
+        venderText = `合作廠商：${venderTrimmed}`;
+      } else if (this.vendorType === 'cooperate2' && venderTrimmed) {
+        venderText = `2nd合作開發：${venderTrimmed}`;
+      } else if (this.vendorType === 'parts' && venderTrimmed) {
+        venderText = `零件商：${venderTrimmed}`;
+      } else if (this.vendorType === 'suggestion' && venderTrimmed) {
         venderText = `建議廠商：${venderTrimmed}`;
       }
 
@@ -61,18 +66,26 @@ const app = Vue.createApp({
       let venderText = '';
       const venderTrimmed = (this.vender ?? '').trim();
 
-      if (this.vendorType === 'project' && venderTrimmed) {
-        venderText = `合作開發：${venderTrimmed}。`;
-      } else if (this.vendorType === 'market' && venderTrimmed) {
+      if (this.vendorType === 'cooperate' && venderTrimmed) {
+        venderText = `合作廠商：${venderTrimmed}。`;
+      } else if (this.vendorType === 'cooperate2' && venderTrimmed) {
+        venderText = `2nd合作開發：${venderTrimmed}。`;
+      } else if (this.vendorType === 'parts' && venderTrimmed) {
+        venderText = `零件商：${venderTrimmed}。`;
+      } else if (this.vendorType === 'suggestion' && venderTrimmed) {
         venderText = `建議廠商：${venderTrimmed}。`;
       }
 
       return `${this.order} - ${this.reason}。(${prevText}詳如附件)。需求工程師：${this.requester}(CT4:${this.phone})。${venderText}煩請長官撥空協助簽核，謝謝。`;
     },
     filteredVenders() {
-      const keyword = (this.vender ?? "").trim().toLowerCase(); // 直接用 vender 當關鍵字
-      if (!keyword) return this.venderList;
-      return this.venderList.filter(v => v.toLowerCase().includes(keyword));
+      const keyword = (this.vender ?? "").trim().toLowerCase();
+      let result = keyword === '' 
+        ? this.venderList 
+        : this.venderList.filter(v => v.toLowerCase().includes(keyword));
+      
+      // ✅ 去除重複的廠商名稱
+      return [...new Set(result)];
     },
   },
 
@@ -86,6 +99,7 @@ const app = Vue.createApp({
 
     await this.loadTXTdata();
     await this.loadVenders();
+    await this.loadTableRows(); // ✅ 載入細項資料
     document.addEventListener("click", (e) => this.handleClickOutside(e));
   },
 
@@ -105,8 +119,8 @@ const app = Vue.createApp({
       this.showDropdown = false; // 選完關閉下拉
     },
     enableDropdown() {
-      // 只有在選擇了 project 或 market 類型時，才打開下拉
-      if (this.vendorType === 'project' || this.vendorType === 'market') {
+      // 只有在選擇了非 none 和非空的類型時，才打開下拉
+      if (this.vendorType !== 'none' && this.vendorType !== '') {
         this.showDropdown = true;
       } else {
         this.showDropdown = false;
@@ -162,8 +176,10 @@ const app = Vue.createApp({
 
       const vendorTypeMap = {
         none: 'none',
-        cooperate: 'project',
-        suggestion: 'market',
+        cooperate: 'cooperate',
+        cooperate2: 'cooperate2',
+        parts: 'parts',
+        suggestion: 'suggestion',
       };
 
       this.vendorType = vendorTypeMap[this.editItemData["合作類別"]] || '';
@@ -190,10 +206,36 @@ const app = Vue.createApp({
         const response = await fetch("http://localhost:5000/api/venders");
         const venders = await response.json();
         if (Array.isArray(venders)) {
-          this.venderList = venders;
+          // ✅ 去除重複的廠商名稱
+          this.venderList = [...new Set(venders)];
+          console.log('✅ 已載入廠商:', this.venderList.length, '筆（已去重）');
         }
       } catch (error) {
         console.log(error);
+      }
+    },
+
+    async loadTableRows() {
+      try {
+        // 取得細項資料
+        const id = this.editItemData['Id'];
+        if (!id) {
+          console.log('沒有Id，無法載入細項');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:5000/api/get_detail/${id}`);
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+          this.tableRows = data;
+          console.log('✅ 已載入細項資料:', this.tableRows.length, '筆');
+        } else {
+          this.tableRows = [];
+        }
+      } catch (error) {
+        console.log('載入細項失敗:', error);
+        this.tableRows = [];
       }
     },
 
@@ -241,11 +283,87 @@ const app = Vue.createApp({
       }
     },
 
+    async saveChanges() {
+      // 更新主資料
+      this.editItemData['合作類別'] = this.vendorType;
+      this.editItemData['合作廠商'] = this.vender;
+      this.editItemData['前購單單號'] = this.prevOrderNo;
+
+      try {
+        // ✅ 直接儲存到資料庫（包含細項）
+        const payload = {
+          ...this.editItemData,
+          tableRows: this.tableRows  // 包含細項資料
+        };
+
+        const response = await fetch('http://localhost:5000/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          console.log('✅ 資料已儲存到資料庫');
+          
+          // 更新 localStorage
+          localStorage.setItem('editItemData', JSON.stringify(this.editItemData));
+          
+          // 設置返回標記
+          this.setRule = "copymsg"
+          localStorage.setItem('username', this.username);
+          localStorage.setItem('setRule', this.setRule);
+          
+          // ✅ 儲存成功後跳轉回360
+          window.location.href = "Procurement_Dynamic_360_Dashboard.html";
+        } else {
+          alert('❌ 儲存失敗：' + (result.message || '未知錯誤'));
+        }
+      } catch (error) {
+        console.error('儲存錯誤：', error);
+        alert('❌ 儲存失敗，請檢查網路連線');
+      }
+    },
+
     async goBack() {
+      // 更新主資料
+      this.editItemData['合作類別'] = this.vendorType;
+      this.editItemData['合作廠商'] = this.vender;
+      this.editItemData['前購單單號'] = this.prevOrderNo;
+
+      try {
+        // ✅ 直接儲存到資料庫（包含細項）
+        const payload = {
+          ...this.editItemData,
+          tableRows: this.tableRows  // 包含細項資料
+        };
+
+        const response = await fetch('http://localhost:5000/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          console.error('儲存失敗');
+          alert('❌ 儲存失敗，請檢查後重試');
+          return;
+        }
+
+        console.log('✅ 資料已儲存到資料庫');
+      } catch (error) {
+        console.error('儲存錯誤：', error);
+        alert('❌ 儲存失敗，請檢查網路連線');
+        return;
+      }
+
+      // 設置返回標記
       this.setRule = "copymsg"
       localStorage.setItem('username', this.username);
-      localStorage.setItem('setRule', this.setRule)
+      localStorage.setItem('setRule', this.setRule);
       localStorage.setItem('editItemData', JSON.stringify(this.editItemData));
+      
       window.location.href = "Procurement_Dynamic_360_Dashboard.html";
     },
   },
