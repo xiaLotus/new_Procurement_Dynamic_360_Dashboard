@@ -298,7 +298,7 @@ def get_unordered_count():
         monthly_sums = df_unordered.groupby("月份")["總金額"].sum().sort_index()
         monthly_expenses = {month: int(round(amount, 2)) for month, amount in monthly_sums.items()}
 
-        print(monthly_expenses)
+        # print(monthly_expenses)
 
         return jsonify({
             "count_X": count_X,
@@ -314,7 +314,6 @@ def get_unordered_count():
             "monthly_expenses": {},
             "error": str(e)
         }), 500
-
 
 # 12/1
 # ========================================================================
@@ -414,7 +413,7 @@ def monthly_expense_analysis():
         print(f"月度費用分析錯誤: {str(e)}")
         traceback.print_exc()
         return jsonify({'success': False, 'message': f'錯誤: {str(e)}'}), 500
-    
+
 
 @app.route('/api/getrestofmoney', methods = ['GET'])
 def getrestofmoney():

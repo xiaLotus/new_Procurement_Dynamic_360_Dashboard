@@ -27,6 +27,10 @@ createApp({
             // 模糊搜尋文字
             itemSearchText: '',
             reasonSearchText: '',
+            
+            // 排序狀態
+            directorSortState: 'none',  // 'none', 'asc', 'desc'
+            uncleSortState: 'none',     // 'none', 'asc', 'desc'
         };
     },
     
@@ -82,7 +86,24 @@ createApp({
         
         // displayItems 直接使用 baseFilteredItems（因為 Tab 過濾已經在 currentTabRawItems 中處理）
         displayItems() {
-            return this.baseFilteredItems;
+            let items = this.baseFilteredItems;
+            
+            // 如果沒有排序，直接返回
+            if (this.directorSortState === 'none' && this.uncleSortState === 'none') {
+                return items;
+            }
+            
+            // 主任簽核排序
+            if (this.directorSortState !== 'none') {
+                return this.sortByDirector(items);
+            }
+            
+            // 叔叔簽核排序
+            if (this.uncleSortState !== 'none') {
+                return this.sortByUncle(items);
+            }
+            
+            return items;
         },
         
         // 為了保持計數正確，需要這些 computed（不套用下拉篩選）
@@ -261,6 +282,80 @@ createApp({
     },
     
     methods: {
+        // ========== 排序方法 ==========
+        toggleDirectorSort() {
+            // 重置叔叔簽核狀態（同一時間只能有一個排序）
+            this.uncleSortState = 'none';
+            
+            if (this.directorSortState === 'none') {
+                this.directorSortState = 'asc';
+            } else if (this.directorSortState === 'asc') {
+                this.directorSortState = 'desc';
+            } else {
+                this.directorSortState = 'none';
+            }
+        },
+        
+        toggleUncleSort() {
+            // 重置主任簽核狀態（同一時間只能有一個排序）
+            this.directorSortState = 'none';
+            
+            if (this.uncleSortState === 'none') {
+                this.uncleSortState = 'asc';
+            } else if (this.uncleSortState === 'asc') {
+                this.uncleSortState = 'desc';
+            } else {
+                this.uncleSortState = 'none';
+            }
+        },
+        
+        // 主任簽核排序 function
+        sortByDirector(items) {
+            const sorted = [...items];
+            
+            sorted.sort((a, b) => {
+                const aVal = a['主任簽核'] || '';
+                const bVal = b['主任簽核'] || '';
+                const aStatus = (aVal.trim() === 'V') ? 1 : (aVal.trim() === 'R' ? 2 : 0);
+                const bStatus = (bVal.trim() === 'V') ? 1 : (bVal.trim() === 'R' ? 2 : 0);
+                
+                if (this.directorSortState === 'asc') {
+                    // 未簽核在上: 0 < 1 < 2
+                    return aStatus - bStatus;
+                } else {
+                    // 簽核完成在上: 1 < 2 < 0
+                    const order = {1: 0, 2: 1, 0: 2};
+                    return order[aStatus] - order[bStatus];
+                }
+            });
+            
+            return sorted;
+        },
+        
+        // 叔叔簽核排序 function（按主任簽核狀態排序）
+        sortByUncle(items) {
+            const sorted = [...items];
+            
+            sorted.sort((a, b) => {
+                // 取得主任簽核狀態（因為叔叔要等主任簽完）
+                const aVal = a['主任簽核'] || '';
+                const bVal = b['主任簽核'] || '';
+                // V=已簽(1), 其他=未簽(0)
+                const aStatus = (aVal.trim() === 'V') ? 1 : 0;
+                const bStatus = (bVal.trim() === 'V') ? 1 : 0;
+                
+                if (this.uncleSortState === 'asc') {
+                    // 箭頭向上：主任簽完的在上 (1 < 0)
+                    return bStatus - aStatus;
+                } else {
+                    // 箭頭向下：主任沒簽的在上 (0 < 1)
+                    return aStatus - bStatus;
+                }
+            });
+            
+            return sorted;
+        },
+        
         // ========== 下拉篩選相關 ==========
         toggleDropdown(filterName) {
             const wasOpen = this[filterName];
@@ -320,6 +415,8 @@ createApp({
             this.checkedAmounts = [];
             this.itemSearchText = '';
             this.reasonSearchText = '';
+            this.directorSortState = 'none';
+            this.uncleSortState = 'none';
             this.closeAllDropdowns();
         },
         

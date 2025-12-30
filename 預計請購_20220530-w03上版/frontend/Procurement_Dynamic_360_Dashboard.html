@@ -987,15 +987,17 @@
                         >
                         <td class="py-2 px-4 text-sm text-center"
                             :class="{
-                                'text-red-500 text-4xl font-bold': item['主任簽核'] === 'X',
-                                'text-green-500 text-4xl font-bold': item['主任簽核'] === 'V'
+                                'text-red-500 text-4xl font-bold': (item['主任簽核'] || '').trim() === 'X',
+                                'text-green-500 text-4xl font-bold': (item['主任簽核'] || '').trim() === 'V',
+                                'text-orange-500 text-4xl font-bold': (item['主任簽核'] || '').trim() === 'R'
                             }">
                             {{ item['主任簽核'] || '' }}
                         </td>
                         <td class="py-2 px-4 text-sm text-center"
                             :class="{
-                                'text-red-500 text-4xl font-bold': item['叔叔簽核'] === 'X',
-                                'text-green-500 text-4xl font-bold': item['叔叔簽核'] === 'V'
+                                'text-red-500 text-4xl font-bold': (item['叔叔簽核'] || '').trim() === 'X',
+                                'text-green-500 text-4xl font-bold': (item['叔叔簽核'] || '').trim() === 'V',
+                                'text-orange-500 text-4xl font-bold': (item['叔叔簽核'] || '').trim() === 'R'
                             }">
                             {{ item['叔叔簽核'] || '' }}
                         </td>

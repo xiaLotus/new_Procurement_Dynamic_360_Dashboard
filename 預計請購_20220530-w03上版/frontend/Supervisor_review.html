@@ -481,10 +481,34 @@
                                     <th class="px-3 py-3 text-left" style="width: 10%;">備註</th>
                                     <!-- 主任簽核欄位 -->
                                     <th v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
-                                        class="px-3 py-3 text-center bg-indigo-700" style="width: 7%;">主任簽核</th>
+                                        class="px-3 py-3 text-center bg-indigo-700" style="width: 7%;">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <span>主任簽核</span>
+                                            <button 
+                                                @click.stop="toggleDirectorSort"
+                                                class="hover:bg-indigo-600 rounded p-1 transition"
+                                                :title="directorSortState === 'none' ? '點擊排序' : directorSortState === 'asc' ? '未簽核在上' : '簽核完成在上'">
+                                                <svg v-if="directorSortState === 'none'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                                                <svg v-else-if="directorSortState === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                                                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
+                                        </div>
+                                    </th>
                                     <!-- 叔叔簽核欄位 -->
                                     <th v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
-                                        class="px-3 py-3 text-center bg-purple-700" style="width: 7%;">叔叔簽核</th>
+                                        class="px-3 py-3 text-center bg-purple-700" style="width: 7%;">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <span>叔叔簽核</span>
+                                            <button 
+                                                @click.stop="toggleUncleSort"
+                                                class="hover:bg-purple-600 rounded p-1 transition"
+                                                :title="uncleSortState === 'none' ? '點擊排序' : uncleSortState === 'asc' ? '主任簽完在上' : '主任沒簽在上'">
+                                                <svg v-if="uncleSortState === 'none'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                                                <svg v-else-if="uncleSortState === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                                                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
+                                        </div>
+                                    </th>
                                     <!-- 已退回的處理欄位 -->
                                     <th v-if="currentTab === 'rejected'" class="px-3 py-3 text-center" style="width: 6%;">處理</th>
                                 </tr>
