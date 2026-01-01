@@ -31,6 +31,9 @@ createApp({
             // 排序狀態
             directorSortState: 'none',  // 'none', 'asc', 'desc'
             uncleSortState: 'none',     // 'none', 'asc', 'desc'
+            orderSortState: 'none',     // 'none', 'asc', 'desc' - 請購順序
+            amountSortState: 'none',    // 'none', 'asc', 'desc' - 總金額
+            dateSortState: 'none',      // 'none', 'asc', 'desc' - 需求日
         };
     },
     
@@ -88,8 +91,12 @@ createApp({
         displayItems() {
             let items = this.baseFilteredItems;
             
-            // 如果沒有排序，直接返回
-            if (this.directorSortState === 'none' && this.uncleSortState === 'none') {
+            // 如果沒有任何排序，直接返回
+            if (this.directorSortState === 'none' && 
+                this.uncleSortState === 'none' && 
+                this.orderSortState === 'none' && 
+                this.amountSortState === 'none' && 
+                this.dateSortState === 'none') {
                 return items;
             }
             
@@ -101,6 +108,21 @@ createApp({
             // 叔叔簽核排序
             if (this.uncleSortState !== 'none') {
                 return this.sortByUncle(items);
+            }
+            
+            // 請購順序排序
+            if (this.orderSortState !== 'none') {
+                return this.sortByOrder(items);
+            }
+            
+            // 總金額排序
+            if (this.amountSortState !== 'none') {
+                return this.sortByAmount(items);
+            }
+            
+            // 需求日排序
+            if (this.dateSortState !== 'none') {
+                return this.sortByDate(items);
             }
             
             return items;
@@ -286,6 +308,9 @@ createApp({
         toggleDirectorSort() {
             // 重置叔叔簽核狀態（同一時間只能有一個排序）
             this.uncleSortState = 'none';
+            this.orderSortState = 'none';
+            this.amountSortState = 'none';
+            this.dateSortState = 'none';
             
             if (this.directorSortState === 'none') {
                 this.directorSortState = 'asc';
@@ -299,6 +324,9 @@ createApp({
         toggleUncleSort() {
             // 重置主任簽核狀態（同一時間只能有一個排序）
             this.directorSortState = 'none';
+            this.orderSortState = 'none';
+            this.amountSortState = 'none';
+            this.dateSortState = 'none';
             
             if (this.uncleSortState === 'none') {
                 this.uncleSortState = 'asc';
@@ -306,6 +334,57 @@ createApp({
                 this.uncleSortState = 'desc';
             } else {
                 this.uncleSortState = 'none';
+            }
+        },
+        
+        // 請購順序排序切換
+        toggleOrderSort() {
+            // 重置其他排序
+            this.directorSortState = 'none';
+            this.uncleSortState = 'none';
+            this.amountSortState = 'none';
+            this.dateSortState = 'none';
+            
+            if (this.orderSortState === 'none') {
+                this.orderSortState = 'asc';
+            } else if (this.orderSortState === 'asc') {
+                this.orderSortState = 'desc';
+            } else {
+                this.orderSortState = 'none';
+            }
+        },
+        
+        // 總金額排序切換
+        toggleAmountSort() {
+            // 重置其他排序
+            this.directorSortState = 'none';
+            this.uncleSortState = 'none';
+            this.orderSortState = 'none';
+            this.dateSortState = 'none';
+            
+            if (this.amountSortState === 'none') {
+                this.amountSortState = 'asc';
+            } else if (this.amountSortState === 'asc') {
+                this.amountSortState = 'desc';
+            } else {
+                this.amountSortState = 'none';
+            }
+        },
+        
+        // 需求日排序切換
+        toggleDateSort() {
+            // 重置其他排序
+            this.directorSortState = 'none';
+            this.uncleSortState = 'none';
+            this.orderSortState = 'none';
+            this.amountSortState = 'none';
+            
+            if (this.dateSortState === 'none') {
+                this.dateSortState = 'asc';
+            } else if (this.dateSortState === 'asc') {
+                this.dateSortState = 'desc';
+            } else {
+                this.dateSortState = 'none';
             }
         },
         
@@ -350,6 +429,66 @@ createApp({
                 } else {
                     // 箭頭向下：主任沒簽的在上 (0 < 1)
                     return aStatus - bStatus;
+                }
+            });
+            
+            return sorted;
+        },
+        
+        // 請購順序排序 function
+        sortByOrder(items) {
+            const sorted = [...items];
+            
+            sorted.sort((a, b) => {
+                const aOrder = parseInt(a['請購順序']) || 0;
+                const bOrder = parseInt(b['請購順序']) || 0;
+                
+                if (this.orderSortState === 'asc') {
+                    // 小到大
+                    return aOrder - bOrder;
+                } else {
+                    // 大到小
+                    return bOrder - aOrder;
+                }
+            });
+            
+            return sorted;
+        },
+        
+        // 總金額排序 function
+        sortByAmount(items) {
+            const sorted = [...items];
+            
+            sorted.sort((a, b) => {
+                const aAmount = parseFloat(a['總金額']) || 0;
+                const bAmount = parseFloat(b['總金額']) || 0;
+                
+                if (this.amountSortState === 'asc') {
+                    // 小到大
+                    return aAmount - bAmount;
+                } else {
+                    // 大到小
+                    return bAmount - aAmount;
+                }
+            });
+            
+            return sorted;
+        },
+        
+        // 需求日排序 function
+        sortByDate(items) {
+            const sorted = [...items];
+            
+            sorted.sort((a, b) => {
+                const aDate = a['需求日'] || '';
+                const bDate = b['需求日'] || '';
+                
+                if (this.dateSortState === 'asc') {
+                    // 舊到新
+                    return aDate.localeCompare(bDate);
+                } else {
+                    // 新到舊
+                    return bDate.localeCompare(aDate);
                 }
             });
             
@@ -417,6 +556,9 @@ createApp({
             this.reasonSearchText = '';
             this.directorSortState = 'none';
             this.uncleSortState = 'none';
+            this.orderSortState = 'none';
+            this.amountSortState = 'none';
+            this.dateSortState = 'none';
             this.closeAllDropdowns();
         },
         

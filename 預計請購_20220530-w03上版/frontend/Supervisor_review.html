@@ -335,13 +335,23 @@
                                     <th class="px-3 py-3 text-center" style="width: 6%;">總體狀態</th>
                                     <th class="px-3 py-3 text-center" style="width: 5%;">WBS</th>
                                     
-                                    <!-- 請購順序（可篩選）-->
+                                    <!-- 請購順序（可篩選 + 可排序）-->
                                     <th class="px-3 py-3 text-center th-clickable filter-dropdown-wrapper" 
                                         style="width: 5%;"
                                         :class="{ 'filter-active': isOrdersFiltered }">
-                                        <div @click.stop="toggleDropdown('showOrderFilter')" class="flex items-center justify-center gap-1">
-                                            <span>請購<br>順序</span>
-                                            <span class="text-xs" :class="{ 'rotate-180': showOrderFilter }">▼</span>
+                                        <div class="flex items-center justify-center gap-1">
+                                            <div @click.stop="toggleDropdown('showOrderFilter')" class="flex items-center gap-1 cursor-pointer">
+                                                <span>請購<br>順序</span>
+                                                <span class="text-xs" :class="{ 'rotate-180': showOrderFilter }">▼</span>
+                                            </div>
+                                            <button 
+                                                @click.stop="toggleOrderSort"
+                                                class="hover:bg-blue-600 rounded p-1 transition"
+                                                :title="orderSortState === 'none' ? '點擊排序' : orderSortState === 'asc' ? '小到大' : '大到小'">
+                                                <svg v-if="orderSortState === 'none'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                                                <svg v-else-if="orderSortState === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                                                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
                                         </div>
                                         <!-- 下拉篩選 -->
                                         <transition name="fade">
@@ -447,13 +457,23 @@
                                         </transition>
                                     </th>
                                     
-                                    <!-- 總金額（可篩選）-->
+                                    <!-- 總金額（可篩選 + 可排序）-->
                                     <th class="px-3 py-3 text-right th-clickable filter-dropdown-wrapper" 
                                         style="width: 6%;"
                                         :class="{ 'filter-active': isAmountsFiltered }">
-                                        <div @click.stop="toggleDropdown('showAmountFilter')" class="flex items-center justify-end gap-1">
-                                            <span>總金額</span>
-                                            <span class="text-xs" :class="{ 'rotate-180': showAmountFilter }">▼</span>
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button 
+                                                @click.stop="toggleAmountSort"
+                                                class="hover:bg-blue-600 rounded p-1 transition"
+                                                :title="amountSortState === 'none' ? '點擊排序' : amountSortState === 'asc' ? '小到大' : '大到小'">
+                                                <svg v-if="amountSortState === 'none'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                                                <svg v-else-if="amountSortState === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                                                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
+                                            <div @click.stop="toggleDropdown('showAmountFilter')" class="flex items-center gap-1 cursor-pointer">
+                                                <span>總金額</span>
+                                                <span class="text-xs" :class="{ 'rotate-180': showAmountFilter }">▼</span>
+                                            </div>
                                         </div>
                                         <!-- 下拉篩選 -->
                                         <transition name="fade">
@@ -476,7 +496,20 @@
                                         </transition>
                                     </th>
                                     
-                                    <th class="px-3 py-3 text-center nowrap-cell" style="width: 6%;">需求日</th>
+                                    <!-- 需求日（可排序）-->
+                                    <th class="px-3 py-3 text-center nowrap-cell" style="width: 6%;">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <span>需求日</span>
+                                            <button 
+                                                @click.stop="toggleDateSort"
+                                                class="hover:bg-blue-600 rounded p-1 transition"
+                                                :title="dateSortState === 'none' ? '點擊排序' : dateSortState === 'asc' ? '舊到新' : '新到舊'">
+                                                <svg v-if="dateSortState === 'none'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                                                <svg v-else-if="dateSortState === 'asc'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                                                <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                                            </button>
+                                        </div>
+                                    </th>
                                     <th class="px-3 py-3 text-left" style="width: 14%;">報告路徑</th>
                                     <th class="px-3 py-3 text-left" style="width: 10%;">備註</th>
                                     <!-- 主任簽核欄位 -->

@@ -6964,3 +6964,10 @@ k =E7=89=B9=E4=BB=95=E7=89=88' -> 'CIM K25-8F 手臂整合 Fork 特仕版'
 2025-12-30 20:45:21,920 INFO: 127.0.0.1 - - [30/Dec/2025 20:45:21] "GET /api/get-all-items-with-approval HTTP/1.1" 200 -
 2025-12-30 20:45:52,637 INFO: 127.0.0.1 - - [30/Dec/2025 20:45:52] "GET /api/get-all-items-with-approval HTTP/1.1" 200 -
 2025-12-30 20:46:02,530 INFO: 127.0.0.1 - - [30/Dec/2025 20:46:02] "GET /api/get-all-items-with-approval HTTP/1.1" 200 -
+2026-01-01 21:08:00,684 INFO: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-01-01 21:08:00,685 INFO: [33mPress CTRL+C to quit[0m
+2026-01-01 21:08:00,687 INFO:  * Restarting with stat
+2026-01-01 21:08:01,431 WARNING:  * Debugger is active!
+2026-01-01 21:08:01,433 INFO:  * Debugger PIN: 509-008-513
+2026-01-01 21:08:01,488 INFO: 127.0.0.1 - - [01/Jan/2026 21:08:01] "GET /api/get-all-items-with-approval HTTP/1.1" 200 -
