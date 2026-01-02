@@ -4687,9 +4687,150 @@ def get_monthly_actual_accounting():
     })
 
 
+# 5.py
+@app.route('/api/next_month_amount', methods=['GET'])
+def get_next_month_amount():
+    """
+    計算下個月的承諾交期總金額
+    
+    篩選條件：
+    1. 有承諾交期
+    2. 承諾交期落在「下個月」
+    3. 發票月份為空
+    4. WBS 為空
+    5. 優先用 RT總金額，否則用 總價
+    """
+    from datetime import date, timedelta 
+    try:
+        file_path = BUYER_FILE
+        
+        print(f"📂 開始處理下個月預計入帳...")
+        print(f"📂 檔案路徑: {file_path}")
+        
+        if not os.path.exists(file_path):
+            print(f"❌ 檔案不存在: {file_path}")
+            return jsonify({
+                "file": file_path, 
+                "next_month_amount": 0, 
+                "rows": [],
+                "error": "檔案不存在"
+            }), 404
+
+        # 讀取 CSV
+        df = pd.read_csv(file_path, encoding="utf-8-sig", dtype=str).fillna("")
+        print(f"✅ 成功讀取 CSV，共 {len(df)} 筆資料")
+
+        # 金額欄位清理（去掉千分位逗號）
+        def clean_amount(series):
+            return (
+                series.astype(str)
+                .str.replace(",", "", regex=False)
+                .str.strip()
+                .replace("", "0")
+            )
+
+        # 處理 RT總金額
+        if "RT總金額" in df.columns:
+            df["RT總金額"] = pd.to_numeric(clean_amount(df["RT總金額"]), errors="coerce").fillna(0)
+        else:
+            print("⚠️ 找不到 RT總金額 欄位")
+            df["RT總金額"] = 0
+
+        # 處理 總價
+        if "總價" in df.columns:
+            df["總價"] = pd.to_numeric(clean_amount(df["總價"]), errors="coerce").fillna(0)
+        else:
+            print("⚠️ 找不到 總價 欄位")
+            df["總價"] = 0
+
+        # 優先用 RT總金額
+        df["計算金額"] = df["RT總金額"].where(df["RT總金額"] > 0, df["總價"])
+        print("✅ 計算金額欄位已建立")
+
+        # 日期清理
+        def clean_date(val):
+            val = str(val).strip().replace("/", "").replace("-", "")
+            return val if val.isdigit() and len(val) == 8 else ""
+
+        df["交期_clean"] = df["Delivery Date 廠商承諾交期"].apply(clean_date)
+
+        # ⭐ 取得下個月區間（修正版）
+        today = date.today()  # 改用 date.today()
+        
+        # 計算下個月第一天
+        first_day_next_month = (today.replace(day=1) + timedelta(days=32)).replace(day=1)
+        
+        # 計算下個月最後一天
+        last_day_next_month = (first_day_next_month.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+
+        start = int(first_day_next_month.strftime("%Y%m%d"))
+        end = int(last_day_next_month.strftime("%Y%m%d"))
+
+        print(f"📅 下個月日期範圍: {first_day_next_month} ~ {last_day_next_month}")
+        print(f"🔢 整數格式: {start} ~ {end}")
+
+        # 篩選符合條件
+        df["交期_int"] = pd.to_numeric(df["交期_clean"], errors="coerce")
+
+        next_month_df = df[
+            (df["交期_int"] >= start) & 
+            (df["交期_int"] <= end) & 
+            (df["發票月份"].astype(str).str.strip() == "") &
+            (df["WBS"].astype(str).str.strip() == "")
+        ].copy()
+
+        print(f"✅ 符合條件的資料共 {len(next_month_df)} 筆")
+
+        # 計算總額
+        next_month_df["計算金額"] = next_month_df["計算金額"].astype(int)
+        total_amount = int(next_month_df["計算金額"].sum())
+
+        print(f"💰 下個月預計入帳總金額: {total_amount:,} 元")
+
+        # 準備輸出資料
+        cols = ["ePR No.", "PO No.", "品項", "計算金額", "Delivery Date 廠商承諾交期", "WBS"]
+        output_rows = next_month_df[cols].to_dict(orient="records")
+
+        # 確保計算金額為整數
+        for row in output_rows:
+            row["計算金額"] = int(row["計算金額"])
+
+        result = {
+            "file": file_path,
+            "next_month_amount": total_amount,
+            "rows": output_rows,
+            "count": len(output_rows),
+            "date_range": {
+                "start": first_day_next_month.strftime("%Y/%m/%d"),
+                "end": last_day_next_month.strftime("%Y/%m/%d")
+            }
+        }
+        
+        print(f"✅ API 執行成功")
+        return jsonify(result)
+
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        error_trace = traceback.format_exc()
+        
+        print(f"❌ 計算下個月預計入帳失敗: {error_msg}")
+        print(f"❌ 詳細錯誤：")
+        print(error_trace)
+        
+        return jsonify({
+            "file": file_path if 'file_path' in locals() else "unknown",
+            "error": error_msg, 
+            "next_month_amount": 0, 
+            "rows": [],
+            "count": 0
+        }), 500
+
+
+
+
 
 # 驗收區塊
-
 import re
 import json
 import traceback

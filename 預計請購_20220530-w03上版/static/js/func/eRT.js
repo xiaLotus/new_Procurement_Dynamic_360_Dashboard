@@ -145,6 +145,12 @@ const app = Vue.createApp({
             // ========== 新增：防止載入時觸發保存的標記 ==========
             _isLoadingFilters: false,
             _saveTimeout: null,
+
+            // ⭐ 新增：下個月預計入帳相關變數（在最後添加這 4 個）
+            nextMonthAmount: 0,
+            nextMonthDetails: [],
+            showNextMonthModal: false,
+            isLoadingNextMonth: false,
         };
     },
 
@@ -6391,6 +6397,38 @@ async deleteItem(item) {
         });
     }
 },
+    // ⭐ 新增：獲取下個月預計入帳資料
+    async fetchNextMonthAmount() {
+        try {
+            console.log('📊 開始獲取下個月預計入帳資料...');
+            const res = await axios.get("http://127.0.0.1:5000/api/next_month_amount");
+            console.log('✅ API 回應:', res.data);
+            
+            this.nextMonthAmount = res.data.next_month_amount || 0;
+            this.nextMonthDetails = res.data.rows || [];
+            
+            console.log(`📊 下個月預計入帳: ${this.nextMonthAmount.toLocaleString()} 元`);
+            console.log(`📋 明細筆數: ${this.nextMonthDetails.length}`);
+        } catch (error) {
+            console.error("❌ 載入下個月預計入帳失敗:", error);
+            this.nextMonthAmount = 0;
+            this.nextMonthDetails = [];
+        }
+    },
+
+    // ⭐ 新增：顯示下個月預計入帳彈窗
+    async showNextMonthModalHandler() {
+        this.showNextMonthModal = true;
+        this.isLoadingNextMonth = true;
+        try {
+            await this.fetchNextMonthAmount();
+        } catch (error) {
+            console.error("❌ 載入下個月明細失敗:", error);
+            alert('載入下個月預計入帳資料失敗，請稍後再試');
+        } finally {
+            this.isLoadingNextMonth = false;
+        }
+    },
 
     },
 
@@ -6408,6 +6446,7 @@ async deleteItem(item) {
         await this.fetchAccountingSummary();
         await this.fetchMonthlyActualAccounting();
         await this.fetchgetrestofmoney()
+        await this.fetchNextMonthAmount();  // ⭐ 新增這行
         
         document.addEventListener('click', this.handleClickOutside);
         // ========== 初始化 Lucide Icons ==========
