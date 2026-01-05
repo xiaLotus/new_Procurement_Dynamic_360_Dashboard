@@ -55,6 +55,8 @@ const app = Vue.createApp({
         venderText = `零件商：${venderTrimmed}`;
       } else if (this.vendorType === 'suggestion' && venderTrimmed) {
         venderText = `建議廠商：${venderTrimmed}`;
+      } else if (this.vendorType === 'equipment_vendor' && venderTrimmed) {
+        venderText = `設備原廠：${venderTrimmed}`;
       }
 
       return `${this.order} - ${this.reason}。(${prevText}詳如附件)。需求工程師：${this.requester}(CT4:${this.phone})。${venderText}`;
@@ -74,6 +76,8 @@ const app = Vue.createApp({
         venderText = `零件商：${venderTrimmed}。`;
       } else if (this.vendorType === 'suggestion' && venderTrimmed) {
         venderText = `建議廠商：${venderTrimmed}。`;
+      } else if (this.vendorType === 'equipment_vendor' && venderTrimmed) {
+        venderText = `設備原廠：${venderTrimmed}。`;
       }
 
       return `${this.order} - ${this.reason}。(${prevText}詳如附件)。需求工程師：${this.requester}(CT4:${this.phone})。${venderText}煩請長官撥空協助簽核，謝謝。`;
@@ -180,6 +184,7 @@ const app = Vue.createApp({
         cooperate2: 'cooperate2',
         parts: 'parts',
         suggestion: 'suggestion',
+        equipment_vendor: 'equipment_vendor',
       };
 
       this.vendorType = vendorTypeMap[this.editItemData["合作類別"]] || '';

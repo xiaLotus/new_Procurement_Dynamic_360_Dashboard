@@ -4828,8 +4828,6 @@ def get_next_month_amount():
 
 
 
-
-
 # 驗收區塊
 import re
 import json
