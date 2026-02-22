@@ -778,7 +778,8 @@ def get_username_info():
             if entry.get("工號", "").strip() == emp_id:
                 return jsonify({
                     "name": entry.get("姓名", "").strip(),
-                    "班別": entry.get("班別", "").strip()
+                    "班別": entry.get("班別", "").strip(),
+                    "後台權限": entry.get("請購網頁後台", "X").strip()
                 })
 
         return jsonify({"error": "查無此工號"}), 404
@@ -5788,5 +5789,61 @@ def clear_remark_and_approve():
         }), 500
 
 
+
+@app.route('/api/reject-approved-to-pending', methods=['POST'])
+def reject_approved_to_pending():
+    """將已確認的資料退回至待簽核（主任簽核若已通過則維持 V，叔叔簽核重置為 X，並記錄退回原因至備註）"""
+    try:
+        data = request.json
+        item_id = data.get('item_id')
+        reject_reason = data.get('reject_reason', '').strip()
+
+        if not item_id:
+            return jsonify({'status': 'error', 'message': '未提供資料 ID'}), 400
+        if not reject_reason:
+            return jsonify({'status': 'error', 'message': '未提供退回原因'}), 400
+
+        df = pd.read_csv(CSV_FILE, encoding="utf-8-sig", dtype=str)
+        df = df.fillna('')
+
+        # 確保欄位存在
+        if '備註' not in df.columns:
+            df['備註'] = ''
+        if '主任簽核' not in df.columns:
+            df['主任簽核'] = 'X'
+        if '叔叔簽核' not in df.columns:
+            df['叔叔簽核'] = 'X'
+
+        mask = df['Id'].astype(str).str.strip() == str(item_id).strip()
+        if not mask.any():
+            return jsonify({'status': 'error', 'message': f'找不到 ID 為 {item_id} 的資料'}), 404
+
+        # 將退回原因附加到備註
+        current_remark = df.loc[mask, '備註'].values[0]
+        current_remark = '' if (pd.isna(current_remark) or str(current_remark).strip() in ['', 'nan']) else str(current_remark)
+        from datetime import datetime as _dt
+        timestamp = _dt.now().strftime('%Y-%m-%d %H:%M')
+        reject_note = f'【長官退回】{reject_reason}（{timestamp}）'
+        new_remark = f'{current_remark}；{reject_note}' if current_remark else reject_note
+        df.loc[mask, '備註'] = new_remark
+
+        # 主任簽核若已通過 (V) 則維持，否則重置為 X；叔叔簽核一律重置為 X
+        current_director = df.loc[mask, '主任簽核'].values[0]
+        if str(current_director).strip() != 'V':
+            df.loc[mask, '主任簽核'] = 'X'
+        df.loc[mask, '叔叔簽核'] = 'X'
+
+        df = df.fillna('')
+        df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
+
+        logger.info(f"✅ ID {item_id} 已從已確認退回至待簽核，原因：{reject_reason}")
+        return jsonify({'status': 'success', 'message': '已退回至待簽核', 'item_id': item_id})
+
+    except Exception as e:
+        logger.error(f"退回已確認失敗: {e}")
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+    
 if __name__ == "__main__":
     app.run(debug=True)

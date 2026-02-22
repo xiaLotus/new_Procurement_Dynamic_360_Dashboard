@@ -544,6 +544,8 @@
                                     </th>
                                     <!-- 已退回的處理欄位 -->
                                     <th v-if="currentTab === 'rejected'" class="px-3 py-3 text-center" style="width: 6%;">處理</th>
+                                    <!-- 已確認的退回欄位 -->
+                                    <th v-if="currentTab === 'approved'" class="px-3 py-3 text-center bg-red-700" style="width: 6%;">退回</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -658,9 +660,18 @@
                                             處理完成 <i data-lucide="rotate-ccw" class="w-3 h-3 ml-1"></i>
                                         </button>
                                     </td>
+                                    <!-- 已確認的退回按鈕 -->
+                                    <td v-if="currentTab === 'approved'" class="px-3 py-2 text-center">
+                                        <button 
+                                            @click="rejectFromApproved(item.Id)"
+                                            class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition flex items-center justify-center mx-auto"
+                                            title="退回此筆申請">
+                                            退回 <i data-lucide="undo-2" class="w-3 h-3 ml-1"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                                 <tr v-if="displayItems.length === 0">
-                                    <td :colspan="currentTab === 'approved' ? 12 : (currentTab === 'rejected' ? 16 : 15)"
+                                    <td :colspan="currentTab === 'approved' ? 13 : (currentTab === 'rejected' ? 16 : 15)"
                                         class="px-4 py-8 text-center text-gray-500">
                                         
                                         <div class="flex flex-col items-center justify-center">

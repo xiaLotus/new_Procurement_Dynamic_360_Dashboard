@@ -2,6 +2,8 @@ const app = Vue.createApp({
     data() {
         return {
             username: '',
+            myChineseName: '',
+            myBackendRole: 'X',
             setRule: '',
             items: [],
             newItem: {},
@@ -1134,6 +1136,14 @@ const app = Vue.createApp({
     async mounted() {
         this.username = localStorage.getItem('username');
         console.log("👤 使用者名稱：", this.username);
+        try {
+            const res = await axios.post('http://127.0.0.1:5000/api/get-username-info', { emp_id: this.username });
+            this.myChineseName = res.data?.name || '';
+            this.myBackendRole = res.data?.後台權限 || 'X';
+            console.log("👤 中文姓名：", this.myChineseName, "後台權限：", this.myBackendRole);
+        } catch (err) {
+            console.warn("❗ 無法取得使用者資訊：", err);
+        }
         await this.fetchData();
         await this.fetchNoneBuy();
         await this.fetchRequesters();

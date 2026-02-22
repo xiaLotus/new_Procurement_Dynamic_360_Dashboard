@@ -977,12 +977,16 @@
                         <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700 whitespace-nowrap text-center">Edit</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody> 
                     <tr v-for="(item, index) in sortedFilteredData" 
                             :key="index" 
                             class="border-t border-gray-200"
                             :class="{
-                                'bg-gray-500 text-white': item['開單狀態'] === 'C' || item['取消'] === 'C'
+                                'bg-gray-500 text-white': item['開單狀態'] === 'C' || item['取消'] === 'C',
+                                'bg-red-100 border-l-4 border-l-red-500': 
+                                    item['開單狀態'] !== 'C' && item['取消'] !== 'C' &&
+                                    ((item['主任簽核'] || '').trim() === 'X' || (item['叔叔簽核'] || '').trim() === 'X') &&
+                                    (myBackendRole === 'O' || (item['需求者'] || '').trim() === (myChineseName || '').trim())
                             }"
                         >
                         <td class="py-2 px-4 text-sm text-center"

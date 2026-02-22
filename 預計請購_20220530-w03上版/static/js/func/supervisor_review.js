@@ -899,6 +899,67 @@ createApp({
             }
         },
         
+        // ========== 已確認頁面的退回功能 ==========
+        async rejectFromApproved(itemId) {
+            const item = this.allItems.find(i => String(i.Id).trim() === String(itemId).trim());
+            if (!item) {
+                Swal.fire({ icon: 'error', title: '找不到資料', text: `找不到 ID 為 ${itemId} 的資料` });
+                return;
+            }
+            
+            const formValues = await Swal.fire({
+                icon: 'warning',
+                title: '退回確認',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-3 text-sm text-gray-600">確定要退回此筆已確認的申請嗎？</p>
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">退回原因 <span class="text-red-500">*</span></label>
+                            <textarea id="swal-reject-reason" class="w-full border border-gray-300 rounded px-3 py-2 text-sm" 
+                                      rows="3" placeholder="請輸入退回原因..."></textarea>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: '確認退回',
+                cancelButtonText: '取消',
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                preConfirm: () => {
+                    const reason = document.getElementById('swal-reject-reason').value;
+                    if (!reason || !reason.trim()) {
+                        Swal.showValidationMessage('請輸入退回原因！');
+                        return false;
+                    }
+                    return { reason };
+                }
+            });
+            
+            if (formValues.isConfirmed) {
+                try {
+                    const response = await fetch('http://127.0.0.1:5000/api/reject-approved-to-pending', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            item_id: itemId,
+                            reject_reason: formValues.value.reason
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        Swal.fire({ icon: 'success', title: '退回成功', text: '已退回至待簽核', timer: 2000, showConfirmButton: false });
+                        await this.loadData();
+                    } else {
+                        Swal.fire({ icon: 'error', title: '退回失敗', text: data.message });
+                    }
+                } catch (error) {
+                    console.error('退回錯誤:', error);
+                    Swal.fire({ icon: 'error', title: '退回失敗', text: error.message });
+                }
+            }
+        },
+        
         // ========== 處理退回資料 ==========
         async clearRemarkAndApprove(itemId) {
             const item = this.allItems.find(i => String(i.Id).trim() === String(itemId).trim());
