@@ -144,7 +144,10 @@ const app = Vue.createApp({
 
             } else if (this.searchMode === 'author' && this.searchQuery.trim()) {
                 const q = this.searchQuery.toLowerCase();
-                msgs = msgs.filter(m => m.author.toLowerCase().includes(q));
+                msgs = msgs.filter(m =>
+                    m.author.toLowerCase().includes(q) ||          // 姓名
+                    (m.emp_id || '').toLowerCase().includes(q)     // 工號
+                );
 
             } else if (this.searchMode === 'time') {
                 const from = this.searchDateFrom;
@@ -201,6 +204,7 @@ const app = Vue.createApp({
 
         // ── 導覽 ──────────────────────────
         goBack() {
+            localStorage.setItem('username', this.username);
             window.location.href = 'Procurement_Dynamic_360_Dashboard.html';
         },
 
@@ -283,7 +287,8 @@ const app = Vue.createApp({
 
             const payload = {
                 channel: this.selectedChannel,
-                author:  this.displayName || this.username,
+                author:  this.myChineseName || this.username,
+                emp_id:  this.username,
                 content: this.newMessage.trim(),
                 tag:     this.selectedTag,
                 replyTo: this.replyingTo ? this.replyingTo.id : null,
@@ -311,6 +316,29 @@ const app = Vue.createApp({
                 this.scrollToBottom();
                 this.markRead(this.selectedChannel);
             });
+        },
+
+        // ── 撤回訊息（10分鐘內）───────────
+        async recallMessage(msg) {
+            const sent = new Date(msg.timestamp).getTime();
+            if (Date.now() - sent > 10 * 60 * 1000) {
+                alert('已超過10分鐘，無法撤回此訊息');
+                return;
+            }
+            if (!confirm('確認撤回這則訊息？\n撤回後所有人將看不到這則訊息。')) return;
+            try {
+                const res = await axios.post('http://127.0.0.1:5000/api/message-board/recall', {
+                    msg_id:   msg.id,
+                    channel:  msg.channel,
+                    username: this.username,
+                });
+                if (res.data?.success) {
+                    const idx = this.messages.findIndex(m => m.id === msg.id && m.channel === msg.channel);
+                    if (idx !== -1) this.messages.splice(idx, 1);
+                }
+            } catch (err) {
+                alert('撤回失敗：' + (err.response?.data?.error || String(err)));
+            }
         },
 
         // ── 後端：切換釘選 ────────────────
@@ -395,6 +423,22 @@ const app = Vue.createApp({
         hasReactions(reactions) {
             if (!reactions) return false;
             return Object.values(reactions).some(v => v > 0);
+        },
+
+        canRecall(msg) {
+            // 只有自己發的、且在10分鐘內才可撤回
+            if (msg.author !== (this.myChineseName || this.username)) return false;
+            if (!msg.timestamp) return false;
+            const sent = new Date(msg.timestamp).getTime();
+            const now  = Date.now();
+            return (now - sent) <= 10 * 60 * 1000;  // 10 分鐘
+        },
+
+        canRecall(msg) {
+            if (msg.author !== (this.myChineseName || this.username)) return false;
+            if (!msg.timestamp) return false;
+            const sent = new Date(msg.timestamp).getTime();
+            return (Date.now() - sent) <= 10 * 60 * 1000;
         },
 
         isNewMessage(msg) {

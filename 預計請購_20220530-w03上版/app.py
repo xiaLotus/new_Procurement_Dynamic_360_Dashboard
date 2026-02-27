@@ -5827,7 +5827,6 @@ def reject_approved_to_pending():
     
 
 
-
 # ============================================================
 #  留言版 API（直接掛載，CORS 由全域 CORS(app) 覆蓋）
 #
@@ -5838,29 +5837,32 @@ def reject_approved_to_pending():
 #        purchase.json  ...
 #      visits/
 #        23688.json          ← 每人已讀記錄（工號）
-#
-#  visits/{工號}.json 格式：
-#  {
-#    "username": "23688",
-#    "last_read": {
-#      "general":    42,   ← 該頻道最後讀到的訊息 id
-#      "purchase":   17,
-#      "acceptance":  0,
-#      "budget":      0,
-#      "urgent":      0
-#    }
-#  }
+#      message_board.log     ← 操作日誌
 # ============================================================
 
 MB_DIR          = 'message_board_data'
 MB_CHANNELS_DIR = os.path.join(MB_DIR, 'channels')
 MB_VISITS_DIR   = os.path.join(MB_DIR, 'visits')
+MB_LOG_FILE     = os.path.join(MB_DIR, 'message_board.log')
 
 for _d in [MB_DIR, MB_CHANNELS_DIR, MB_VISITS_DIR]:
     if not os.path.exists(_d):
         os.makedirs(_d)
 
 MB_VALID_CHANNELS = {'general', 'purchase', 'acceptance', 'budget', 'urgent'}
+
+# ── 獨立 Logger ──────────────────────────────────────────────
+mb_logger = logging.getLogger('message_board')
+if not mb_logger.handlers:
+    mb_logger.setLevel(logging.INFO)
+    _mb_fh = logging.FileHandler(MB_LOG_FILE, encoding='utf-8')
+    _mb_fh.setLevel(logging.INFO)
+    _mb_fh.setFormatter(logging.Formatter(
+        '%(asctime)s  [%(levelname)s]  %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    ))
+    mb_logger.addHandler(_mb_fh)
+    mb_logger.propagate = False
 
 
 def mb_channel_path(channel):
@@ -5879,7 +5881,7 @@ def mb_load(filepath, default):
         with open(filepath, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        print(f'❌ [MB] 讀取失敗 {filepath}：{e}')
+        mb_logger.error(f'讀取失敗 {filepath}：{e}')
         return default
 
 
@@ -5906,22 +5908,23 @@ for _ch in MB_VALID_CHANNELS:
     _p = mb_channel_path(_ch)
     if not os.path.exists(_p):
         mb_save(_p, [])
-        print(f'📄 已建立 {_p}')
+        mb_logger.info(f'初始化頻道檔案：{_p}')
 
 
 # ── 1. 取得頻道訊息 ───────────────────────────────────────────
 @app.route('/api/message-board/messages/<channel>', methods=['GET'])
 def mb_get_messages(channel):
     if channel not in MB_VALID_CHANNELS:
+        mb_logger.warning(f'取得訊息：無效頻道 [{channel}]')
         return jsonify({'error': '無效頻道'}), 400
     msgs = mb_load(mb_channel_path(channel), [])
+    mb_logger.info(f'取得訊息 [{channel}]：共 {len(msgs)} 則')
     return jsonify({'messages': sorted(msgs, key=lambda m: m.get('timestamp', ''))})
 
 
 # ── 1b. 各頻道最新訊息 id（前端紅點用）──────────────────────
 @app.route('/api/message-board/latest-timestamps', methods=['GET'])
 def mb_latest_timestamps():
-    """回傳每個頻道最新非系統訊息的 id，讓前端和 lastReadIds 直接比對"""
     result = {}
     for ch in MB_VALID_CHANNELS:
         msgs = mb_load(mb_channel_path(ch), [])
@@ -5933,33 +5936,25 @@ def mb_latest_timestamps():
 # ── 2. 取得使用者各頻道的已讀 last_read ──────────────────────
 @app.route('/api/message-board/last-read/<username>', methods=['GET'])
 def mb_get_last_read(username):
-    """
-    GET /api/message-board/last-read/<username>
-    → { "last_read": { "general": 42, "purchase": 17, ... } }
-    """
     visit = mb_load(mb_visit_path(username), mb_default_visit(username))
-    # 補齊缺少的頻道（舊資料相容）
     last_read = visit.get('last_read', {})
     for ch in MB_VALID_CHANNELS:
         if ch not in last_read:
             last_read[ch] = 0
+    mb_logger.info(f'取得已讀記錄 [{username}]：{last_read}')
     return jsonify({'last_read': last_read})
 
 
 # ── 3. 標記已讀（捲到底時呼叫）──────────────────────────────
 @app.route('/api/message-board/mark-read', methods=['POST'])
 def mb_mark_read():
-    """
-    POST /api/message-board/mark-read
-    Body: { username, channel, last_msg_id }
-    更新該使用者在該頻道的已讀到第幾則
-    """
     data        = request.get_json(silent=True) or {}
     username    = data.get('username', '').strip()
     channel     = data.get('channel',  '').strip()
     last_msg_id = data.get('last_msg_id', 0)
 
     if not username or channel not in MB_VALID_CHANNELS:
+        mb_logger.warning(f'標記已讀：參數錯誤 username={username} channel={channel}')
         return jsonify({'error': '參數錯誤'}), 400
 
     vpath = mb_visit_path(username)
@@ -5968,29 +5963,27 @@ def mb_mark_read():
     if 'last_read' not in visit:
         visit['last_read'] = {ch: 0 for ch in MB_VALID_CHANNELS}
 
-    # 只往前推，不後退（避免重整時 id 變小）
     current = visit['last_read'].get(channel, 0)
     visit['last_read'][channel] = max(current, int(last_msg_id))
     visit['username'] = username
 
     mb_save(vpath, visit)
-    print(f'✅ {username} [{channel}] 已讀到 #{last_msg_id}')
+    mb_logger.info(f'標記已讀 [{username}] [{channel}] → #{last_msg_id}（原 #{current}）')
     return jsonify({'success': True, 'last_read': visit['last_read']})
 
 
 # ── 4. 各頻道未讀數（主看板用）──────────────────────────────
 @app.route('/api/message-board/unread/<username>', methods=['GET'])
 def mb_unread_count(username):
-    visit    = mb_load(mb_visit_path(username), mb_default_visit(username))
+    visit     = mb_load(mb_visit_path(username), mb_default_visit(username))
     last_read = visit.get('last_read', {})
-    result   = {}
+    result    = {}
     for ch in MB_VALID_CHANNELS:
-        msgs     = mb_load(mb_channel_path(ch), [])
-        read_id  = last_read.get(ch, 0)
-        result[ch] = sum(
-            1 for m in msgs
-            if m.get('type') != 'system' and m.get('id', 0) > read_id
-        )
+        msgs       = mb_load(mb_channel_path(ch), [])
+        read_id    = last_read.get(ch, 0)
+        result[ch] = sum(1 for m in msgs if m.get('type') != 'system' and m.get('id', 0) > read_id)
+    total = sum(result.values())
+    mb_logger.info(f'查詢未讀 [{username}]：{result}（合計 {total}）')
     return jsonify({'username': username, 'unread': result})
 
 
@@ -6003,6 +5996,7 @@ def mb_send_message():
     content = data.get('content', '').strip()
 
     if channel not in MB_VALID_CHANNELS:
+        mb_logger.warning(f'發送訊息：無效頻道 [{channel}] by {author}')
         return jsonify({'error': '無效頻道'}), 400
     if not author:
         return jsonify({'error': '缺少作者'}), 400
@@ -6017,6 +6011,7 @@ def mb_send_message():
         'id':        new_id,
         'channel':   channel,
         'author':    author,
+        'emp_id':    data.get('emp_id', ''),   # 工號，供搜尋用
         'type':      'message',
         'content':   content,
         'timestamp': mb_now(),
@@ -6028,7 +6023,8 @@ def mb_send_message():
 
     msgs.append(new_msg)
     mb_save(mb_channel_path(channel), msgs)
-    print(f'💬 新訊息 #{new_id} [{channel}] by {author}')
+    preview = content[:30] + ('…' if len(content) > 30 else '')
+    mb_logger.info(f'新訊息 #{new_id} [{channel}] by {author}：「{preview}」tag={data.get("tag","無")} replyTo={data.get("replyTo")}')
     return jsonify({'success': True, 'message': new_msg})
 
 
@@ -6040,19 +6036,24 @@ def mb_toggle_pin():
     channel = data.get('channel', '').strip()
 
     if channel not in MB_VALID_CHANNELS:
+        mb_logger.warning(f'釘選操作：無效頻道 [{channel}] msg_id={msg_id}')
         return jsonify({'error': '無效頻道'}), 400
 
     msgs = mb_load(mb_channel_path(channel), [])
     msg  = next((m for m in msgs if m.get('id') == msg_id), None)
     if not msg:
+        mb_logger.warning(f'釘選操作：找不到訊息 [{channel}] msg_id={msg_id}')
         return jsonify({'error': '找不到訊息'}), 404
 
     msg['pinned'] = not msg.get('pinned', False)
     if msg['pinned']:
-        msg['pinned_at'] = mb_now()   # 記錄釘選時間
+        msg['pinned_at'] = mb_now()
     else:
-        msg['pinned_at'] = ''         # 取消釘選時清除
+        msg['pinned_at'] = ''
+
     mb_save(mb_channel_path(channel), msgs)
+    action = '釘選' if msg['pinned'] else '取消釘選'
+    mb_logger.info(f'{action} [{channel}] msg_id={msg_id}（作者：{msg.get("author","?")}）')
     return jsonify({'success': True, 'pinned': msg['pinned'], 'pinned_at': msg.get('pinned_at', '')})
 
 
@@ -6065,11 +6066,13 @@ def mb_add_reaction():
     channel = data.get('channel', '').strip()
 
     if not emoji or channel not in MB_VALID_CHANNELS:
+        mb_logger.warning(f'Emoji 反應：參數錯誤 channel={channel} emoji={emoji}')
         return jsonify({'error': '參數錯誤'}), 400
 
     msgs = mb_load(mb_channel_path(channel), [])
     msg  = next((m for m in msgs if m.get('id') == msg_id), None)
     if not msg:
+        mb_logger.warning(f'Emoji 反應：找不到訊息 [{channel}] msg_id={msg_id}')
         return jsonify({'error': '找不到訊息'}), 404
 
     if 'reactions' not in msg:
@@ -6077,12 +6080,54 @@ def mb_add_reaction():
     msg['reactions'][emoji] = msg['reactions'].get(emoji, 0) + 1
 
     mb_save(mb_channel_path(channel), msgs)
+    mb_logger.info(f'Emoji {emoji} [{channel}] msg_id={msg_id}（作者：{msg.get("author","?")}）→ 共 {msg["reactions"][emoji]} 次')
     return jsonify({'success': True, 'reactions': msg['reactions']})
 
 
+# ── 8. 撤回訊息（10分鐘內、本人才可撤回）────────────────────
+@app.route('/api/message-board/recall', methods=['POST'])
+def mb_recall_message():
+    import datetime as _dt
+    data     = request.get_json(silent=True) or {}
+    msg_id   = data.get('msg_id')
+    channel  = data.get('channel', '').strip()
+    username = data.get('username', '').strip()
+
+    if not username or channel not in MB_VALID_CHANNELS:
+        mb_logger.warning(f'撤回訊息：參數錯誤 username={username} channel={channel}')
+        return jsonify({'error': '參數錯誤'}), 400
+
+    msgs = mb_load(mb_channel_path(channel), [])
+    msg  = next((m for m in msgs if m.get('id') == msg_id), None)
+
+    if not msg:
+        mb_logger.warning(f'撤回訊息：找不到訊息 [{channel}] msg_id={msg_id}')
+        return jsonify({'error': '找不到訊息'}), 404
+
+    # 10 分鐘時間驗證
+    ts_str = msg.get('timestamp', '')
+    try:
+        ts = _dt.datetime.fromisoformat(ts_str)
+        now = _dt.datetime.now().astimezone()
+        if ts.tzinfo is None:
+            ts = ts.astimezone()
+        elapsed = (now - ts).total_seconds()
+        if elapsed > 600:
+            mb_logger.warning(f'撤回訊息：超過10分鐘 [{channel}] msg_id={msg_id} elapsed={elapsed:.0f}s')
+            return jsonify({'error': '已超過10分鐘，無法撤回'}), 403
+    except Exception as e:
+        mb_logger.error(f'撤回訊息：時間解析失敗 {ts_str}：{e}')
+        return jsonify({'error': '時間驗證失敗'}), 500
+
+    msgs = [m for m in msgs if m.get('id') != msg_id]
+    mb_save(mb_channel_path(channel), msgs)
+    mb_logger.info(f'撤回訊息 [{channel}] msg_id={msg_id} by {username}（作者：{msg.get("author","?")}，發送 {elapsed:.0f}s 前）')
+    return jsonify({'success': True})
+
+
+mb_logger.info('=' * 60)
+mb_logger.info('Message Board API 路由已掛載')
+mb_logger.info('=' * 60)
 print('✅ Message Board API 路由已掛載')
-
-
-
 if __name__ == "__main__":
     app.run(debug=True)

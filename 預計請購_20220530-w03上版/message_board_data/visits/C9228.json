@@ -1,12 +1,10 @@
 {
   "username": "C9228",
-  "previous": "2026-02-27T11:42:44.963487+08:00",
-  "current": "2026-02-27T11:49:15.672510+08:00",
   "last_read": {
-    "acceptance": 4,
-    "purchase": 6,
-    "budget": 1,
-    "urgent": 8,
-    "general": 28
+    "urgent": 0,
+    "purchase": 0,
+    "acceptance": 0,
+    "general": 3,
+    "budget": 0
   }
 }
