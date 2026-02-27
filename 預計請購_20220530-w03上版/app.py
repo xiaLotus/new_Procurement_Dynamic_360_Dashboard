@@ -15,7 +15,7 @@ import shutil
 import numpy as np
 import traceback
 
-BACKEND_DATA = r"D:\Data\Backend_Access_Management\Backend_data.json"
+BACKEND_DATA = f"Backend_data.json"
 VENDER_FILE_PATH = f'static/data/vender.ini'
 
 app = Flask(__name__)
@@ -786,7 +786,6 @@ def get_username_info():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
     
 @app.route('/api/checkeEPRno', methods=['POST'])
 def check_epr_no():
@@ -4705,9 +4704,6 @@ def get_next_month_amount():
     try:
         file_path = BUYER_FILE
         
-        print(f"📂 開始處理下個月預計入帳...")
-        print(f"📂 檔案路徑: {file_path}")
-        
         if not os.path.exists(file_path):
             print(f"❌ 檔案不存在: {file_path}")
             return jsonify({
@@ -4719,7 +4715,6 @@ def get_next_month_amount():
 
         # 讀取 CSV
         df = pd.read_csv(file_path, encoding="utf-8-sig", dtype=str).fillna("")
-        print(f"✅ 成功讀取 CSV，共 {len(df)} 筆資料")
 
         # 金額欄位清理（去掉千分位逗號）
         def clean_amount(series):
@@ -4746,7 +4741,6 @@ def get_next_month_amount():
 
         # 優先用 RT總金額
         df["計算金額"] = df["RT總金額"].where(df["RT總金額"] > 0, df["總價"])
-        print("✅ 計算金額欄位已建立")
 
         # 日期清理
         def clean_date(val):
@@ -4767,9 +4761,6 @@ def get_next_month_amount():
         start = int(first_day_next_month.strftime("%Y%m%d"))
         end = int(last_day_next_month.strftime("%Y%m%d"))
 
-        print(f"📅 下個月日期範圍: {first_day_next_month} ~ {last_day_next_month}")
-        print(f"🔢 整數格式: {start} ~ {end}")
-
         # 篩選符合條件
         df["交期_int"] = pd.to_numeric(df["交期_clean"], errors="coerce")
 
@@ -4780,13 +4771,9 @@ def get_next_month_amount():
             (df["WBS"].astype(str).str.strip() == "")
         ].copy()
 
-        print(f"✅ 符合條件的資料共 {len(next_month_df)} 筆")
-
         # 計算總額
         next_month_df["計算金額"] = next_month_df["計算金額"].astype(int)
         total_amount = int(next_month_df["計算金額"].sum())
-
-        print(f"💰 下個月預計入帳總金額: {total_amount:,} 元")
 
         # 準備輸出資料
         cols = ["ePR No.", "PO No.", "品項", "計算金額", "Delivery Date 廠商承諾交期", "WBS"]
@@ -4806,18 +4793,14 @@ def get_next_month_amount():
                 "end": last_day_next_month.strftime("%Y/%m/%d")
             }
         }
-        
-        print(f"✅ API 執行成功")
+
         return jsonify(result)
 
     except Exception as e:
         import traceback
         error_msg = str(e)
         error_trace = traceback.format_exc()
-        
-        print(f"❌ 計算下個月預計入帳失敗: {error_msg}")
-        print(f"❌ 詳細錯誤：")
-        print(error_trace)
+
         
         return jsonify({
             "file": file_path if 'file_path' in locals() else "unknown",
@@ -5788,8 +5771,6 @@ def clear_remark_and_approve():
             'message': str(e)
         }), 500
 
-
-
 @app.route('/api/reject-approved-to-pending', methods=['POST'])
 def reject_approved_to_pending():
     """將已確認的資料退回至待簽核（主任簽核若已通過則維持 V，叔叔簽核重置為 X，並記錄退回原因至備註）"""
@@ -5844,6 +5825,264 @@ def reject_approved_to_pending():
         traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 500
     
-    
+
+
+
+# ============================================================
+#  留言版 API（直接掛載，CORS 由全域 CORS(app) 覆蓋）
+#
+#  資料結構：
+#    message_board_data/
+#      channels/
+#        general.json        ← 各頻道訊息
+#        purchase.json  ...
+#      visits/
+#        23688.json          ← 每人已讀記錄（工號）
+#
+#  visits/{工號}.json 格式：
+#  {
+#    "username": "23688",
+#    "last_read": {
+#      "general":    42,   ← 該頻道最後讀到的訊息 id
+#      "purchase":   17,
+#      "acceptance":  0,
+#      "budget":      0,
+#      "urgent":      0
+#    }
+#  }
+# ============================================================
+
+MB_DIR          = 'message_board_data'
+MB_CHANNELS_DIR = os.path.join(MB_DIR, 'channels')
+MB_VISITS_DIR   = os.path.join(MB_DIR, 'visits')
+
+for _d in [MB_DIR, MB_CHANNELS_DIR, MB_VISITS_DIR]:
+    if not os.path.exists(_d):
+        os.makedirs(_d)
+
+MB_VALID_CHANNELS = {'general', 'purchase', 'acceptance', 'budget', 'urgent'}
+
+
+def mb_channel_path(channel):
+    return os.path.join(MB_CHANNELS_DIR, f'{channel}.json')
+
+
+def mb_visit_path(username):
+    safe = str(username).replace('/', '_').replace('\\', '_')
+    return os.path.join(MB_VISITS_DIR, f'{safe}.json')
+
+
+def mb_load(filepath, default):
+    if not os.path.exists(filepath):
+        return default
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f'❌ [MB] 讀取失敗 {filepath}：{e}')
+        return default
+
+
+def mb_save(filepath, data):
+    with FileLock(filepath + '.lock', timeout=10):
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def mb_now():
+    import datetime as _dt
+    return _dt.datetime.now().astimezone().isoformat()
+
+
+def mb_default_visit(username):
+    return {
+        'username':  username,
+        'last_read': {ch: 0 for ch in MB_VALID_CHANNELS}
+    }
+
+
+# 初始化各頻道 JSON
+for _ch in MB_VALID_CHANNELS:
+    _p = mb_channel_path(_ch)
+    if not os.path.exists(_p):
+        mb_save(_p, [])
+        print(f'📄 已建立 {_p}')
+
+
+# ── 1. 取得頻道訊息 ───────────────────────────────────────────
+@app.route('/api/message-board/messages/<channel>', methods=['GET'])
+def mb_get_messages(channel):
+    if channel not in MB_VALID_CHANNELS:
+        return jsonify({'error': '無效頻道'}), 400
+    msgs = mb_load(mb_channel_path(channel), [])
+    return jsonify({'messages': sorted(msgs, key=lambda m: m.get('timestamp', ''))})
+
+
+# ── 1b. 各頻道最新訊息 id（前端紅點用）──────────────────────
+@app.route('/api/message-board/latest-timestamps', methods=['GET'])
+def mb_latest_timestamps():
+    """回傳每個頻道最新非系統訊息的 id，讓前端和 lastReadIds 直接比對"""
+    result = {}
+    for ch in MB_VALID_CHANNELS:
+        msgs = mb_load(mb_channel_path(ch), [])
+        non_system = [m for m in msgs if m.get('type') != 'system']
+        result[ch] = max((m.get('id', 0) for m in non_system), default=0)
+    return jsonify(result)
+
+
+# ── 2. 取得使用者各頻道的已讀 last_read ──────────────────────
+@app.route('/api/message-board/last-read/<username>', methods=['GET'])
+def mb_get_last_read(username):
+    """
+    GET /api/message-board/last-read/<username>
+    → { "last_read": { "general": 42, "purchase": 17, ... } }
+    """
+    visit = mb_load(mb_visit_path(username), mb_default_visit(username))
+    # 補齊缺少的頻道（舊資料相容）
+    last_read = visit.get('last_read', {})
+    for ch in MB_VALID_CHANNELS:
+        if ch not in last_read:
+            last_read[ch] = 0
+    return jsonify({'last_read': last_read})
+
+
+# ── 3. 標記已讀（捲到底時呼叫）──────────────────────────────
+@app.route('/api/message-board/mark-read', methods=['POST'])
+def mb_mark_read():
+    """
+    POST /api/message-board/mark-read
+    Body: { username, channel, last_msg_id }
+    更新該使用者在該頻道的已讀到第幾則
+    """
+    data        = request.get_json(silent=True) or {}
+    username    = data.get('username', '').strip()
+    channel     = data.get('channel',  '').strip()
+    last_msg_id = data.get('last_msg_id', 0)
+
+    if not username or channel not in MB_VALID_CHANNELS:
+        return jsonify({'error': '參數錯誤'}), 400
+
+    vpath = mb_visit_path(username)
+    visit = mb_load(vpath, mb_default_visit(username))
+
+    if 'last_read' not in visit:
+        visit['last_read'] = {ch: 0 for ch in MB_VALID_CHANNELS}
+
+    # 只往前推，不後退（避免重整時 id 變小）
+    current = visit['last_read'].get(channel, 0)
+    visit['last_read'][channel] = max(current, int(last_msg_id))
+    visit['username'] = username
+
+    mb_save(vpath, visit)
+    print(f'✅ {username} [{channel}] 已讀到 #{last_msg_id}')
+    return jsonify({'success': True, 'last_read': visit['last_read']})
+
+
+# ── 4. 各頻道未讀數（主看板用）──────────────────────────────
+@app.route('/api/message-board/unread/<username>', methods=['GET'])
+def mb_unread_count(username):
+    visit    = mb_load(mb_visit_path(username), mb_default_visit(username))
+    last_read = visit.get('last_read', {})
+    result   = {}
+    for ch in MB_VALID_CHANNELS:
+        msgs     = mb_load(mb_channel_path(ch), [])
+        read_id  = last_read.get(ch, 0)
+        result[ch] = sum(
+            1 for m in msgs
+            if m.get('type') != 'system' and m.get('id', 0) > read_id
+        )
+    return jsonify({'username': username, 'unread': result})
+
+
+# ── 5. 發送訊息 ───────────────────────────────────────────────
+@app.route('/api/message-board/send', methods=['POST'])
+def mb_send_message():
+    data    = request.get_json(silent=True) or {}
+    channel = data.get('channel', '').strip()
+    author  = data.get('author',  '').strip()
+    content = data.get('content', '').strip()
+
+    if channel not in MB_VALID_CHANNELS:
+        return jsonify({'error': '無效頻道'}), 400
+    if not author:
+        return jsonify({'error': '缺少作者'}), 400
+    if not content:
+        return jsonify({'error': '訊息內容不可為空'}), 400
+
+    msgs = mb_load(mb_channel_path(channel), [])
+    existing_ids = [m.get('id', 0) for m in msgs if isinstance(m.get('id'), int)]
+    new_id = (max(existing_ids) + 1) if existing_ids else 1
+
+    new_msg = {
+        'id':        new_id,
+        'channel':   channel,
+        'author':    author,
+        'type':      'message',
+        'content':   content,
+        'timestamp': mb_now(),
+        'tag':       data.get('tag', ''),
+        'reactions': {},
+        'replyTo':   data.get('replyTo', None),
+        'pinned':    False,
+    }
+
+    msgs.append(new_msg)
+    mb_save(mb_channel_path(channel), msgs)
+    print(f'💬 新訊息 #{new_id} [{channel}] by {author}')
+    return jsonify({'success': True, 'message': new_msg})
+
+
+# ── 6. 切換釘選 ───────────────────────────────────────────────
+@app.route('/api/message-board/pin', methods=['POST'])
+def mb_toggle_pin():
+    data    = request.get_json(silent=True) or {}
+    msg_id  = data.get('msg_id')
+    channel = data.get('channel', '').strip()
+
+    if channel not in MB_VALID_CHANNELS:
+        return jsonify({'error': '無效頻道'}), 400
+
+    msgs = mb_load(mb_channel_path(channel), [])
+    msg  = next((m for m in msgs if m.get('id') == msg_id), None)
+    if not msg:
+        return jsonify({'error': '找不到訊息'}), 404
+
+    msg['pinned'] = not msg.get('pinned', False)
+    if msg['pinned']:
+        msg['pinned_at'] = mb_now()   # 記錄釘選時間
+    else:
+        msg['pinned_at'] = ''         # 取消釘選時清除
+    mb_save(mb_channel_path(channel), msgs)
+    return jsonify({'success': True, 'pinned': msg['pinned'], 'pinned_at': msg.get('pinned_at', '')})
+
+
+# ── 7. Emoji 反應 ─────────────────────────────────────────────
+@app.route('/api/message-board/reaction', methods=['POST'])
+def mb_add_reaction():
+    data    = request.get_json(silent=True) or {}
+    msg_id  = data.get('msg_id')
+    emoji   = data.get('emoji',   '').strip()
+    channel = data.get('channel', '').strip()
+
+    if not emoji or channel not in MB_VALID_CHANNELS:
+        return jsonify({'error': '參數錯誤'}), 400
+
+    msgs = mb_load(mb_channel_path(channel), [])
+    msg  = next((m for m in msgs if m.get('id') == msg_id), None)
+    if not msg:
+        return jsonify({'error': '找不到訊息'}), 404
+
+    if 'reactions' not in msg:
+        msg['reactions'] = {}
+    msg['reactions'][emoji] = msg['reactions'].get(emoji, 0) + 1
+
+    mb_save(mb_channel_path(channel), msgs)
+    return jsonify({'success': True, 'reactions': msg['reactions']})
+
+
+print('✅ Message Board API 路由已掛載')
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)

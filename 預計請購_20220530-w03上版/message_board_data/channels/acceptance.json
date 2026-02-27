@@ -1,0 +1,54 @@
+[
+  {
+    "id": 1,
+    "channel": "acceptance",
+    "author": "王柏翰",
+    "type": "message",
+    "content": "565565",
+    "timestamp": "2026-02-27T12:42:54.010520+08:00",
+    "tag": "",
+    "reactions": {
+      "👍": 4
+    },
+    "replyTo": null,
+    "pinned": false
+  },
+  {
+    "id": 2,
+    "channel": "acceptance",
+    "author": "王柏翰",
+    "type": "message",
+    "content": "454",
+    "timestamp": "2026-02-27T12:42:56.977801+08:00",
+    "tag": "📦 採購",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false,
+    "pinned_at": ""
+  },
+  {
+    "id": 3,
+    "channel": "acceptance",
+    "author": "王柏翰",
+    "type": "message",
+    "content": "45454",
+    "timestamp": "2026-02-27T12:43:00.073463+08:00",
+    "tag": "❓ 問題",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": true,
+    "pinned_at": "2026-02-27T12:52:04.844381+08:00"
+  },
+  {
+    "id": 4,
+    "channel": "acceptance",
+    "author": "詹睿穎",
+    "type": "message",
+    "content": "56",
+    "timestamp": "2026-02-27T13:44:22.407228+08:00",
+    "tag": "",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false
+  }
+]

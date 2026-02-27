@@ -1855,6 +1855,24 @@
                 const remainingBatchCount = this.allGroups.filter(g => g.type === 'batch').length;
                 const remainingMergeCount = this.allGroups.filter(g => g.type === 'merge').length;
                 
+                /* =============================
+                🔴 核心邏輯：三個都 0 → 直接忽略
+                20260223
+                ============================= */
+
+                if (
+                    remainingNormalCount === 0 &&
+                    remainingBatchCount === 0 &&
+                    remainingMergeCount === 0
+                ) {
+                    console.log("✅ 所有項目已處理完成，不顯示提示");
+                    localStorage.removeItem('processed_batch_items');
+                    localStorage.removeItem('merge_items_data');
+                    document.addEventListener('click', this.handleClickOutside);
+                    return;
+                }
+
+
                 // 🔴 改進提示訊息
                 let successMessage = `已成功處理 <strong>${items.length}</strong> 個項目`;
                 

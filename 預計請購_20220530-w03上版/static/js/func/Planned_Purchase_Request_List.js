@@ -3,6 +3,8 @@ const app = Vue.createApp({
         return {
             username: '',
             myChineseName: '',
+            // ↓ 新增這行
+            totalUnread: 0,
             myBackendRole: 'X',
             setRule: '',
             items: [],
@@ -1179,7 +1181,10 @@ const app = Vue.createApp({
         // 在最後加入載入篩選狀態
         await this.loadFiltersFromJSON();
         await this.getrestofmoney();
-        
+        // 抓留言版未讀數（每 60 秒刷新一次）
+        await this.fetchMbUnread();
+        setInterval(() => this.fetchMbUnread(), 60000);
+                
     },
 
     beforeUnmount() {
@@ -3212,6 +3217,29 @@ const app = Vue.createApp({
 
             localStorage.setItem('username', this.username);
             window.location.href = 'Monthly_expense_analysis.html';
+        },
+
+        async fetchMbUnread() {
+            if (!this.username) return;
+            try {
+                const res = await axios.get(`http://127.0.0.1:5000/api/message-board/unread/${this.username}`);
+                const unread = res.data?.unread || {};
+                const total = Object.values(unread).reduce((a, b) => a + b, 0);
+                this.totalUnread = Math.min(total, 99);
+            } catch (err) {
+                console.warn('❗ 無法取得留言版未讀數：', err);
+            }
+        },
+
+        goMessageBoard() {
+            try{
+                this.toggleFilterhis.saveCurrentFilters();
+            }catch (err) {
+                console.error("❌ 儲存篩選條件失敗，直接跳轉至留言版", err);
+            }
+
+            localStorage.setItem('username', this.username);
+            window.location.href = 'Message_Board.html';
         }
     }
 });

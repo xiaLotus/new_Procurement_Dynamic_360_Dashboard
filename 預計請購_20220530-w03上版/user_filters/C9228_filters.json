@@ -1,9 +1,7 @@
 {
-  "username": "K19505",
+  "username": "C9228",
   "filterPurchaseStatus": "ALL",
-  "checkedPeople": [
-    "魏劭宇"
-  ],
+  "checkedPeople": [],
   "checkedReceivingResults": [],
   "checkedStates": [],
   "checkedWBS": [],
@@ -24,10 +22,10 @@
   "reasonSearchText": "",
   "sortField": "",
   "sortOrder": "asc",
-  "selectedMonth": "202512",
+  "selectedMonth": "202602",
   "selectedIssuedMonth": "202602",
   "filterStartDate": "",
   "filterEndDate": "",
   "dateFilterActive": false,
-  "lastUpdated": "2026-02-22T04:03:41.526Z"
+  "lastUpdated": "2026-02-27T06:00:35.816Z"
 }

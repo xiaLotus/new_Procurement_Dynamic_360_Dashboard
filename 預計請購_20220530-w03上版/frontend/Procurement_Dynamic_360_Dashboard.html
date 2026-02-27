@@ -982,11 +982,9 @@
                             :key="index" 
                             class="border-t border-gray-200"
                             :class="{
-                                'bg-gray-500 text-white': item['開單狀態'] === 'C' || item['取消'] === 'C',
-                                'bg-red-100 border-l-4 border-l-red-500': 
-                                    item['開單狀態'] !== 'C' && item['取消'] !== 'C' &&
-                                    ((item['主任簽核'] || '').trim() === 'X' || (item['叔叔簽核'] || '').trim() === 'X') &&
-                                    (myBackendRole === 'O' || (item['需求者'] || '').trim() === (myChineseName || '').trim())
+                                'bg-red-100 border-l-4 border-l-red-500':
+                                    ['開單狀態','主任簽核','叔叔簽核','驗收狀態']
+                                        .some(key => (item[key] || '').trim() === 'X')
                             }"
                         >
                         <td class="py-2 px-4 text-sm text-center"
@@ -1130,7 +1128,20 @@
                     @click="goDetailPage">
                     <span> 📋 eRT 驗收總表</span>
                 </div>
+                <!-- 新的 -->
+                <div class="relative">
                     <div 
+                        class="bg-pink-500 hover:bg-pink-600 text-white text-lg px-5 py-3 rounded-full shadow-lg cursor-pointer flex items-center justify-center h-12"
+                        @click="goMessageBoard">
+                        <span>💬 留言版</span>
+                    </div>
+                    <!-- 未讀徽章 -->
+                    <div v-if="totalUnread > 0"
+                        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow">
+                        {{ totalUnread >= 99 ? '99+' : totalUnread }}
+                    </div>
+                </div>
+                <div 
                     class="bg-indigo-600 hover:bg-indigo-700 text-white text-lg px-5 py-3 rounded-full shadow-lg cursor-pointer flex items-center justify-center h-12"
                     @click="goApprovalPage">
                     📝 長官簽核

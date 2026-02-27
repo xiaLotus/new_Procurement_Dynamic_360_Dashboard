@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "channel": "purchase",
+    "author": "詹睿穎",
+    "type": "message",
+    "content": "5656",
+    "timestamp": "2026-02-27T11:34:00.107911+08:00",
+    "tag": "",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false
+  },
+  {
+    "id": 2,
+    "channel": "purchase",
+    "author": "詹睿穎",
+    "type": "message",
+    "content": "12121",
+    "timestamp": "2026-02-27T11:34:00.954465+08:00",
+    "tag": "",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false
+  },
+  {
+    "id": 3,
+    "channel": "purchase",
+    "author": "詹睿穎",
+    "type": "message",
+    "content": "45454",
+    "timestamp": "2026-02-27T11:34:01.823718+08:00",
+    "tag": "",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false
+  },
+  {
+    "id": 4,
+    "channel": "purchase",
+    "author": "詹睿穎",
+    "type": "message",
+    "content": "4545",
+    "timestamp": "2026-02-27T11:34:02.593974+08:00",
+    "tag": "",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false
+  },
+  {
+    "id": 5,
+    "channel": "purchase",
+    "author": "王柏翰",
+    "type": "message",
+    "content": "4565",
+    "timestamp": "2026-02-27T13:47:23.964890+08:00",
+    "tag": "",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false
+  },
+  {
+    "id": 6,
+    "channel": "purchase",
+    "author": "王柏翰",
+    "type": "message",
+    "content": "121",
+    "timestamp": "2026-02-27T13:47:24.583751+08:00",
+    "tag": "",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false
+  }
+]
