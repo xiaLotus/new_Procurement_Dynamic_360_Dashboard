@@ -155,7 +155,7 @@
                         style="z-index: 50;"
                     >
                         <option disabled value="">請選擇</option>
-                        <option v-for="month in Object.keys(total_money_by_month_data)" :key="month" :value="month">
+                        <option v-for="month in Object.keys(total_money_by_month_data).sort().reverse()" :key="month" :value="month">
                             {{ formatMonth(month) }}
                         </option>
                     </select>

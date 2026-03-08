@@ -1037,7 +1037,7 @@ const app = Vue.createApp({
                 }
             }
 
-            return Array.from(set).sort();
+            return Array.from(set).sort().reverse();
         },
 
 
@@ -1474,7 +1474,7 @@ const app = Vue.createApp({
             // ✅ 自動選最新「已開單」月份（來自 issuedMonthOptions）
             const issuedMonths = this.issuedMonthOptions;
             if (!issuedMonths.includes(this.selectedIssuedMonth)) {
-                this.selectedIssuedMonth = issuedMonths[issuedMonths.length - 1] || '';
+                this.selectedIssuedMonth = issuedMonths[0] || '';
             }
         },
 
