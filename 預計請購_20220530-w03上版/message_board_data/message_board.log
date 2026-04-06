@@ -1,109 +1,127 @@
-2026-02-27 14:11:41  [INFO]  ============================================================
-2026-02-27 14:11:41  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:11:41  [INFO]  ============================================================
-2026-02-27 14:11:44  [INFO]  查詢未讀 [C9228]：{'urgent': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'purchase': 0}（合計 0）
-2026-02-27 14:11:47  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 28}
-2026-02-27 14:11:47  [INFO]  取得訊息 [general]：共 28 則
-2026-02-27 14:11:49  [INFO]  新訊息 #29 [general] by 王柏翰：「444」tag= replyTo=None
-2026-02-27 14:11:49  [INFO]  標記已讀 [C9228] [general] → #29（原 #28）
-2026-02-27 14:11:49  [INFO]  標記已讀 [C9228] [general] → #29（原 #28）
-2026-02-27 14:14:38  [INFO]  ============================================================
-2026-02-27 14:14:38  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:15:03  [INFO]  ============================================================
-2026-02-27 14:15:03  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:22:04  [INFO]  ============================================================
-2026-02-27 14:22:04  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:22:04  [INFO]  ============================================================
-2026-02-27 14:22:05  [INFO]  ============================================================
-2026-02-27 14:22:05  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:22:05  [INFO]  ============================================================
-2026-02-27 14:22:07  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 29}
-2026-02-27 14:22:07  [INFO]  取得訊息 [general]：共 29 則
-2026-02-27 14:22:10  [INFO]  新訊息 #30 [general] by 王柏翰：「444」tag= replyTo=None
-2026-02-27 14:22:10  [INFO]  標記已讀 [C9228] [general] → #30（原 #29）
-2026-02-27 14:22:10  [INFO]  標記已讀 [C9228] [general] → #30（原 #30）
-2026-02-27 14:22:20  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 30}
-2026-02-27 14:22:20  [INFO]  取得訊息 [general]：共 30 則
-2026-02-27 14:24:15  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 30}
-2026-02-27 14:24:15  [INFO]  取得訊息 [general]：共 30 則
-2026-02-27 14:24:17  [INFO]  撤回訊息 [general] msg_id=30 by C9228（作者：王柏翰，發送 127s 前）
-2026-02-27 14:24:20  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 30}
-2026-02-27 14:24:20  [INFO]  取得訊息 [general]：共 29 則
-2026-02-27 14:24:24  [INFO]  取得訊息 [general]：共 29 則
-2026-02-27 14:24:33  [INFO]  查詢未讀 [K18251]：{'purchase': 0, 'general': 1, 'budget': 0, 'acceptance': 0, 'urgent': 0}（合計 1）
-2026-02-27 14:24:34  [INFO]  取得訊息 [urgent]：共 8 則
-2026-02-27 14:24:34  [INFO]  取得已讀記錄 [K18251]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 28}
-2026-02-27 14:24:34  [INFO]  取得訊息 [urgent]：共 8 則
-2026-02-27 14:24:38  [INFO]  取得訊息 [general]：共 29 則
-2026-02-27 14:24:39  [INFO]  標記已讀 [K18251] [general] → #29（原 #28）
-2026-02-27 14:25:59  [INFO]  新訊息 #30 [general] by 詹睿穎：「453」tag= replyTo=None
-2026-02-27 14:25:59  [INFO]  標記已讀 [K18251] [general] → #30（原 #29）
-2026-02-27 14:25:59  [INFO]  標記已讀 [K18251] [general] → #30（原 #30）
-2026-02-27 14:26:02  [INFO]  撤回訊息 [general] msg_id=30 by K18251（作者：詹睿穎，發送 2s 前）
-2026-02-27 14:26:08  [INFO]  查詢未讀 [C9228]：{'purchase': 0, 'general': 0, 'budget': 0, 'acceptance': 0, 'urgent': 0}（合計 0）
-2026-02-27 14:26:10  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 30}
-2026-02-27 14:26:10  [INFO]  取得訊息 [general]：共 29 則
-2026-02-27 14:28:26  [INFO]  ============================================================
-2026-02-27 14:28:26  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:28:26  [INFO]  ============================================================
-2026-02-27 14:28:27  [INFO]  ============================================================
-2026-02-27 14:28:27  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:28:27  [INFO]  ============================================================
-2026-02-27 14:28:28  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 30}
-2026-02-27 14:28:29  [INFO]  取得訊息 [general]：共 29 則
-2026-02-27 14:28:36  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 30}
-2026-02-27 14:28:36  [INFO]  取得訊息 [general]：共 29 則
-2026-02-27 14:31:06  [INFO]  取得已讀記錄 [C9228]：{'acceptance': 4, 'purchase': 6, 'budget': 1, 'urgent': 8, 'general': 30}
-2026-02-27 14:31:06  [INFO]  取得訊息 [general]：共 29 則
-2026-02-27 14:32:53  [INFO]  ============================================================
-2026-02-27 14:32:53  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:32:53  [INFO]  ============================================================
-2026-02-27 14:33:06  [INFO]  初始化頻道檔案：message_board_data\channels\general.json
-2026-02-27 14:33:06  [INFO]  初始化頻道檔案：message_board_data\channels\purchase.json
-2026-02-27 14:33:06  [INFO]  初始化頻道檔案：message_board_data\channels\acceptance.json
-2026-02-27 14:33:06  [INFO]  初始化頻道檔案：message_board_data\channels\budget.json
-2026-02-27 14:33:06  [INFO]  初始化頻道檔案：message_board_data\channels\urgent.json
-2026-02-27 14:33:06  [INFO]  ============================================================
-2026-02-27 14:33:06  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:33:06  [INFO]  ============================================================
-2026-02-27 14:33:07  [INFO]  ============================================================
-2026-02-27 14:33:07  [INFO]  Message Board API 路由已掛載
-2026-02-27 14:33:07  [INFO]  ============================================================
-2026-02-27 14:33:09  [INFO]  取得已讀記錄 [C9228]：{'urgent': 0, 'purchase': 0, 'acceptance': 0, 'general': 0, 'budget': 0}
-2026-02-27 14:33:09  [INFO]  取得訊息 [general]：共 0 則
-2026-02-27 14:33:12  [INFO]  新訊息 #1 [general] by 王柏翰：「4554」tag= replyTo=None
-2026-02-27 14:33:12  [INFO]  標記已讀 [C9228] [general] → #1（原 #0）
-2026-02-27 14:33:12  [INFO]  標記已讀 [C9228] [general] → #1（原 #1）
-2026-02-27 14:33:13  [INFO]  新訊息 #2 [general] by 王柏翰：「5656565」tag= replyTo=None
-2026-02-27 14:33:14  [INFO]  標記已讀 [C9228] [general] → #2（原 #1）
-2026-02-27 14:33:17  [INFO]  新訊息 #3 [general] by 王柏翰：「4524」tag=✅ 完成 replyTo=None
-2026-02-27 14:33:17  [INFO]  標記已讀 [C9228] [general] → #3（原 #2）
-2026-02-27 14:33:19  [INFO]  釘選 [general] msg_id=3（作者：王柏翰）
-2026-03-08 17:24:36  [INFO]  ============================================================
-2026-03-08 17:24:36  [INFO]  Message Board API 路由已掛載
-2026-03-08 17:24:36  [INFO]  ============================================================
-2026-03-08 17:24:39  [INFO]  ============================================================
-2026-03-08 17:24:39  [INFO]  Message Board API 路由已掛載
-2026-03-08 17:24:39  [INFO]  ============================================================
-2026-03-08 17:24:41  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 3, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 3）
-2026-03-08 17:24:42  [INFO]  取得已讀記錄 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}
-2026-03-08 17:24:42  [INFO]  取得訊息 [general]：共 3 則
-2026-03-08 17:24:44  [INFO]  標記已讀 [K18251] [general] → #3（原 #0）
-2026-03-08 17:24:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:25:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:26:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:27:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:28:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:29:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:30:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:31:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:32:53  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:33:54  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:34:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:35:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:36:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:37:53  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:38:54  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:39:52  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:40:31  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
-2026-03-08 17:40:39  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'general': 0, 'purchase': 0, 'budget': 0, 'acceptance': 0}（合計 0）
+2026-03-04 09:46:33  [INFO]  初始化頻道檔案：message_board_data\channels\budget.json
+2026-03-04 09:46:33  [INFO]  初始化頻道檔案：message_board_data\channels\urgent.json
+2026-03-04 09:46:33  [INFO]  初始化頻道檔案：message_board_data\channels\purchase.json
+2026-03-04 09:46:33  [INFO]  初始化頻道檔案：message_board_data\channels\acceptance.json
+2026-03-04 09:46:33  [INFO]  初始化頻道檔案：message_board_data\channels\general.json
+2026-03-04 09:46:42  [INFO]  查詢未讀 [K18251]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:46:44  [INFO]  取得已讀記錄 [K18251]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:46:44  [INFO]  取得訊息 [general]：共 0 則
+2026-03-04 09:46:48  [INFO]  新訊息 #1 [general] by 詹睿穎：「TEST」tag= replyTo=None
+2026-03-04 09:46:48  [INFO]  標記已讀 [K18251] [general] → #1（原 #0）
+2026-03-04 09:46:48  [INFO]  標記已讀 [K18251] [general] → #1（原 #1）
+2026-03-04 09:46:52  [INFO]  取得訊息 [purchase]：共 0 則
+2026-03-04 09:46:52  [INFO]  取得訊息 [acceptance]：共 0 則
+2026-03-04 09:46:53  [INFO]  取得訊息 [general]：共 1 則
+2026-03-04 09:46:54  [INFO]  取得已讀記錄 [K18251]：{'purchase': 0, 'general': 1, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:46:54  [INFO]  取得訊息 [general]：共 1 則
+2026-03-04 09:46:57  [INFO]  取得訊息 [purchase]：共 0 則
+2026-03-04 09:46:58  [INFO]  取得訊息 [acceptance]：共 0 則
+2026-03-04 09:46:58  [INFO]  取得訊息 [budget]：共 0 則
+2026-03-04 09:46:58  [INFO]  取得訊息 [urgent]：共 0 則
+2026-03-04 09:47:00  [INFO]  查詢未讀 [K18251]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:47:10  [INFO]  取得訊息 [urgent]：共 0 則
+2026-03-04 09:47:10  [INFO]  取得已讀記錄 [K18251]：{'purchase': 0, 'general': 1, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:47:10  [INFO]  取得訊息 [urgent]：共 0 則
+2026-03-04 09:47:13  [INFO]  取得訊息 [general]：共 1 則
+2026-03-04 09:47:21  [INFO]  取得訊息 [general]：共 1 則
+2026-03-04 09:47:28  [INFO]  查詢未讀 [C9228]：{'purchase': 0, 'general': 1, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 1）
+2026-03-04 09:47:33  [INFO]  取得已讀記錄 [C9228]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:47:33  [INFO]  取得訊息 [general]：共 1 則
+2026-03-04 09:47:34  [INFO]  標記已讀 [C9228] [general] → #1（原 #0）
+2026-03-04 09:47:45  [INFO]  新訊息 #2 [general] by 王柏翰：「55」tag=📌 重要 replyTo=None
+2026-03-04 09:47:45  [INFO]  標記已讀 [C9228] [general] → #2（原 #1）
+2026-03-04 09:47:48  [INFO]  釘選 [general] msg_id=2（作者：王柏翰）
+2026-03-04 09:47:54  [INFO]  查詢未讀 [C9228]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:48:27  [INFO]  取得已讀記錄 [C9228]：{'purchase': 0, 'general': 2, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:48:27  [INFO]  取得訊息 [general]：共 2 則
+2026-03-04 09:48:28  [INFO]  取消釘選 [general] msg_id=2（作者：王柏翰）
+2026-03-04 09:48:32  [INFO]  釘選 [general] msg_id=2（作者：王柏翰）
+2026-03-04 09:51:29  [INFO]  取得已讀記錄 [C9228]：{'purchase': 0, 'general': 2, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:51:29  [INFO]  取得訊息 [general]：共 2 則
+2026-03-04 09:51:31  [INFO]  新訊息 #3 [general] by 王柏翰：「232」tag= replyTo=None
+2026-03-04 09:51:31  [INFO]  標記已讀 [C9228] [general] → #3（原 #2）
+2026-03-04 09:51:33  [INFO]  查詢未讀 [C9228]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:51:34  [INFO]  查詢未讀 [C9228]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:51:35  [INFO]  取得訊息 [general]：共 3 則
+2026-03-04 09:51:37  [INFO]  查詢未讀 [C9228]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:51:43  [INFO]  查詢未讀 [K22920]：{'purchase': 0, 'general': 3, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 3）
+2026-03-04 09:51:43  [INFO]  取得已讀記錄 [K22920]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:51:43  [INFO]  取得訊息 [general]：共 3 則
+2026-03-04 09:51:44  [INFO]  標記已讀 [K22920] [general] → #3（原 #0）
+2026-03-04 09:51:47  [INFO]  新訊息 #4 [general] by 蔣杰軒：「5」tag= replyTo=None
+2026-03-04 09:51:47  [INFO]  標記已讀 [K22920] [general] → #4（原 #3）
+2026-03-04 09:52:46  [INFO]  取得已讀記錄 [K22920]：{'purchase': 0, 'general': 4, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:52:46  [INFO]  取得訊息 [general]：共 4 則
+2026-03-04 09:53:23  [INFO]  取得已讀記錄 [K22920]：{'purchase': 0, 'general': 4, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-03-04 09:53:23  [INFO]  取得訊息 [general]：共 4 則
+2026-03-04 09:53:29  [INFO]  查詢未讀 [K22920]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:53:38  [INFO]  查詢未讀 [K22920]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:53:43  [INFO]  查詢未讀 [K22920]：{'purchase': 0, 'general': 0, 'acceptance': 0, 'budget': 0, 'urgent': 0}（合計 0）
+2026-03-04 09:54:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 09:55:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 09:56:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 09:57:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 09:58:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 09:59:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:00:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:01:44  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:02:45  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:03:46  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:04:47  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:05:48  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:06:49  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:07:50  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:08:51  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:09:52  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:10:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:11:44  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:12:45  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:13:46  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:14:47  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:15:48  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:16:49  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:17:50  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:18:51  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:19:52  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:20:53  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:21:54  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:22:55  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:23:43  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-03-04 10:24:44  [INFO]  查詢未讀 [K22920]：{'urgent': 0, 'acceptance': 0, 'budget': 0, 'general': 0, 'purchase': 0}（合計 0）
+2026-04-06 13:11:03  [INFO]  查詢未讀 [K18251]：{'general': 3, 'budget': 0, 'acceptance': 0, 'urgent': 0, 'purchase': 0}（合計 3）
+2026-04-06 13:11:18  [INFO]  取得已讀記錄 [K18251]：{'purchase': 0, 'general': 1, 'acceptance': 0, 'budget': 0, 'urgent': 0}
+2026-04-06 13:11:18  [INFO]  取得訊息 [general]：共 4 則
+2026-04-06 13:11:21  [INFO]  取得訊息 [general]：共 4 則
+2026-04-06 13:11:22  [INFO]  取得訊息 [purchase]：共 0 則
+2026-04-06 13:11:22  [INFO]  取得訊息 [purchase]：共 0 則
+2026-04-06 13:11:22  [INFO]  取得訊息 [general]：共 4 則
+2026-04-06 13:11:22  [INFO]  取得訊息 [general]：共 4 則
+2026-04-06 13:11:22  [INFO]  標記已讀 [K18251] [general] → #4（原 #1）
+2026-04-06 13:11:24  [INFO]  取得訊息 [general]：共 4 則
+2026-04-06 13:11:27  [INFO]  取得訊息 [general]：共 4 則
+2026-04-06 13:11:30  [INFO]  查詢未讀 [K18251]：{'general': 0, 'budget': 0, 'acceptance': 0, 'urgent': 0, 'purchase': 0}（合計 0）
+2026-04-06 13:45:56  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:47:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:48:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:49:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:50:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:51:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:52:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:53:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:54:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:55:15  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:55:54  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:56:54  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:57:55  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:58:55  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 13:59:55  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:00:39  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:02:39  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:03:39  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:03:42  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:03:50  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:04:31  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:05:00  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:05:37  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:06:37  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）
+2026-04-06 14:07:37  [INFO]  查詢未讀 [K18251]：{'urgent': 0, 'purchase': 0, 'budget': 0, 'general': 0, 'acceptance': 0}（合計 0）

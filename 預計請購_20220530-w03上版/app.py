@@ -539,7 +539,7 @@ def uploadMoney():
         additional_budget = data.get('additionalBudget')
 
         budget_data = read_json_file()  # 讀原始 JSON 資料
-        print("budget_data: ", budget_data)
+        # print("budget_data: ", budget_data)
 
         # 檢查年度
         if "預算" not in budget_data:
@@ -3211,12 +3211,12 @@ def upload_buyer_detail():
     # backup_files()
     file = request.files.get('file')
     if not file or not file.filename:
-        print("❌ 沒有收到檔案")
+        logger.info("❌ 沒有收到檔案")
         return jsonify({"status": "fail", "message": "No file uploaded"}), 400
 
     filename = file.filename
     ext = os.path.splitext(filename)[-1].lower()
-    print(f"📁 收到檔案：{filename}（副檔名：{ext}）")
+    logger.info(f"📁 收到檔案：{filename}（副檔名：{ext}）")
 
     if ext not in ['.xlsx', '.xls']:
         return jsonify({"status": "fail", "message": "Invalid file type"}), 400
@@ -3225,7 +3225,7 @@ def upload_buyer_detail():
         engine = 'openpyxl' if ext == '.xlsx' else 'xlrd'
         df = pd.read_excel(file, engine=engine)  # 這行最容易報錯
         df.to_csv("static/data/delivery_receipt.csv", index=False, encoding="utf-8-sig")
-        print("💾 已儲存為 static/data/delivery_receipt.csv，開始進行對 Buyer detail 該表數據更新")
+        logger.info("💾 已儲存為 static/data/delivery_receipt.csv，開始進行對 Buyer detail 該表數據更新")
 
 
         output_df = pd.read_csv("static/data/delivery_receipt.csv", encoding="utf-8-sig", dtype=str)
@@ -3243,14 +3243,14 @@ def upload_buyer_detail():
         # 檢查 buyer_df 是否有必要的欄位
         if not all(col in buyer_df.columns for col in required_buyer_cols):
             missing_cols = [col for col in required_buyer_cols if col not in buyer_df.columns]
-            print(f"錯誤: {BUYER_FILE} 缺少必要的欄位: {', '.join(missing_cols)}")
+            logger.info(f"錯誤: {BUYER_FILE} 缺少必要的欄位: {', '.join(missing_cols)}")
             logger.error(f"{BUYER_FILE} 缺少必要的欄位: {', '.join(missing_cols)}")
             exit()
 
         # 檢查 output_df 是否有必要的欄位
         if not all(col in output_df.columns for col in required_output_cols):
             missing_cols = [col for col in required_output_cols if col not in output_df.columns]
-            print(f"錯誤: delivery_receipt.csv 缺少必要的欄位: {', '.join(missing_cols)}")
+            logger.info(f"錯誤: delivery_receipt.csv 缺少必要的欄位: {', '.join(missing_cols)}")
             logger.error(f"delivery_receipt.csv 缺少必要的欄位: {', '.join(missing_cols)}")
             exit()
 
@@ -3349,8 +3349,8 @@ def upload_buyer_detail():
         # === 儲存更新後的檔案 ===
         final_df.to_csv(BUYER_FILE, index=False, encoding="utf-8-sig")
 
-        print(f"總共更新了 {update_count} 筆資料。")
-        print(f"檔案已更新。總共更新了 {update_count} 筆資料。")
+        logger.info(f"總共更新了 {update_count} 筆資料。")
+        logger.info(f"檔案已更新。總共更新了 {update_count} 筆資料。")
         os.remove("static/data/delivery_receipt.csv")
 
         return jsonify({"status": "success", "msg": f"檔案已更新。總共更新了 {update_count} 筆資料。"})
@@ -4704,6 +4704,9 @@ def get_next_month_amount():
     try:
         file_path = BUYER_FILE
         
+        print(f"📂 開始處理下個月預計入帳...")
+        print(f"📂 檔案路徑: {file_path}")
+        
         if not os.path.exists(file_path):
             print(f"❌ 檔案不存在: {file_path}")
             return jsonify({
@@ -4715,6 +4718,7 @@ def get_next_month_amount():
 
         # 讀取 CSV
         df = pd.read_csv(file_path, encoding="utf-8-sig", dtype=str).fillna("")
+        print(f"✅ 成功讀取 CSV，共 {len(df)} 筆資料")
 
         # 金額欄位清理（去掉千分位逗號）
         def clean_amount(series):
@@ -4741,6 +4745,7 @@ def get_next_month_amount():
 
         # 優先用 RT總金額
         df["計算金額"] = df["RT總金額"].where(df["RT總金額"] > 0, df["總價"])
+        print("✅ 計算金額欄位已建立")
 
         # 日期清理
         def clean_date(val):
@@ -4761,6 +4766,9 @@ def get_next_month_amount():
         start = int(first_day_next_month.strftime("%Y%m%d"))
         end = int(last_day_next_month.strftime("%Y%m%d"))
 
+        print(f"📅 下個月日期範圍: {first_day_next_month} ~ {last_day_next_month}")
+        print(f"🔢 整數格式: {start} ~ {end}")
+
         # 篩選符合條件
         df["交期_int"] = pd.to_numeric(df["交期_clean"], errors="coerce")
 
@@ -4771,9 +4779,13 @@ def get_next_month_amount():
             (df["WBS"].astype(str).str.strip() == "")
         ].copy()
 
+        print(f"✅ 符合條件的資料共 {len(next_month_df)} 筆")
+
         # 計算總額
         next_month_df["計算金額"] = next_month_df["計算金額"].astype(int)
         total_amount = int(next_month_df["計算金額"].sum())
+
+        print(f"💰 下個月預計入帳總金額: {total_amount:,} 元")
 
         # 準備輸出資料
         cols = ["ePR No.", "PO No.", "品項", "計算金額", "Delivery Date 廠商承諾交期", "WBS"]
@@ -4793,14 +4805,18 @@ def get_next_month_amount():
                 "end": last_day_next_month.strftime("%Y/%m/%d")
             }
         }
-
+        
+        print(f"✅ API 執行成功")
         return jsonify(result)
 
     except Exception as e:
         import traceback
         error_msg = str(e)
         error_trace = traceback.format_exc()
-
+        
+        print(f"❌ 計算下個月預計入帳失敗: {error_msg}")
+        print(f"❌ 詳細錯誤：")
+        print(error_trace)
         
         return jsonify({
             "file": file_path if 'file_path' in locals() else "unknown",
@@ -6125,9 +6141,8 @@ def mb_recall_message():
     return jsonify({'success': True})
 
 
-mb_logger.info('=' * 60)
-mb_logger.info('Message Board API 路由已掛載')
-mb_logger.info('=' * 60)
-print('✅ Message Board API 路由已掛載')
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)

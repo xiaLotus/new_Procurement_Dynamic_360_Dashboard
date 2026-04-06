@@ -155,7 +155,7 @@
                         style="z-index: 50;"
                     >
                         <option disabled value="">請選擇</option>
-                        <option v-for="month in Object.keys(total_money_by_month_data).sort().reverse()" :key="month" :value="month">
+                        <option v-for="month in Object.keys(total_money_by_month_data)" :key="month" :value="month">
                             {{ formatMonth(month) }}
                         </option>
                     </select>
@@ -1580,6 +1580,9 @@
                 <div class="flex justify-end gap-4 pt-4">
                     <button @click="cancelEdit" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-lg transition">
                         取消
+                    </button>
+                    <button @click="resubmitItem" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg transition flex items-center gap-2">
+                        🔄 退回重送
                     </button>
                     <button @click="saveEdit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition">
                         💾 儲存

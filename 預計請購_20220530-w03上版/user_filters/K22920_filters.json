@@ -1,9 +1,7 @@
 {
-  "username": "K18251",
+  "username": "K22920",
   "filterPurchaseStatus": "ALL",
-  "checkedPeople": [
-    "詹睿穎"
-  ],
+  "checkedPeople": [],
   "checkedReceivingResults": [],
   "checkedStates": [],
   "checkedWBS": [],
@@ -24,10 +22,10 @@
   "reasonSearchText": "",
   "sortField": "",
   "sortOrder": "asc",
-  "selectedMonth": "202512",
-  "selectedIssuedMonth": "202552",
+  "selectedMonth": "202602",
+  "selectedIssuedMonth": "202602",
   "filterStartDate": "",
   "filterEndDate": "",
   "dateFilterActive": false,
-  "lastUpdated": "2026-04-06T06:05:37.322Z"
+  "lastUpdated": "2026-03-04T01:53:43.439Z"
 }

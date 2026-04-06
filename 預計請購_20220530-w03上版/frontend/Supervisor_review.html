@@ -207,6 +207,137 @@
         .th-clickable:hover {
             background-color: #1e3a8a;
         }
+
+        /* ========== 展開列相關 ========== */
+        /* 展開切換按鈕 */
+        .expand-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .expand-btn:hover {
+            background: #eff6ff;
+            border-color: #3b82f6;
+            color: #2563eb;
+        }
+        .expand-btn.is-expanded {
+            background: #dbeafe;
+            border-color: #3b82f6;
+            color: #1d4ed8;
+        }
+        .expand-chevron {
+            transition: transform 0.2s ease;
+            width: 12px;
+            height: 12px;
+        }
+        .expand-chevron.rotated {
+            transform: rotate(90deg);
+        }
+
+        /* 報告路徑複製按鈕 */
+        .copy-path-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+        .copy-path-btn:hover {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            color: #16a34a;
+        }
+
+        /* 細項展開面板 */
+        .detail-row td {
+            padding: 0 !important;
+        }
+        .detail-panel {
+            background: #f0f7ff;
+            border-top: 2px solid #bfdbfe;
+            border-bottom: 2px solid #bfdbfe;
+            padding: 12px 20px;
+        }
+        .detail-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d4ed8;
+            margin-bottom: 10px;
+        }
+        .detail-sub-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            background: white;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .detail-sub-table thead th {
+            background: #1e40af;
+            color: white;
+            padding: 6px 10px;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+            position: static; /* override sticky */
+        }
+        .detail-sub-table tbody td {
+            padding: 5px 10px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #374151;
+        }
+        .detail-sub-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .detail-sub-table tbody tr:hover td {
+            background: #f0f9ff;
+        }
+        .detail-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .detail-empty {
+            color: #9ca3af;
+            font-style: italic;
+            font-size: 13px;
+            padding: 12px 0;
+            text-align: center;
+        }
+
+        /* 展開列動畫 */
+        .slide-enter-active {
+            transition: opacity 0.2s ease;
+        }
+        .slide-leave-active {
+            transition: opacity 0.15s ease;
+        }
+        .slide-enter-from, .slide-leave-to {
+            opacity: 0;
+        }
     </style>
 </head>
 <body class="h-full bg-gray-50">
@@ -219,7 +350,7 @@
                         <i data-lucide="clipboard-check" class="w-8 h-8 ml-2" style="display: inline-block; flex-shrink: 0;"></i>
                         <div>
                             <h1 class="text-2xl font-bold">長官審核系統</h1>
-                            <p class="text-blue-200 text-sm">請購申請審核管理（需主任 & 叔叔雙重簽核）</p>
+                            <p class="text-blue-200 text-sm">請購申請審核管理（需主任 & 管裡雙重簽核）</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
@@ -331,7 +462,8 @@
                                     <th v-if="currentTab === 'pending'" class="px-3 py-3 text-center" style="width: 3%;">
                                         <input type="checkbox" @change="toggleSelectAll" :checked="isAllSelected" class="w-4 h-4">
                                     </th>
-                                    <th class="px-2 py-3 text-center" style="width: 3%;">#</th>
+                                    <!-- # 欄位：含展開按鈕 -->
+                                    <th class="px-2 py-3 text-center" style="width: 4%;">#</th>
                                     <th class="px-3 py-3 text-center" style="width: 6%;">總體狀態</th>
                                     <th class="px-3 py-3 text-center" style="width: 5%;">WBS</th>
                                     
@@ -527,11 +659,11 @@
                                             </button>
                                         </div>
                                     </th>
-                                    <!-- 叔叔簽核欄位 -->
+                                    <!-- 管裡簽核欄位 -->
                                     <th v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
                                         class="px-3 py-3 text-center bg-purple-700" style="width: 7%;">
                                         <div class="flex items-center justify-center gap-1">
-                                            <span>叔叔簽核</span>
+                                            <span>管裡簽核</span>
                                             <button 
                                                 @click.stop="toggleUncleSort"
                                                 class="hover:bg-purple-600 rounded p-1 transition"
@@ -549,127 +681,257 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(item, index) in displayItems" 
-                                    :key="item.Id"
-                                    :class="{
-                                        'row-selected': selectedIds.includes(item.Id), 
-                                        'hover-row': true,
-                                        'bg-green-50': item['ePR No.'] && item['ePR No.'].trim() !== ''
-                                    }"
-                                    class="border-b">
-                                    <td v-if="currentTab === 'pending'" class="px-3 py-2 text-center">
-                                        <input 
-                                            type="checkbox" 
-                                            :value="item.Id"
-                                            v-model="selectedIds"
-                                            class="w-4 h-4">
-                                    </td>
-                                    <td class="px-2 py-2 text-center font-medium text-gray-600 text-sm">{{ index + 1 }}</td>
+                                <!-- ★ 使用 template v-for 讓每筆資料可以渲染兩列（主列 + 細項列）-->
+                                <template v-for="(item, index) in displayItems" :key="item.Id">
                                     
-                                    <!-- 總體狀態 -->
-                                    <td class="px-3 py-2 text-center">
-                                        <span 
-                                            v-if="item['ePR No.'] && item['ePR No.'].trim() !== ''" 
-                                            class="status-badge bg-blue-100 text-blue-800"
-                                        >
-                                            <i data-lucide="check-circle" class="w-4 h-4 mr-1 inline-block align-middle"></i>
-                                            已開單
-                                        </span>
-                                        <span 
-                                            v-else 
-                                            :class="getOverallStatusClass(item)"
-                                        >
-                                            {{ getOverallStatusText(item) }}
-                                        </span>
-                                    </td>
-                                    
-                                    <td class="px-3 py-2 text-center text-sm">{{ item['WBS'] || '-' }}</td>
-                                    <td class="px-3 py-2 text-center text-sm">{{ item['請購順序'] || '-' }}</td>
-                                    <td class="px-3 py-2 text-left text-sm">{{ item['需求者'] || '-' }}</td>
-                                    <td class="px-3 py-2 text-left text-sm full-content">{{ item['請購項目'] || '-' }}</td>
-                                    <td class="px-3 py-2 text-left text-sm full-content">{{ item['需求原因'] || '-' }}</td>
-                                    <td class="px-3 py-2 text-right text-sm font-medium nowrap-cell">{{ formatMoney(item['總金額']) }}</td>
-                                    <td class="px-3 py-2 text-center text-sm nowrap-cell">{{ formatDate(item['需求日']) }}</td>
-                                    <td class="px-3 py-2 text-left text-sm full-content">{{ item['報告路徑'] || '-' }}</td>
-                                    <td class="px-3 py-2 text-left">
-                                        <div class="remark-display break-words" :title="item['備註']">{{ item['備註'] || '-' }}</div>
-                                    </td>
-                                    
-                                    <!-- 主任簽核操作欄 -->
-                                    <td v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
-                                        class="px-2 py-2 text-center">
-                                        <div class="flex flex-col items-center gap-1">
-                                            <span :class="getApprovalStatusClass(item['主任簽核'])" class="mini-badge">
-                                                {{ getApprovalStatusText(item['主任簽核']) }}
+                                    <!-- 主列 -->
+                                    <tr
+                                        :class="{
+                                            'row-selected': selectedIds.includes(item.Id), 
+                                            'hover-row': true,
+                                            'bg-green-50': item['ePR No.'] && item['ePR No.'].trim() !== ''
+                                        }"
+                                        class="border-b">
+                                        <td v-if="currentTab === 'pending'" class="px-3 py-2 text-center">
+                                            <input 
+                                                type="checkbox" 
+                                                :value="item.Id"
+                                                v-model="selectedIds"
+                                                class="w-4 h-4">
+                                        </td>
+                                        
+                                        <!-- # 欄：序號 + 展開按鈕 -->
+                                        <td class="px-2 py-2 text-center font-medium text-gray-600 text-sm">
+                                            <div class="flex items-center justify-center gap-1">
+                                                <button
+                                                    @click="toggleRow(item.Id)"
+                                                    :class="['expand-btn', isRowExpanded(item.Id) ? 'is-expanded' : '']"
+                                                    :title="isRowExpanded(item.Id) ? '收合細項' : '展開細項'">
+                                                    <!-- Chevron right → rotate to down when expanded -->
+                                                    <svg :class="['expand-chevron', isRowExpanded(item.Id) ? 'rotated' : '']"
+                                                         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="m9 18 6-6-6-6"/>
+                                                    </svg>
+                                                </button>
+                                                <span>{{ index + 1 }}</span>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- 總體狀態 -->
+                                        <td class="px-3 py-2 text-center">
+                                            <span 
+                                                v-if="item['ePR No.'] && item['ePR No.'].trim() !== ''" 
+                                                class="status-badge bg-blue-100 text-blue-800"
+                                            >
+                                                <i data-lucide="check-circle" class="w-4 h-4 mr-1 inline-block align-middle"></i>
+                                                已開單
                                             </span>
-                                            <div v-if="currentTab === 'pending' && canApprove(item, 'director')" 
-                                                 class="flex gap-1 mt-1">
-                                                <button 
-                                                    @click="approveDirector(item.Id)"
-                                                    class="w-6 h-6 flex items-center justify-center bg-green-500 text-white rounded hover:bg-green-600 transition"
-                                                    title="主任簽核通過">
-                                                    <i data-lucide="check" class="w-3 h-3"></i>
-                                                </button>
-                                                <button 
-                                                    @click="rejectDirector(item.Id)"
-                                                    class="w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                                    title="主任簽核退回">
-                                                    <i data-lucide="x" class="w-3 h-3"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    
-                                    <!-- 叔叔簽核操作欄 -->
-                                    <td v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
-                                        class="px-2 py-2 text-center">
-                                        <div class="flex flex-col items-center gap-1">
-                                            <span :class="getApprovalStatusClass(item['叔叔簽核'])" class="mini-badge">
-                                                {{ getApprovalStatusText(item['叔叔簽核']) }}
+                                            <span 
+                                                v-else 
+                                                :class="getOverallStatusClass(item)"
+                                            >
+                                                {{ getOverallStatusText(item) }}
                                             </span>
-                                            <!-- 等待主任簽核提示 -->
-                                            <div v-if="currentTab === 'pending' && isWaitingForDirector(item)" 
-                                                 class="text-xs text-orange-500 mt-1">
-                                                等待主任
-                                            </div>
-                                            <!-- 操作按鈕 -->
-                                            <div v-if="currentTab === 'pending' && canApprove(item, 'uncle')" 
-                                                 class="flex gap-1 mt-1">
-                                                <button 
-                                                    @click="approveUncle(item.Id)"
-                                                    class="w-6 h-6 flex items-center justify-center bg-green-500 text-white rounded hover:bg-green-600 transition"
-                                                    title="叔叔簽核通過">
-                                                    <i data-lucide="check" class="w-3 h-3"></i>
+                                        </td>
+                                        
+                                        <td class="px-3 py-2 text-center text-sm">{{ item['WBS'] || '-' }}</td>
+                                        <td class="px-3 py-2 text-center text-sm">{{ item['請購順序'] || '-' }}</td>
+                                        <td class="px-3 py-2 text-left text-sm">{{ item['需求者'] || '-' }}</td>
+                                        <td class="px-3 py-2 text-left text-sm full-content">{{ item['請購項目'] || '-' }}</td>
+                                        <td class="px-3 py-2 text-left text-sm full-content">{{ item['需求原因'] || '-' }}</td>
+                                        <td class="px-3 py-2 text-right text-sm font-medium nowrap-cell">{{ formatMoney(item['總金額']) }}</td>
+                                        <td class="px-3 py-2 text-center text-sm nowrap-cell">{{ formatDate(item['需求日']) }}</td>
+                                        
+                                        <!-- ★ 報告路徑欄：路徑文字 + 複製按鈕 -->
+                                        <td class="px-3 py-2 text-left text-sm full-content">
+                                            <div class="flex items-start gap-1">
+                                                <span class="flex-1">{{ item['報告路徑'] || '-' }}</span>
+                                                <button
+                                                    v-if="item['報告路徑'] && item['報告路徑'].trim() && item['報告路徑'].trim() !== '-'"
+                                                    @click.stop="copyPath(item['報告路徑'])"
+                                                    class="copy-path-btn mt-0.5"
+                                                    title="複製報告路徑">
+                                                    <!-- Copy icon (inline SVG) -->
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                                                        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                                                    </svg>
                                                 </button>
-                                                <button 
-                                                    @click="rejectUncle(item.Id)"
-                                                    class="w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded hover:bg-red-600 transition"
-                                                    title="叔叔簽核退回">
-                                                    <i data-lucide="x" class="w-3 h-3"></i>
-                                                </button>
                                             </div>
-                                        </div>
-                                    </td>
+                                        </td>
+                                        
+                                        <td class="px-3 py-2 text-left">
+                                            <div class="remark-display break-words" :title="item['備註']">{{ item['備註'] || '-' }}</div>
+                                        </td>
+                                        
+                                        <!-- 主任簽核操作欄 -->
+                                        <td v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
+                                            class="px-2 py-2 text-center">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span :class="getApprovalStatusClass(item['主任簽核'])" class="mini-badge">
+                                                    {{ getApprovalStatusText(item['主任簽核']) }}
+                                                </span>
+                                                <div v-if="currentTab === 'pending' && canApprove(item, 'director')" 
+                                                     class="flex gap-1 mt-1">
+                                                    <button 
+                                                        @click="approveDirector(item.Id)"
+                                                        class="w-6 h-6 flex items-center justify-center bg-green-500 text-white rounded hover:bg-green-600 transition"
+                                                        title="主任簽核通過">
+                                                        <i data-lucide="check" class="w-3 h-3"></i>
+                                                    </button>
+                                                    <button 
+                                                        @click="rejectDirector(item.Id)"
+                                                        class="w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                                        title="主任簽核退回">
+                                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- 管裡簽核操作欄 -->
+                                        <td v-if="currentTab === 'pending' || currentTab === 'rejected' || currentTab === 'all'" 
+                                            class="px-2 py-2 text-center">
+                                            <div class="flex flex-col items-center gap-1">
+                                                <span :class="getApprovalStatusClass(item['管裡簽核'])" class="mini-badge">
+                                                    {{ getApprovalStatusText(item['管裡簽核']) }}
+                                                </span>
+                                                <!-- 等待主任簽核提示 -->
+                                                <div v-if="currentTab === 'pending' && isWaitingForDirector(item)" 
+                                                     class="text-xs text-orange-500 mt-1">
+                                                    等待主任
+                                                </div>
+                                                <!-- 操作按鈕 -->
+                                                <div v-if="currentTab === 'pending' && canApprove(item, 'uncle')" 
+                                                     class="flex gap-1 mt-1">
+                                                    <button 
+                                                        @click="approveUncle(item.Id)"
+                                                        class="w-6 h-6 flex items-center justify-center bg-green-500 text-white rounded hover:bg-green-600 transition"
+                                                        title="管裡簽核通過">
+                                                        <i data-lucide="check" class="w-3 h-3"></i>
+                                                    </button>
+                                                    <button 
+                                                        @click="rejectUncle(item.Id)"
+                                                        class="w-6 h-6 flex items-center justify-center bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                                        title="管裡簽核退回">
+                                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- 已退回的處理按鈕 -->
+                                        <td v-if="currentTab === 'rejected'" class="px-3 py-2 text-center">
+                                            <button 
+                                                @click="clearRemarkAndApprove(item.Id)"
+                                                class="px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition flex items-center justify-center"
+                                                title="清空備註並重新送審">
+                                                處理完成 <i data-lucide="rotate-ccw" class="w-3 h-3 ml-1"></i>
+                                            </button>
+                                        </td>
+                                        <!-- 已確認的退回按鈕 -->
+                                        <td v-if="currentTab === 'approved'" class="px-3 py-2 text-center">
+                                            <button 
+                                                @click="rejectFromApproved(item.Id)"
+                                                class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition flex items-center justify-center mx-auto"
+                                                title="退回此筆申請">
+                                                退回 <i data-lucide="undo-2" class="w-3 h-3 ml-1"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
                                     
-                                    <!-- 已退回的處理按鈕 -->
-                                    <td v-if="currentTab === 'rejected'" class="px-3 py-2 text-center">
-                                        <button 
-                                            @click="clearRemarkAndApprove(item.Id)"
-                                            class="px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition flex items-center justify-center"
-                                            title="清空備註並重新送審">
-                                            處理完成 <i data-lucide="rotate-ccw" class="w-3 h-3 ml-1"></i>
-                                        </button>
-                                    </td>
-                                    <!-- 已確認的退回按鈕 -->
-                                    <td v-if="currentTab === 'approved'" class="px-3 py-2 text-center">
-                                        <button 
-                                            @click="rejectFromApproved(item.Id)"
-                                            class="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition flex items-center justify-center mx-auto"
-                                            title="退回此筆申請">
-                                            退回 <i data-lucide="undo-2" class="w-3 h-3 ml-1"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                                    <!-- ★ 細項展開列 -->
+                                    <transition name="slide">
+                                        <tr v-if="isRowExpanded(item.Id)" class="detail-row">
+                                            <td :colspan="detailColspan">
+                                                <div class="detail-panel">
+                                                    <!-- 細項標題列 -->
+                                                    <div class="detail-panel-header">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/>
+                                                            <path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>
+                                                        </svg>
+                                                        細項資訊（來源：Buyer_detail）
+                                                        <span class="text-xs font-normal text-blue-500 ml-2">
+                                                            共 {{ getBuyerDetails(item.Id).length }} 筆子項
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <!-- 無細項 -->
+                                                    <div v-if="getBuyerDetails(item.Id).length === 0" class="detail-empty">
+                                                        此筆請購目前無細項資料
+                                                    </div>
+                                                    
+                                                    <!-- 細項表格 -->
+                                                    <table v-else class="detail-sub-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width:5%">項次</th>
+                                                                <th style="width:18%">品項</th>
+                                                                <th style="width:12%">規格</th>
+                                                                <th style="width:5%">數量</th>
+                                                                <th style="width:9%">單價</th>
+                                                                <th style="width:9%">總價</th>
+                                                                <th style="width:8%">ePR No.</th>
+                                                                <th style="width:8%">PO No.</th>
+                                                                <th style="width:6%">開單狀態</th>
+                                                                <th style="width:6%">交貨驗證</th>
+                                                                <th style="width:9%">廠商承諾交期</th>
+                                                                <th style="width:5%">驗收數量</th>
+                                                                <th style="width:7%">驗收狀態</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr v-for="(detail, di) in getBuyerDetails(item.Id)" :key="di">
+                                                                <td class="text-center font-mono text-gray-500">{{ detail['Item'] || '-' }}</td>
+                                                                <td class="font-medium">{{ detail['品項'] || '-' }}</td>
+                                                                <td class="text-gray-600">{{ detail['規格'] || '-' }}</td>
+                                                                <td class="text-center">{{ detail['數量'] || '-' }}</td>
+                                                                <td class="text-center font-mono">{{ formatMoney(detail['單價']) }}</td>
+                                                                <td class="text-center font-mono font-medium">{{ formatMoney(detail['總價']) }}</td>
+                                                                <td class="text-center">
+                                                                    <span v-if="detail['ePR No.'] && detail['ePR No.'].trim()"
+                                                                          class="detail-badge bg-blue-100 text-blue-700">
+                                                                        {{ detail['ePR No.'] }}
+                                                                    </span>
+                                                                    <span v-else class="text-gray-400">-</span>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <span v-if="detail['PO No.'] && detail['PO No.'].trim()"
+                                                                          class="detail-badge bg-indigo-100 text-indigo-700">
+                                                                        {{ detail['PO No.'] }}
+                                                                    </span>
+                                                                    <span v-else class="text-gray-400">-</span>
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <span :class="['detail-badge', getOrderStatusClass(detail['開單狀態'])]">
+                                                                        {{ detail['開單狀態'] === 'V' ? '已開單' : detail['開單狀態'] === 'X' ? '未開單' : (detail['開單狀態'] || '-') }}
+                                                                    </span>
+                                                                </td>
+                                                                <td class="text-center text-gray-600">{{ detail['交貨驗證'] || '-' }}</td>
+                                                                <td class="text-center text-gray-600">{{ formatDate(detail['Delivery Date 廠商承諾交期']) }}</td>
+                                                                <td class="text-center">{{ detail['驗收數量'] || '-' }}</td>
+                                                                <td class="text-center">
+                                                                    <span v-if="detail['驗收狀態'] && detail['驗收狀態'].trim()"
+                                                                          :class="['detail-badge', getAcceptanceStatusClass(detail['驗收狀態'])]">
+                                                                        {{ detail['驗收狀態'] }}
+                                                                    </span>
+                                                                    <span v-else class="text-gray-400">-</span>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </transition>
+                                    
+                                </template>
+                                
+                                <!-- 無資料提示 -->
                                 <tr v-if="displayItems.length === 0">
                                     <td :colspan="currentTab === 'approved' ? 13 : (currentTab === 'rejected' ? 16 : 15)"
                                         class="px-4 py-8 text-center text-gray-500">

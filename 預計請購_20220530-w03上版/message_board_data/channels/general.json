@@ -2,11 +2,11 @@
   {
     "id": 1,
     "channel": "general",
-    "author": "王柏翰",
-    "emp_id": "C9228",
+    "author": "詹睿穎",
+    "emp_id": "K18251",
     "type": "message",
-    "content": "4554",
-    "timestamp": "2026-02-27T14:33:12.569750+08:00",
+    "content": "TEST",
+    "timestamp": "2026-03-04T09:46:48.110467+08:00",
     "tag": "",
     "reactions": {},
     "replyTo": null,
@@ -18,12 +18,13 @@
     "author": "王柏翰",
     "emp_id": "C9228",
     "type": "message",
-    "content": "5656565",
-    "timestamp": "2026-02-27T14:33:13.985213+08:00",
-    "tag": "",
+    "content": "55",
+    "timestamp": "2026-03-04T09:47:45.029174+08:00",
+    "tag": "📌 重要",
     "reactions": {},
     "replyTo": null,
-    "pinned": false
+    "pinned": true,
+    "pinned_at": "2026-03-04T09:48:32.712241+08:00"
   },
   {
     "id": 3,
@@ -31,12 +32,24 @@
     "author": "王柏翰",
     "emp_id": "C9228",
     "type": "message",
-    "content": "4524",
-    "timestamp": "2026-02-27T14:33:17.240924+08:00",
-    "tag": "✅ 完成",
+    "content": "232",
+    "timestamp": "2026-03-04T09:51:31.323889+08:00",
+    "tag": "",
     "reactions": {},
     "replyTo": null,
-    "pinned": true,
-    "pinned_at": "2026-02-27T14:33:19.301947+08:00"
+    "pinned": false
+  },
+  {
+    "id": 4,
+    "channel": "general",
+    "author": "蔣杰軒",
+    "emp_id": "K22920",
+    "type": "message",
+    "content": "5",
+    "timestamp": "2026-03-04T09:51:47.908755+08:00",
+    "tag": "",
+    "reactions": {},
+    "replyTo": null,
+    "pinned": false
   }
 ]

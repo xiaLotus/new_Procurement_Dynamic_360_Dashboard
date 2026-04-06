@@ -80,6 +80,11 @@ const app = Vue.createApp({
 
             // 快速 Emoji
             quickEmojis: ['👍', '❤️', '😄', '✅'],
+
+            // 🔁 自動輪詢控制
+            pollTimer: null,           // setInterval 參考
+            pollInterval: 3000,        // 輪詢間隔（毫秒），建議生產環境改為 3000~5000
+            isPolling: false,          // 避免重複啟動
         };
     },
 
@@ -195,23 +200,59 @@ const app = Vue.createApp({
         // 4. 載入頻道訊息
         // 若 savedCh 與初始值 'general' 相同，watcher 不會觸發，需手動呼叫
         await this.fetchMessages(this.selectedChannel);
+
+        // ✅ 初始化完成後啟動自動輪詢
+        this.startPolling();
     },
 
+    // 🧹 元件卸載時務必清除 timer，避免記憶體洩漏
+    beforeUnmount() {
+        this.stopPolling();
+    },
     // ──────────────────────────────────────
     //  方法
     // ──────────────────────────────────────
     methods: {
+    // 🔁 開始自動輪詢
+        startPolling() {
+            if (this.isPolling) return;
+            this.isPolling = true;
+            
+            this.pollTimer = setInterval(() => {
+                // 只輪詢「當前頻道」的新訊息（避免過度請求）
+                this.fetchMessages(this.selectedChannel);
+                
+                // 同時更新各頻道最新時間戳（用於紅點提示）
+                this.fetchLatestTimestamps();
+            }, this.pollInterval);
+            
+            console.log(`🔄 開始輪詢，間隔：${this.pollInterval}ms`);
+        },
 
+        // ⏹️ 停止自動輪詢
+        stopPolling() {
+            if (this.pollTimer) {
+                clearInterval(this.pollTimer);
+                this.pollTimer = null;
+                this.isPolling = false;
+                console.log('⏹️ 已停止輪詢');
+            }
+        },
+
+        // 🔄 切換頻道時重置輪詢（可選）
+        switchChannel(id) {
+            this.selectedChannel = id;
+            localStorage.setItem(`mb_last_channel_${this.username}`, id);
+            
+            // 切換頻道後立即撈取，並保持輪詢
+            this.fetchMessages(id);
+        },
         // ── 導覽 ──────────────────────────
         goBack() {
             localStorage.setItem('username', this.username);
             window.location.href = 'Procurement_Dynamic_360_Dashboard.html';
         },
 
-        switchChannel(id) {
-            this.selectedChannel = id;
-            localStorage.setItem(`mb_last_channel_${this.username}`, id);
-        },
 
         // ── 後端：取得各頻道已讀 id（Discord 風格）──
         async fetchLastRead() {
@@ -343,6 +384,19 @@ const app = Vue.createApp({
 
         // ── 後端：切換釘選 ────────────────
         async togglePin(msgId, channel) {
+            const allowUsers = ["K18251", "C9228", "G9745"]
+
+            // 權限檢查
+            if (!allowUsers.includes(this.username)) {
+                Swal.fire({
+                    icon: "error",
+                    title: "無權限",
+                    text: "只有管理者可以釘選公告",
+                    confirmButtonText: "確定"
+                })
+                return
+            }
+
             try {
                 const res = await axios.post('http://127.0.0.1:5000/api/message-board/pin', { msg_id: msgId, channel: channel || this.selectedChannel });
                 if (res.data?.success) {
@@ -432,13 +486,6 @@ const app = Vue.createApp({
             const sent = new Date(msg.timestamp).getTime();
             const now  = Date.now();
             return (now - sent) <= 10 * 60 * 1000;  // 10 分鐘
-        },
-
-        canRecall(msg) {
-            if (msg.author !== (this.myChineseName || this.username)) return false;
-            if (!msg.timestamp) return false;
-            const sent = new Date(msg.timestamp).getTime();
-            return (Date.now() - sent) <= 10 * 60 * 1000;
         },
 
         isNewMessage(msg) {

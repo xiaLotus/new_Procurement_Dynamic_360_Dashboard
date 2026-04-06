@@ -9,6 +9,10 @@ createApp({
             loading: false,
             username: localStorage.getItem('username') || '',
             
+            // ========== 細項展開相關 ==========
+            expandedRows: {},       // { [itemId]: true/false }
+            buyerDetailsMap: {},    // { [itemId]: [...rows] }
+            
             // ========== 下拉篩選相關 ==========
             // 篩選器顯示狀態
             showPersonFilter: false,
@@ -300,6 +304,17 @@ createApp({
                    this.checkedOrders.length > 0 ||
                    this.checkedReasons.length > 0 ||
                    this.checkedAmounts.length > 0;
+        },
+
+        // 細項展開列的 colspan（依目前 Tab 的實際欄位數）
+        detailColspan() {
+            switch(this.currentTab) {
+                case 'pending':  return 14;  // checkbox + # + 12欄
+                case 'approved': return 12;  // # + 11欄（含退回）
+                case 'rejected': return 14;  // # + 13欄（含處理）
+                case 'all':      return 13;  // # + 12欄（含主任+管裡）
+                default:         return 14;
+            }
         }
     },
     
@@ -585,6 +600,95 @@ createApp({
                     }
                 });
             }
+        },
+        
+        // ========== 載入 Buyer_detail 細項資料 ==========
+        async loadBuyerDetails() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/buyer_detail');
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    console.error('❌ Buyer_detail 格式錯誤:', data);
+                    return;
+                }
+
+                // 平面陣列依 Id 分組成 { [Id]: [...rows] }
+                const grouped = {};
+                for (const row of data) {
+                    const id = String(row['Id'] ?? '').trim();
+                    if (!id) continue;
+                    if (!grouped[id]) grouped[id] = [];
+                    grouped[id].push(row);
+                }
+
+                this.buyerDetailsMap = grouped;
+                console.log('✅ Buyer_detail 細項載入成功，共', data.length, '筆');
+
+            } catch (error) {
+                console.error('❌ Buyer_detail 網路錯誤:', error);
+            }
+        },
+        
+        // ========== 展開 / 收合細項列 ==========
+        toggleRow(itemId) {
+            const id = String(itemId);
+            this.expandedRows = {
+                ...this.expandedRows,
+                [id]: !this.expandedRows[id]
+            };
+        },
+        
+        isRowExpanded(itemId) {
+            return !!this.expandedRows[String(itemId)];
+        },
+        
+        // 取得某筆的 Buyer_detail 細項（依 Id 對應）
+        getBuyerDetails(itemId) {
+            return this.buyerDetailsMap[String(itemId)] || [];
+        },
+        
+        // 驗收狀態 badge class
+        getAcceptanceStatusClass(status) {
+            const s = (status || '').trim();
+            if (s === 'V' || s === '已驗收') return 'bg-green-100 text-green-800';
+            if (s === 'R' || s === '拒收') return 'bg-red-100 text-red-800';
+            if (s === 'X' || s === '未驗收') return 'bg-gray-100 text-gray-600';
+            return 'bg-gray-100 text-gray-600';
+        },
+        
+        // 開單狀態 badge class
+        getOrderStatusClass(status) {
+            const s = (status || '').trim();
+            if (s === 'V') return 'bg-blue-100 text-blue-800';
+            if (s === 'X') return 'bg-gray-100 text-gray-500';
+            return 'bg-gray-100 text-gray-500';
+        },
+        
+        // ========== 複製報告路徑 ==========
+        async copyPath(path) {
+            try {
+                await navigator.clipboard.writeText(path);
+            } catch {
+                // Fallback for older browsers
+                const el = document.createElement('textarea');
+                el.value = path;
+                el.style.position = 'fixed';
+                el.style.opacity = '0';
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+            }
+            Swal.fire({
+                icon: 'success',
+                title: '已複製路徑',
+                text: path,
+                timer: 1800,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
         },
         
         // ========== 選擇相關 ==========
@@ -1092,6 +1196,7 @@ createApp({
     
     mounted() {
         this.loadData();
+        this.loadBuyerDetails();
         
         this.$nextTick(() => {
             if (typeof lucide !== 'undefined') {

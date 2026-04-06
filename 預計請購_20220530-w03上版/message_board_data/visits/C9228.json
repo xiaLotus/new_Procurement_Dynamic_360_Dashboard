@@ -1,10 +1,10 @@
 {
   "username": "C9228",
   "last_read": {
-    "urgent": 0,
     "purchase": 0,
-    "acceptance": 0,
     "general": 3,
-    "budget": 0
+    "acceptance": 0,
+    "budget": 0,
+    "urgent": 0
   }
 }

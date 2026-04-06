@@ -1037,7 +1037,7 @@ const app = Vue.createApp({
                 }
             }
 
-            return Array.from(set).sort().reverse();
+            return Array.from(set).sort();
         },
 
 
@@ -1474,7 +1474,7 @@ const app = Vue.createApp({
             // ✅ 自動選最新「已開單」月份（來自 issuedMonthOptions）
             const issuedMonths = this.issuedMonthOptions;
             if (!issuedMonths.includes(this.selectedIssuedMonth)) {
-                this.selectedIssuedMonth = issuedMonths[0] || '';
+                this.selectedIssuedMonth = issuedMonths[issuedMonths.length - 1] || '';
             }
         },
 
@@ -1595,6 +1595,12 @@ const app = Vue.createApp({
             }, 5000);
         },
 
+
+        async resubmitItem() {
+            this.editItemData['主任簽核'] = 'X';
+            this.editItemData['叔叔簽核'] = 'X';
+            await this.saveEdit();
+        },
 
         async saveEdit() {
             if (this.editingIndex !== null) {
