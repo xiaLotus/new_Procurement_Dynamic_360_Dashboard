@@ -1077,48 +1077,60 @@
 
         <!-- 底部按鈕區塊 - 合併左右兩側 -->
         <div class="fixed bottom-6 left-6 right-6 z-50 flex justify-between items-end">
-            <!-- 左側：篩選區間按鈕 -->
-            <div class="relative">
-                <div 
-                    class="text-white text-lg bg-green-600 px-5 py-3 rounded-full shadow-lg hover:bg-green-700 transition min-w-[140px] h-12 text-center cursor-pointer flex items-center justify-center"
-                    @click="openFilterCard">
-                    📅 篩選區間
+
+            <!-- 左側：篩選區間 + 需求者新增 -->
+            <div class="flex items-end gap-2">
+
+                <div class="relative">
+                    <div 
+                        class="text-white text-lg bg-green-600 px-5 py-3 rounded-full shadow-lg hover:bg-green-700 transition min-w-[140px] h-12 text-center cursor-pointer flex items-center justify-center"
+                        @click="openFilterCard">
+                        📅 篩選區間
+                    </div>
+
+                    <!-- 卡片顯示在按鈕上方 -->
+                    <transition name="fade">
+                        <div v-if="showFilterCard"
+                            class="absolute bottom-full left-0 mb-2 w-80 bg-white border rounded-lg shadow-xl p-4 text-gray-800"
+                            style="z-index: 9999;">
+                            <h3 class="text-lg font-semibold mb-3 text-center border-b pb-2">📅 日期區間篩選</h3>
+                            <div class="space-y-3">
+                                <label class="block">
+                                    <span class="text-sm font-medium text-gray-700">開始日期：</span>
+                                    <input type="date" v-model="filterStartDate"
+                                        class="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                                </label>
+                                <label class="block">
+                                    <span class="text-sm font-medium text-gray-700">結束日期：</span>
+                                    <input type="date" v-model="filterEndDate"
+                                        class="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+                                </label>
+                            </div>
+                            <div class="mt-4 flex justify-between space-x-2">
+                                <button @click="applyDateRangeFilter"
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex-1">
+                                    ✅ 套用
+                                </button>
+                                <button @click="cancelDateRangeFilter"
+                                    class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition flex-1">
+                                    🔄 取消篩選
+                                </button>
+                                <button @click="showFilterCard = false"
+                                    class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition flex-1">
+                                    ❌ 關閉
+                                </button>
+                            </div>
+                        </div>
+                    </transition>
                 </div>
 
-                <!-- 卡片顯示在按鈕上方 -->
-                <transition name="fade">
-                    <div v-if="showFilterCard"
-                        class="absolute bottom-full left-0 mb-2 w-80 bg-white border rounded-lg shadow-xl p-4 text-gray-800"
-                        style="z-index: 9999;">
-                        <h3 class="text-lg font-semibold mb-3 text-center border-b pb-2">📅 日期區間篩選</h3>
-                        <div class="space-y-3">
-                            <label class="block">
-                                <span class="text-sm font-medium text-gray-700">開始日期：</span>
-                                <input type="date" v-model="filterStartDate"
-                                    class="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
-                            </label>
-                            <label class="block">
-                                <span class="text-sm font-medium text-gray-700">結束日期：</span>
-                                <input type="date" v-model="filterEndDate"
-                                    class="w-full border border-gray-300 px-3 py-2 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
-                            </label>
-                        </div>
-                        <div class="mt-4 flex justify-between space-x-2">
-                            <button @click="applyDateRangeFilter"
-                                class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition flex-1">
-                                ✅ 套用
-                            </button>
-                            <button @click="cancelDateRangeFilter"
-                                class="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition flex-1">
-                                🔄 取消篩選
-                            </button>
-                            <button @click="showFilterCard = false"
-                                class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition flex-1">
-                                ❌ 關閉
-                            </button>
-                        </div>
-                    </div>
-                </transition>
+                <!-- 需求者新增（僅 admin 可見） -->
+                <div v-if="admins.includes(username)"
+                    class="text-white text-lg bg-slate-600 hover:bg-slate-700 px-5 py-3 rounded-full shadow-lg transition cursor-pointer flex items-center justify-center h-12"
+                    @click="goMemberManager">
+                    ⚙ 需求者新增
+                </div>
+
             </div>
 
             <!-- 右側：三個按鈕群組 -->
@@ -1578,12 +1590,27 @@
 
                 <!-- 底部按鈕 -->
                 <div class="flex justify-end gap-4 pt-4">
+                    <button 
+                        @click="resubmitItem"
+                        :disabled="editItemData.主任簽核 === 'V' && editItemData.叔叔簽核 === 'V'"
+                        :class="[
+                            'font-semibold px-6 py-2 rounded-xl transition flex items-center gap-2 shadow-md',
+                            (editItemData.主任簽核 === 'V' && editItemData.叔叔簽核 === 'V')
+                                ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed text-white'
+                                : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white hover:scale-105'
+                        ]"
+                    >
+                        <span v-if="editItemData.主任簽核 === 'V' && editItemData.叔叔簽核 === 'V'">
+                            ✅ 不須重送
+                        </span>
+                        <span v-else>
+                            🐔 退回重送
+                        </span>
+                    </button>
                     <button @click="cancelEdit" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-lg transition">
                         取消
                     </button>
-                    <button @click="resubmitItem" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-2 rounded-lg transition flex items-center gap-2">
-                        🔄 退回重送
-                    </button>
+
                     <button @click="saveEdit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition">
                         💾 儲存
                     </button>
@@ -1910,7 +1937,6 @@
                 </div>
             </div>
         </div>
-
 
     </div>
 

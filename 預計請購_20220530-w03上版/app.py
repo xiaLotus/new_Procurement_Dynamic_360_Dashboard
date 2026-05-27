@@ -2989,15 +2989,49 @@ def save_override_all():
 
 # eRT 驗收表單
 # === 設定 logger ，針對 eRT 驗收表單===
-log_file_path = "buyer_detail_update_log.log"
-logging.basicConfig(
+# log_file_path = "buyer_detail_update_log.log"
+# logging.basicConfig(
+#     filename=log_file_path,
+#     filemode='a',
+#     level=logging.INFO,
+#     format="%(asctime)s %(levelname)s: %(message)s",
+#     encoding='utf-8'
+# )
+# logger = logging.getLogger("BuyerDetailUpdater")
+
+
+
+# 1️⃣ 建立 Log 資料夾（若不存在）
+log_dir = "Log"
+os.makedirs(log_dir, exist_ok=True)
+from logging.handlers import TimedRotatingFileHandler
+# 2️⃣ 設定主 log 檔路徑
+log_file_path = os.path.join(log_dir, "buyer_detail_update.log")
+
+# 3️⃣ 使用 TimedRotatingFileHandler：每 30 天輪轉一次
+handler = TimedRotatingFileHandler(
     filename=log_file_path,
-    filemode='a',
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s: %(message)s",
-    encoding='utf-8'
+    when='D',              # 按「天」輪轉
+    interval=30,           # 每 30 天切割一次
+    backupCount=12,        # 保留最近 12 個舊檔（約 1 年記錄）
+    encoding='utf-8',
+    utc=False              # 使用本地時間（台灣時間）
 )
-logger = logging.getLogger("BuyerDetailUpdater")
+
+# 4️⃣ 設定輪轉後的檔名格式（例：buyer_detail_update.log.2024-01-15）
+handler.suffix = "%Y-%m-%d"
+
+# 5️⃣ 設定輸出格式（與您原本一致）
+formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
+handler.setFormatter(formatter)
+
+# 6️⃣ 設定 logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
+
+# ✅ 測試寫入（可選）
+logger.info("🔄 eRT 驗收表單 Log 系統已啟動，輪轉週期：30 天")
 
 # 2025/11/03修正
 @app.route('/api/update-buyer-items', methods=['POST'])
@@ -6143,6 +6177,116 @@ def mb_recall_message():
 
 
 
+# ══════════════════════════════════════════════
+#  成員管理 API
+# ══════════════════════════════════════════════
 
+CONFIG_FILE  = "config.cfg"
+PHONE_FILE   = "static/data/phone.json"
+BACKEND_DATA = "Backend_data.json"
+
+
+# ── 1. 新增需求者 → config.cfg + phone.json + Backend_data.json ──
+@app.route('/api/requesters/add', methods=['POST'])
+def add_requester():
+    try:
+        data     = request.get_json()
+        name     = data.get("name",     "").strip()
+        phone    = data.get("phone",    "").strip()
+        emp_id   = data.get("emp_id",   "").strip()
+        notes_id = data.get("notes_id", "Otis_Wang@aseglobal.com").strip()
+
+        if not name:   return jsonify({"error": "姓名不可為空"}), 400
+        if not phone:  return jsonify({"error": "電話不可為空"}), 400
+        if not emp_id: return jsonify({"error": "工號不可為空"}), 400
+
+        # config.cfg
+        with FileLock(CONFIG_FILE + ".lock"):
+            with open(CONFIG_FILE, "r", encoding="utf-8-sig") as f:
+                existing = [l.strip() for l in f.readlines() if l.strip()]
+            if name in existing:
+                return jsonify({"error": "此人已在需求者清單中"}), 409
+            existing.append(name)
+            with open(CONFIG_FILE, "w", encoding="utf-8-sig") as f:
+                f.write("\n".join(existing) + "\n")
+
+        # phone.json
+        with FileLock(PHONE_FILE + ".lock"):
+            with open(PHONE_FILE, "r", encoding="utf-8-sig") as f:
+                phones = json.load(f)
+            phones[name] = phone
+            with open(PHONE_FILE, "w", encoding="utf-8-sig") as f:
+                json.dump(phones, f, ensure_ascii=False, indent=4)
+
+        # Backend_data.json
+        new_entry = {
+            "工號":              emp_id,
+            "姓名":              name,
+            "Notes_ID":          notes_id,
+            "班別":              "RR",
+            "第一階主管":        "G9745 LC Wang 王利哲",
+            "後台管理":          "X",
+            "EAP健康度後台":     "X",
+            "新增議題後台":      "X",
+            "請購網頁後台":      "X",
+            "ASEGO派報網頁後台": "X",
+            "早報派報網頁後台":  "X",
+        }
+        with FileLock(BACKEND_DATA + ".lock"):
+            with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
+                backend = json.load(f)
+            if any(str(e.get("工號", "")).strip() == emp_id for e in backend):
+                return jsonify({"error": f"工號 {emp_id} 已存在於系統中"}), 409
+            backend.append(new_entry)
+            with open(BACKEND_DATA, "w", encoding="utf-8-sig") as f:
+                json.dump(backend, f, ensure_ascii=False, indent=2)
+
+        return jsonify({"success": True, "message": f"已新增：{name}（{phone}）"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── 2. 移除需求者 → config.cfg + phone.json + Backend_data.json ──
+@app.route('/api/requesters/remove', methods=['POST'])
+def remove_requester():
+    try:
+        data = request.get_json()
+        name = data.get("name", "").strip()
+
+        if not name: return jsonify({"error": "姓名不可為空"}), 400
+
+        # config.cfg
+        with FileLock(CONFIG_FILE + ".lock"):
+            with open(CONFIG_FILE, "r", encoding="utf-8-sig") as f:
+                existing = [l.strip() for l in f.readlines() if l.strip()]
+            if name not in existing:
+                return jsonify({"error": "此人不在清單中"}), 404
+            existing.remove(name)
+            with open(CONFIG_FILE, "w", encoding="utf-8-sig") as f:
+                f.write("\n".join(existing) + "\n")
+
+        # phone.json
+        with FileLock(PHONE_FILE + ".lock"):
+            with open(PHONE_FILE, "r", encoding="utf-8-sig") as f:
+                phones = json.load(f)
+            phones.pop(name, None)
+            with open(PHONE_FILE, "w", encoding="utf-8-sig") as f:
+                json.dump(phones, f, ensure_ascii=False, indent=4)
+
+        # Backend_data.json
+        with FileLock(BACKEND_DATA + ".lock"):
+            with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
+                backend = json.load(f)
+            backend = [e for e in backend if str(e.get("姓名", "")).strip() != name]
+            with open(BACKEND_DATA, "w", encoding="utf-8-sig") as f:
+                json.dump(backend, f, ensure_ascii=False, indent=2)
+
+        return jsonify({"success": True, "message": f"已移除：{name}"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+        
 if __name__ == "__main__":
     app.run(debug=True)

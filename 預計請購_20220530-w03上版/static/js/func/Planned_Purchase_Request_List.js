@@ -1137,6 +1137,12 @@ const app = Vue.createApp({
 
     async mounted() {
         this.username = localStorage.getItem('username');
+        // 如果沒有登入 → 直接導回首頁
+        if (!this.username) {
+            console.warn("❗ 未登入，導回首頁");
+            window.location.href = "../index.html";
+            return; 
+        }
         console.log("👤 使用者名稱：", this.username);
         try {
             const res = await axios.post('http://127.0.0.1:5000/api/get-username-info', { emp_id: this.username });
@@ -3246,6 +3252,11 @@ const app = Vue.createApp({
 
             localStorage.setItem('username', this.username);
             window.location.href = 'Message_Board.html';
+        },
+
+        goMemberManager() {
+            localStorage.setItem('username', this.username);
+            window.location.href = 'Member_manager.html';
         }
     }
 });
