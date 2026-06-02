@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>狀態時序圖 · EAP Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:#0d1117; }
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:#0d1117; }
+  ::-webkit-scrollbar-thumb { background:#30363d; border-radius:3px; }
+
+  /* ── subnet card ─────────────────────────────────── */
+  .sn-card {
+    background:linear-gradient(145deg,#161b22,#0d1117);
+    border:1px solid #21262d; border-radius:12px;
+    padding:14px 15px; cursor:pointer; transition:all .2s;
+    display:flex; flex-direction:column; gap:8px;
+    position:relative; overflow:hidden;
+  }
+  .sn-card::before {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,rgba(88,166,255,.04) 0%,transparent 60%);
+    opacity:0; transition:opacity .2s;
+  }
+  .sn-card:hover { border-color:#388bfd; transform:translateY(-3px);
+    box-shadow:0 8px 24px rgba(31,111,235,.2), 0 0 0 1px rgba(56,139,253,.15); }
+  .sn-card:hover::before { opacity:1; }
+
+  /* ── group hero card (10.x) ──────────────────────── */
+  .group-card {
+    background:linear-gradient(135deg,#0d2137 0%,#0d1117 100%);
+    border:1px solid #1f4a7a; border-radius:14px;
+    padding:20px 24px; cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; gap:20px;
+    box-shadow: inset 0 1px 0 rgba(88,166,255,.08);
+  }
+  .group-card:hover { border-color:#388bfd; transform:translateY(-3px);
+    box-shadow:0 12px 32px rgba(31,111,235,.25), inset 0 1px 0 rgba(88,166,255,.15); }
+
+  .seg-alive  { transition:opacity .1s,filter .1s; }
+  .seg-alive:hover  { opacity:1!important; filter:brightness(.85); }
+  .seg-dead   { transition:opacity .1s,filter .1s; }
+  .seg-dead:hover   { opacity:1!important; filter:brightness(.85); }
+  .seg-unknown { opacity:.25; }
+
+  .ctrl-btn {
+    background:#21262d; border:1.5px solid #30363d; color:#8b949e;
+    font-size:11px; padding:4px 12px; border-radius:4px;
+    cursor:pointer; font-family:inherit; transition:all .15s; white-space:nowrap;
+  }
+  .ctrl-btn:hover  { border-color:#58a6ff; color:#e6edf3; background:#1f2937; }
+  .ctrl-btn.active { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+
+  .filter-input {
+    background:#21262d; border:1.5px solid #30363d; color:#e6edf3;
+    font-size:11px; border-radius:4px; padding:4px 9px;
+    font-family:inherit; outline:none; width:160px;
+  }
+  .filter-input::placeholder { color:#8b949e; }
+  .filter-input:focus { border-color:#58a6ff; }
+
+  .row-even { background:rgba(22,27,34,.9); }
+  .row-odd  { background:rgba(13,17,23,.9); }
+  .row-no-data { opacity:.45; }
+
+
+  .date-input {
+    background:#21262d; border:1.5px solid #30363d; color:#e6edf3;
+    font-size:11px; border-radius:4px; padding:4px 8px;
+    font-family:inherit; outline:none; color-scheme:dark; width:110px;
+  }
+  .date-input:focus { border-color:#58a6ff; }
+  .preset-btn {
+    background:#21262d; border:1.5px solid #30363d; color:#8b949e;
+    font-size:10px; padding:3px 8px; border-radius:4px;
+    cursor:pointer; font-family:inherit; transition:all .15s;
+  }
+  .preset-btn:hover { border-color:#58a6ff; color:#c9d1d9; }
+  .preset-btn.active { background:#1f6feb; border-color:#1f6feb; color:#fff; }
+  @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.3} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  @keyframes spin   { to { transform:rotate(360deg); } }
+  .fade-in { animation:fadeIn .2s ease both; }
+</style>
+</head>
+
+<body style="height:100vh;overflow:hidden;font-family:'IBM Plex Mono',monospace;color:#e6edf3">
+<div id="app" style="display:flex;flex-direction:column;height:100vh;overflow:hidden">
+
+  <!-- ═══ HEADER ══════════════════════════════════════════════════════ -->
+  <div style="flex-shrink:0;background:#161b22;border-bottom:2px solid #30363d;
+              padding:0 18px;display:flex;align-items:center;gap:12px;
+              min-height:56px;box-shadow:0 1px 6px rgba(0,0,0,.4)">
+
+    <span style="color:#1565c0;font-size:12px;font-weight:600;letter-spacing:.1em;flex-shrink:0">
+      ◈ STATUS TIMELINE
+    </span>
+
+    <button v-if="view!=='cards'" @click="backToCards"
+            class="ctrl-btn" style="color:#58a6ff;border-color:#1f6feb;background:#0d1117">
+      ← 返回
+    </button>
+
+    <span v-if="view==='subnet-timeline'"
+          style="font-size:12px;color:#f0f6fc;font-weight:600">
+      {{ activeLabel }}
+      <span style="color:#8b949e;font-weight:400;font-size:10px">.1 — .254</span>
+    </span>
+    <span v-if="view==='group-timeline'"
+          style="font-size:12px;color:#f0f6fc;font-weight:600">
+      {{ activeLabel }}
+    </span>
+
+    <template v-if="view!=='cards'">
+      <input v-model="searchQ" class="filter-input" placeholder="搜尋 IP / 設備名稱...">
+
+      <!-- 日期區間選擇 -->
+      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+        <input type="date" v-model="dateFrom" class="date-input"
+               :max="dateTo||todayStr" @change="applyDateRange">
+        <span style="color:#484f58;font-size:12px">—</span>
+        <input type="date" v-model="dateTo" class="date-input"
+               :min="dateFrom" :max="todayStr" @change="applyDateRange">
+        <button class="preset-btn" :class="{active:activePreset==='data'}" @click="resetToData"
+                style="color:#4ade80;border-color:#166534" title="回到資料範圍">預設</button>
+        <button class="preset-btn" :class="{active:activePreset===7}"  @click="setPreset(7)">7天</button>
+        <button class="preset-btn" :class="{active:activePreset===14}" @click="setPreset(14)">14天</button>
+        <button class="preset-btn" :class="{active:activePreset===30}" @click="setPreset(30)">30天</button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:4px;margin-left:auto">
+        <button @click="doZoom(1.6)"   class="ctrl-btn">＋</button>
+        <button @click="doZoom(1/1.6)" class="ctrl-btn">－</button>
+        <button @click="resetView"     class="ctrl-btn" style="color:#58a6ff">全覽</button>
+        <span style="color:#cdd5df;font-size:16px;margin:0 3px">│</span>
+        <span style="color:#90a4ae;font-size:10px;min-width:55px;text-align:right">{{ viewLabel }}</span>
+      </div>
+      <div style="font-size:11px;display:flex;align-items:center;gap:7px;flex-shrink:0">
+        <span v-if="tlLoading" style="color:#f57c00;animation:pulse 1s infinite">⟳ 載入...</span>
+        <template v-else>
+          <span style="color:#2e7d32;font-weight:500">● {{ aliveCount }}</span>
+          <span style="color:#c62828;font-weight:500">● {{ deadCount }}</span>
+          <span v-if="view==='subnet-timeline'" style="color:#90a4ae">● {{ unknownCount }}</span>
+          <span style="color:#cdd5df">│</span>
+          <span style="color:#c9d1d9">共 {{ deviceCount }} 台</span>
+        </template>
+      </div>
+    </template>
+
+    <template v-if="view==='cards'">
+      <span style="color:#90a4ae;font-size:10px">選擇網段查看時序圖</span>
+      <span v-if="cardLoading" style="color:#f57c00;font-size:10px;animation:pulse 1s infinite">⟳ 載入中...</span>
+    </template>
+  </div>
+
+  <!-- ═══ ERROR BANNER ════════════════════════════════════════════════ -->
+  <div v-if="apiError"
+       style="flex-shrink:0;background:#2d1b00;border-bottom:2px solid #f57c00;
+              padding:7px 16px;display:flex;align-items:center;gap:10px">
+    <span style="color:#e65100;font-size:11px;font-weight:600">⚠ API 連線失敗</span>
+    <span style="color:#bf360c;font-size:10px;flex:1">{{ apiError }}</span>
+    <button @click="init" class="ctrl-btn" style="color:#e65100;border-color:#ffb74d">重試</button>
+  </div>
+
+  <!-- ═══ CARD VIEW ═══════════════════════════════════════════════════ -->
+  <div v-if="view==='cards'" style="flex:1;overflow-y:auto;padding:20px 24px;background:#0d1117">
+
+    <!-- 10.x 大卡片 -->
+    <div v-if="tenCard" class="fade-in" style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:13px;font-weight:600;color:#c9d1d9;letter-spacing:.05em">10.x.*</span>
+        <span style="font-size:10px;color:#8b949e">所有 10.x 裝置</span>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,#21262d,transparent)"></div>
+      </div>
+      <div class="group-card" @click="openGroupTimeline('10', '10.x.*')">
+        <!-- 大標題 -->
+        <div style="flex-shrink:0;text-align:center;padding-right:4px">
+          <div style="font-size:32px;font-weight:600;color:#58a6ff;letter-spacing:-.02em;line-height:1">10.x.*</div>
+          <div style="font-size:10px;color:#484f58;margin-top:4px">ALL SEGMENTS</div>
+        </div>
+        <div style="width:1px;height:48px;background:#21262d;flex-shrink:0"></div>
+        <!-- 統計 + 進度 -->
+        <div style="flex:1">
+          <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:10px">
+            <span style="font-size:13px;color:#3fb950;font-weight:600">● ONLINE &nbsp;{{ tenCard.alive }}</span>
+            <span style="font-size:13px;color:#f85149;font-weight:600">● OFFLINE {{ tenCard.dead }}</span>
+            <span style="font-size:11px;color:#484f58;margin-left:auto">共 {{ tenCard.total }} 台</span>
+          </div>
+          <div style="height:7px;border-radius:4px;background:#21262d;overflow:hidden">
+            <div :style="{
+                   width:tenCard.total?(tenCard.alive/tenCard.total*100)+'%':'0%',
+                   height:'100%',
+                   background:'linear-gradient(90deg,#1a7f37,#3fb950)',
+                   borderRadius:'4px',transition:'width .6s'
+                 }"></div>
+          </div>
+
+        </div>
+        <div style="font-size:18px;color:#30363d;flex-shrink:0">▶</div>
+      </div>
+    </div>
+
+    <!-- 172.xx 各子網卡片 -->
+    <div v-for="grp in oneSeventyGroups" :key="grp.g" class="fade-in" style="margin-bottom:28px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:13px;font-weight:600;color:#79c0ff;letter-spacing:.02em">{{ grp.g }}.*</span>
+        <span style="font-size:10px;color:#8b949e">{{ grp.subnets.length }} 個子網</span>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,#21262d,transparent)"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+        <div v-for="sn in grp.subnets" :key="sn.subnet"
+             class="sn-card" @click="openSubnetTimeline(sn.subnet)">
+          <!-- 子網標題 -->
+          <div style="font-size:15px;font-weight:600;color:#58a6ff;letter-spacing:.02em">
+            {{ sn.subnet }}.x
+          </div>
+          <!-- 進度條 (alive %) -->
+          <div style="position:relative;height:8px;border-radius:6px;background:#21262d;overflow:hidden;margin:2px 0">
+            <div :style="{
+                   width: sn.total ? (sn.alive/sn.total*100)+'%' : '0%',
+                   height:'100%',
+                   background:'linear-gradient(90deg,#1a7f37,#3fb950)',
+                   borderRadius:'6px', transition:'width .5s'
+                 }"></div>
+            <!-- dead portion -->
+            <div :style="{
+                   position:'absolute', right:'0', top:'0', bottom:'0',
+                   width: sn.total ? (sn.dead/sn.total*100)+'%' : '0%',
+                   background:'rgba(248,81,73,.35)',
+                   borderRadius:'0 6px 6px 0'
+                 }"></div>
+          </div>
+          <!-- 統計 -->
+          <div style="display:flex;align-items:center;font-size:12px;margin-top:2px">
+            <span style="color:#3fb950;font-weight:600">{{ sn.alive }}</span>
+            <span style="color:#484f58;margin:0 4px;font-size:10px">●</span>
+            <span style="color:#f85149;font-weight:600">{{ sn.dead }}</span>
+            <span style="color:#30363d;margin-left:auto;font-size:11px">{{ sn.total }} 台</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="!cardLoading&&!apiError&&!tenCard&&oneSeventyGroups.length===0"
+         style="display:flex;flex-direction:column;align-items:center;
+                justify-content:center;height:60%;gap:12px;opacity:.4">
+      <div style="font-size:36px">◈</div>
+      <div style="font-size:12px">無資料</div>
+    </div>
+  </div>
+
+  <!-- ═══ TIMELINE VIEW ════════════════════════════════════════════════ -->
+  <div v-if="view!=='cards'" style="flex:1;overflow:hidden;position:relative">
+    <div ref="scroller"
+         style="height:100%;overflow-y:auto;overflow-x:hidden;position:relative;user-select:none"
+         @scroll="onScroll"
+         @wheel.prevent="onWheel"
+         @mousedown="dragStart"
+         @mousemove="dragMove"
+         @mouseup="dragEnd"
+         @mouseleave="dragEnd">
+
+      <div :style="{width:(LW+TW)+'px'}">
+
+        <!-- TIME AXIS -->
+        <div style="position:sticky;top:0;z-index:20;display:flex;height:48px;
+                    background:#161b22;border-bottom:1.5px solid #30363d;
+                    box-shadow:0 2px 8px rgba(0,0,0,.4)">
+          <div :style="{width:LW+'px',flexShrink:0,background:'#161b22',
+                        borderRight:'1.5px solid #30363d',
+                        display:'flex',alignItems:'center',padding:'0 12px'}">
+            <span style="font-size:11px;color:#c9d1d9;letter-spacing:.08em;font-weight:500">
+              {{ view==='subnet-timeline' ? '.HOST / DEVICE' : 'IP / DEVICE' }}
+            </span>
+          </div>
+          <div :style="{width:TW+'px',flexShrink:0,position:'relative',overflow:'hidden',background:'#0d1117'}">
+            <div v-for="tk in majorTicks" :key="'al'+tk.ms"
+                 :style="{position:'absolute',left:tk.x+'px',top:0,bottom:0,
+                          width:'1px',background:'rgba(48,54,61,.6)',pointerEvents:'none'}"></div>
+            <div v-for="tk in timeTicks" :key="tk.ms"
+                 :style="{position:'absolute',left:tk.x+'px',top:0,bottom:0,
+                          display:'flex',flexDirection:'column',
+                          justifyContent:'flex-end',paddingBottom:'3px',pointerEvents:'none'}">
+              <div :style="{width:'1px',height:tk.major?'10px':'4px',
+                            background:tk.major?'#58a6ff':'#21262d',marginBottom:'2px'}"></div>
+              <span v-if="tk.label"
+                    style="font-size:10px;color:#c9d1d9;white-space:nowrap;
+                           transform:translateX(-50%);display:block;font-weight:500">
+                {{ tk.label }}
+              </span>
+            </div>
+            <div v-if="nowX!==null"
+                 :style="{position:'absolute',left:nowX+'px',top:0,bottom:0,
+                          width:'2px',background:'rgba(245,124,0,.7)',pointerEvents:'none',zIndex:2}">
+              <span style="position:absolute;top:2px;left:3px;font-size:7px;color:#e65100;font-weight:600">NOW</span>
+            </div>
+          </div>
+        </div>
+
+        <div :style="{height:topPad+'px'}"></div>
+
+        <!-- ROWS -->
+        <div v-for="row in visibleRows" :key="row.key"
+             :style="{height:RH+'px',display:'flex',alignItems:'stretch'}"
+             :class="[row.type==='group'?'':'',
+                      row.type==='device'?(row._idx%2===0?'row-even':'row-odd'):'',
+                      '']">
+
+          <!-- Label -->
+          <div :style="{width:LW+'px',flexShrink:0,
+                        borderRight:'1.5px solid #21262d',
+                        borderTop:row.type==='group'?'1.5px solid #30363d':'none',
+                        background:row.type==='group'?'#161b22':'transparent',
+                        display:'flex',alignItems:'center'}">
+
+            <!-- group header (for group-timeline) -->
+            <button v-if="row.type==='group'"
+                    @click="toggleGroup(row.g)"
+                    style="width:100%;height:100%;display:flex;align-items:center;
+                           gap:6px;padding:0 12px;background:none;border:none;
+                           cursor:pointer;font-family:inherit">
+              <span style="font-size:13px;color:#8b949e">{{ collapsed[row.g]?'▶':'▼' }}</span>
+              <span style="font-size:15px;color:#58a6ff;font-weight:600">{{ row.g }}.*</span>
+              <span style="font-size:9px;color:#8b949e">{{ row.total }}</span>
+              <span style="margin-left:auto;font-size:9px">
+                <span style="color:#2e7d32">● {{ row.alive }}</span>
+                <span style="color:#c62828;margin-left:4px">● {{ row.dead }}</span>
+              </span>
+            </button>
+
+            <!-- subnet device row -->
+            <div v-else-if="view==='subnet-timeline'"
+                 style="padding:0 10px;overflow:hidden;width:100%">
+              <div style="display:flex;align-items:center;gap:6px">
+                <!-- 狀態點 -->
+                <span :style="{width:'8px',height:'8px',borderRadius:'50%',flexShrink:0,
+                               background:row.lastStatus==='alive'?'#43a047'
+                                         :row.lastStatus==='dead'?'#e53935':'#b0bec5'}">
+                </span>
+                <!-- 完整 IP -->
+                <div style="font-size:15px;color:#58a6ff;font-weight:600;
+                            overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">
+                  {{ row.ip }}
+                </div>
+                <!-- 類型標籤 -->
+                <span style="font-size:10px;color:#78909c;flex-shrink:0">{{ row.tp }}</span>
+              </div>
+              <!-- 設備名稱 -->
+              <div style="font-size:13px;color:#f0f6fc;overflow:hidden;
+                          text-overflow:ellipsis;white-space:nowrap;margin-top:2px;padding-left:14px">
+                {{ row.dn||row.mid||'—' }}
+              </div>
+            </div>
+
+            <!-- group device row -->
+            <div v-else style="padding:0 10px;overflow:hidden;width:100%">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span :style="{width:'10px',height:'10px',borderRadius:'50%',flexShrink:0,
+                               background:row.lastStatus==='alive'?'#43a047':'#e53935'}"></span>
+                <div style="font-size:14px;color:#58a6ff;overflow:hidden;
+                            text-overflow:ellipsis;white-space:nowrap;flex:1;font-weight:500">
+                  {{ row.ip }}
+                </div>
+                <span style="font-size:9px;color:#b0bec5;flex-shrink:0">{{ row.tp }}</span>
+              </div>
+              <div style="font-size:11px;color:#f0f6fc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">
+                {{ row.mid||row.dn||row.sub }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Timeline bars -->
+          <div :style="{width:TW+'px',flexShrink:0,position:'relative',overflow:'hidden',
+                        background:row.type==='group'?'rgba(31,111,235,.06)':'transparent'}">
+            <div v-if="row.type==='group'"
+                 style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(31,111,235,.1),transparent);pointer-events:none"></div>
+            <template v-if="row.type==='device'">
+              <div v-for="tk in majorTicks" :key="'gl'+tk.ms"
+                   :style="{position:'absolute',left:tk.x+'px',top:0,bottom:0,
+                            width:'1px',background:'rgba(48,54,61,.8)',pointerEvents:'none'}"></div>
+              <div v-for="(seg,si) in row.segs" :key="si"
+                   :class="seg.v==='alive'?'seg-alive':seg.v==='dead'?'seg-dead':'seg-unknown'"
+                   :style="segStyle(seg, si, row.segs.length)"
+                   @mouseenter="showTip($event,row,seg)"
+                   @mouseleave="hideTip"></div>
+            </template>
+          </div>
+        </div>
+
+        <div :style="{height:botPad+'px'}"></div>
+        <!-- 底部緩衝：避免最後一行被進度條遮住 -->
+        <div style="height:28px"></div>
+      </div>
+    </div>
+
+    <!-- LOADING OVERLAY -->
+    <div v-if="tlLoading"
+         style="position:absolute;inset:0;background:rgba(13,17,23,.85);
+                display:flex;align-items:center;justify-content:center;
+                z-index:50;backdrop-filter:blur(2px)">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border:3px solid #21262d;
+                    border-top-color:#58a6ff;border-radius:50%;
+                    animation:spin .8s linear infinite"></div>
+        <span style="font-size:12px;color:#c9d1d9;font-weight:500">載入中…</span>
+      </div>
+    </div>
+
+    <!-- SCRUB BAR -->
+    <div v-if="tMin&&tMax" ref="scrubBar"
+         style="position:absolute;bottom:0;left:0;right:0;height:18px;
+                background:#0d1117;border-top:1px solid #21262d;cursor:pointer;z-index:10"
+         @click="scrubClick"
+         @mousedown.prevent="scrubDragStart"
+         @mousemove="scrubDragMove"
+         @mouseup="scrubDragEnd"
+         @mouseleave="scrubDragEnd">
+      <div style="position:absolute;inset:3px 0;background:#21262d;border-radius:2px"></div>
+      <div :style="{position:'absolute',top:'3px',bottom:'3px',borderRadius:'3px',
+                    background:'rgba(21,101,192,.3)',border:'1px solid rgba(21,101,192,.5)',
+                    left:scrubLeft+'px',width:scrubWidth+'px'}" style="min-width:4px"></div>
+    </div>
+
+    <!-- TOOLTIP -->
+    <div v-show="tip.show"
+         :style="{position:'fixed',left:tip.x+'px',top:tip.y+'px',
+                  background:'#161b22',border:'1.5px solid #30363d',borderRadius:'8px',
+                  padding:'10px 14px',pointerEvents:'none',zIndex:400,
+                  boxShadow:'0 8px 24px rgba(0,0,0,.12)',minWidth:'200px'}"
+         style="font-size:10px">
+      <div style="color:#1565c0;font-weight:600;margin-bottom:3px;font-size:11px">{{ tip.ip }}</div>
+      <div v-if="tip.mid" style="color:#90a4ae;font-size:9px;margin-bottom:6px">{{ tip.mid }}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <span :style="{width:'9px',height:'9px',borderRadius:'50%',display:'inline-block',
+                       background:tip.status==='alive'?'#43a047':tip.status==='dead'?'#e53935':'#90a4ae'}"></span>
+        <span :style="{color:tip.status==='alive'?'#2e7d32':tip.status==='dead'?'#c62828':'#546e7a',fontWeight:600,fontSize:'11px'}">
+          {{ tip.status==='alive'?'ONLINE':tip.status==='dead'?'OFFLINE':'UNKNOWN' }}
+        </span>
+        <span style="color:#b0bec5;font-size:9px">{{ tip.tp }}</span>
+      </div>
+      <div style="border-top:1px solid #e8edf2;padding-top:6px">
+        <div style="color:#c9d1d9;font-size:9px">▶&ensp;{{ tip.start }}</div>
+        <div style="color:#c9d1d9;font-size:9px;margin-top:2px">■&ensp;{{ tip.end||'—' }}</div>
+        <div style="color:#90a4ae;font-size:9px;margin-top:3px">⏱&ensp;{{ tip.dur }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+const parseMs = s => s ? new Date(s.replace(' ','T')).getTime() : 0;
+const durStr = ms => {
+  if(ms<=0) return '0 秒';
+  const s=Math.floor(ms/1000); if(s<60) return s+' 秒';
+  const m=Math.floor(s/60); if(m<60) return m+' 分 '+(s%60)+' 秒';
+  return Math.floor(m/60)+' 時 '+(m%60)+' 分';
+};
+const fmtTs = ms => {
+  const d=new Date(ms),p=n=>String(n).padStart(2,'0');
+  return `${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+};
+
+createApp({
+  data:()=>({
+    view: 'cards',          // 'cards' | 'subnet-timeline' | 'group-timeline'
+    cardLoading: false,
+    apiError: '',
+
+    // card data
+    tenCard: null,           // { alive, dead, total, types }
+    oneSeventyGroups: [],    // [{ g:'172.21', subnets:[...] }]
+
+    // timeline
+    activeLabel: '',
+    tlLoading: false,
+    rawDevs: [],
+    searchQ: '',
+    tMin:0, tMax:0, vMin:0, vMax:0,
+    LW:420, TW:1000, RH:54,
+    collapsed: {},
+    scrollTop:0, contH:600, drag:null, scrubDrag:null,
+    tip:{show:false,ip:'',mid:'',tp:'',status:'alive',start:'',end:'',dur:'',x:0,y:0},
+    _fetchCtrl: null,
+    _reqId: 0,
+    dateFrom: '', dateTo: '', activePreset: 7,
+  }),
+
+  computed:{
+    filteredDevs(){
+      const q=this.searchQ.toLowerCase();
+      if(!q) return this.rawDevs;
+      return this.rawDevs.filter(d=>d.ip.includes(q)||(d.mid||'').toLowerCase().includes(q)||(d.dn||'').toLowerCase().includes(q));
+    },
+
+    flatRows(){
+      // subnet-timeline: 254 rows, no group headers
+      if(this.view==='subnet-timeline'){
+        return this.filteredDevs.map((d,i)=>{
+          const l=d.segs[d.segs.length-1];
+          return {key:'D:'+d.ip, type:'device', _idx:i,
+                  ip:d.ip, oct:d.oct, tp:d.tp, mid:d.mid, dn:d.dn,
+                  segs:d.segs, hasData:true, lastStatus:l?l.v:'alive'};
+        });
+      }
+      // group-timeline: grouped with headers
+      const rows=[],byG={};
+      for(const d of this.filteredDevs)(byG[d.g]=byG[d.g]||[]).push(d);
+      let idx=0;
+      for(const g of Object.keys(byG).sort()){
+        const devs=byG[g]; let alive=0,dead=0;
+        for(const d of devs){const l=d.segs[d.segs.length-1];l&&l.v==='alive'?alive++:dead++;}
+        rows.push({key:'G:'+g, type:'group', g, total:devs.length, alive, dead});
+        if(!this.collapsed[g])
+          for(const d of devs){
+            const l=d.segs[d.segs.length-1];
+            rows.push({key:'D:'+d.ip, type:'device', _idx:idx++,
+                       ip:d.ip, g:d.g, sub:d.sub, tp:d.tp, mid:d.mid, dn:d.dn,
+                       segs:d.segs, hasData:true, lastStatus:l?l.v:'alive'});
+          }
+      }
+      return rows;
+    },
+
+    deviceCount(){ return this.flatRows.filter(r=>r.type==='device').length; },
+    aliveCount(){   return this.flatRows.filter(r=>r.type==='device'&&r.lastStatus==='alive').length; },
+    deadCount(){    return this.flatRows.filter(r=>r.type==='device'&&r.lastStatus==='dead').length; },
+    unknownCount(){ return this.flatRows.filter(r=>r.type==='device'&&r.lastStatus==='unknown').length; },
+
+    startIdx(){ return Math.max(0,Math.floor(this.scrollTop/this.RH)-8); },
+    visCount(){  return Math.ceil(this.contH/this.RH)+20; },
+    visibleRows(){ return this.flatRows.slice(this.startIdx,this.startIdx+this.visCount); },
+    topPad(){  return this.startIdx*this.RH; },
+    botPad(){  const r=this.startIdx+this.visibleRows.length; return Math.max(0,(this.flatRows.length-r)*this.RH); },
+    range(){   return this.vMax-this.vMin||1; },
+
+    timeTicks(){
+      if(!this.TW||!this.range) return [];
+      const hr=this.range/3.6e6;
+      const [mn,mj]=hr<=0.5?[60e3,300e3]:hr<=1?[120e3,600e3]:hr<=3?[300e3,1800e3]:
+                    hr<=8?[900e3,3600e3]:hr<=24?[1800e3,7200e3]:hr<=72?[3600e3,14400e3]:[7200e3,28800e3];
+      const ticks=[]; let t=Math.ceil(this.vMin/mn)*mn;
+      while(t<=this.vMax){
+        const x=(t-this.vMin)/this.range*this.TW, isMajor=Math.round(t%mj)===0;
+        let label='';
+        if(isMajor){const d=new Date(t),hh=String(d.getHours()).padStart(2,'0'),mm=String(d.getMinutes()).padStart(2,'0');
+          label=hr>24?`${d.getMonth()+1}/${d.getDate()} ${hh}h`:`${hh}:${mm}`;}
+        ticks.push({ms:t,x,major:isMajor,label}); t+=mn;
+      }
+      return ticks;
+    },
+    majorTicks(){ return this.timeTicks.filter(t=>t.major); },
+    viewLabel(){ const hr=this.range/3.6e6; return hr>=24?`${(hr/24).toFixed(1)} 天`:`${hr.toFixed(1)} 時`; },
+    nowX(){ const n=Date.now(); return n<this.vMin||n>this.vMax?null:(n-this.vMin)/this.range*this.TW; },
+    todayStr(){ return new Date().toISOString().slice(0,10); },
+    scrubLeft(){ return !this.tMin?0:Math.max(0,(this.vMin-this.tMin)/(this.tMax-this.tMin)*(this.LW+this.TW)); },
+    scrubWidth(){ return !this.tMin?20:Math.max(8,(this.vMax-this.vMin)/(this.tMax-this.tMin)*(this.LW+this.TW)); },
+  },
+
+  methods:{
+    async init(){
+      this.cardLoading=true; this.apiError='';
+      try{
+        const r=await fetch('http://127.0.0.1:5000/api/tl/subnet_stats');
+        if(!r.ok) throw new Error(`HTTP ${r.status}`);
+        const stats=await r.json();
+
+        // 分類：10.x 合併一張，172.xx 各子網一張
+        let tenAlive=0, tenDead=0, tenTotal=0, tenTypes=new Set();
+        const byGroup={};
+
+        for(const sn of stats){
+          const first=sn.subnet.split('.')[0];
+          if(first==='10'){
+            tenAlive+=sn.alive; tenDead+=sn.dead; tenTotal+=sn.total;
+            sn.types.forEach(t=>tenTypes.add(t));
+          } else {
+            const g=sn.subnet.split('.').slice(0,2).join('.');
+            if(!byGroup[g]) byGroup[g]=[];
+            byGroup[g].push(sn);
+          }
+        }
+
+        this.tenCard = tenTotal>0 ? {alive:tenAlive,dead:tenDead,total:tenTotal,types:[...tenTypes]} : null;
+        this.oneSeventyGroups = Object.keys(byGroup).sort().map(g=>({g,subnets:byGroup[g]}));
+        this.apiError='';
+      }catch(e){
+        this.apiError=`http://127.0.0.1:5000/api/tl/subnet_stats 失敗: ${e.message}`;
+      }finally{ this.cardLoading=false; }
+    },
+
+
+
+
+
+    /* ─── 核心導航：任何順序點擊都安全 ─────────────────── */
+    _abortPrev(){
+      if(this._fetchCtrl){ this._fetchCtrl.abort(); this._fetchCtrl=null; }
+    },
+
+    async _navigate(view, label, url){
+      this._abortPrev();
+      const id = ++this._reqId;
+      this.view        = view;
+      this.activeLabel = label;
+      this.tlLoading   = true;
+      this.searchQ     = '';
+      this.apiError    = '';
+      // 儲存狀態到 localStorage（刷新後可還原）
+      localStorage.setItem('tl_view',  view);
+      localStorage.setItem('tl_label', label);
+      localStorage.setItem('tl_url',   url);
+      // 等 DOM 更新後再計算高度（用 rAF 確保 layout 已完成）
+      this.$nextTick(()=> requestAnimationFrame(()=>{ this.updateTW(); this.updateContH(); }));
+      const ctrl = new AbortController();
+      this._fetchCtrl = ctrl;
+      try {
+        const r = await fetch(url, { signal: ctrl.signal });
+        if(!r.ok) throw new Error(`HTTP ${r.status}`);
+        const d = await r.json();
+        if(id !== this._reqId) return;
+        this.rawDevs = d.devs || [];
+        this.tMin    = d.tmin ? parseMs(d.tmin) : 0;
+        this.tMax    = d.tmax ? parseMs(d.tmax) : 0;
+        this.resetView();
+        // 資料載入後再算一次高度
+        this.$nextTick(()=> requestAnimationFrame(()=> this.updateContH()));
+      } catch(e) {
+        if(id !== this._reqId) return;
+        if(e.name !== 'AbortError') this.apiError = `載入失敗: ${e.message}`;
+      } finally {
+        if(id === this._reqId){ this.tlLoading = false; this._fetchCtrl = null; }
+      }
+    },
+
+    openGroupTimeline(prefix, label){
+      this._navigate('group-timeline', label,
+        `http://127.0.0.1:5000/api/tl/data?prefix=${prefix}&changed_only=0`);
+    },
+
+    openSubnetTimeline(subnet){
+      this._navigate('subnet-timeline', subnet,
+        `http://127.0.0.1:5000/api/tl/subnet_grid?subnet=${subnet}`);
+    },
+
+    backToCards(){
+      this._abortPrev();
+      this._reqId++;
+      this.view      = 'cards';
+      this.rawDevs   = [];
+      this.tMin      = 0; this.tMax = 0;
+      this.apiError  = '';
+      this.collapsed = {};
+      this.tlLoading = false;
+      // 清除記憶
+      localStorage.removeItem('tl_view');
+      localStorage.removeItem('tl_label');
+      localStorage.removeItem('tl_url');
+    },
+
+
+    /* ── 日期區間（methods） ──────────────────────────── */
+    _syncDatePicker(){
+      this.dateFrom = new Date(this.vMin).toISOString().slice(0,10);
+      this.dateTo   = new Date(this.vMax).toISOString().slice(0,10);
+    },
+    applyDateRange(){
+      const from = new Date(this.dateFrom+'T00:00:00').getTime();
+      const to   = new Date(this.dateTo  +'T23:59:59').getTime();
+      if(isNaN(from)||isNaN(to)||from>=to) return;
+      const maxRange = 30*24*3600*1000;
+      if(to - from > maxRange){ alert('最多只能選 30 天'); return; }
+      this.vMin = from;
+      this.vMax = to;
+      this.activePreset = 0;
+    },
+    resetToData(){
+      this.vMin = this.tMin;
+      this.vMax = Math.max(this.tMax, Date.now());
+      this.activePreset = 'data';
+      this._syncDatePicker();
+    },
+    setPreset(days){
+      const to   = Math.max(this.tMax, Date.now());  // 右側到當前時間
+      const from = to - days*24*3600*1000;
+      this.vMin  = from; this.vMax = to;
+      this.activePreset = days;
+      this._syncDatePicker();
+    },
+    resetView(){
+      const now  = Date.now();
+      const vMax = Math.max(this.tMax, now);   // 右側延伸到當前時間
+      this.vMax  = vMax;
+      const seven = 7*24*3600*1000;
+      if(vMax - this.tMin > seven){
+        this.vMin = vMax - seven;
+        this.activePreset = 7;
+      } else {
+        this.vMin = this.tMin;
+        this.activePreset = 'data';
+      }
+      this._syncDatePicker();
+    },
+    toggleGroup(g){ this.collapsed={...this.collapsed,[g]:!this.collapsed[g]}; },
+
+    segStyle(seg, si=0, total=1){
+      const sMs = parseMs(seg.s);
+      const eMs = seg.e ? parseMs(seg.e) : this.tMax;
+
+      // 先算延伸後的實際範圍（才能正確判斷是否在視窗內）
+      // 第一段：左端延伸到視窗左緣（或更早）
+      const effectiveStart = si === 0         ? Math.min(sMs, this.vMin) : sMs;
+      // 最後一段：右端延伸到視窗右緣（含 tMax 之後到現在的空白期）
+      const effectiveEnd   = si === total - 1 ? Math.max(eMs, this.vMax) : eMs;
+
+      // 延伸後範圍完全在視窗外才跳過
+      if(effectiveEnd <= this.vMin || effectiveStart >= this.vMax) return {display:'none'};
+
+      const x    = Math.max(0, (effectiveStart - this.vMin) / this.range * this.TW);
+      const endX = Math.min(this.TW, (effectiveEnd - this.vMin) / this.range * this.TW);
+      const w    = Math.max(2, endX - x);
+
+      const col = seg.v==='alive' ? 'rgba(67,160,71,.75)'
+                : seg.v==='dead'  ? 'rgba(229,57,53,.88)'
+                :                   'rgba(176,190,197,.55)';
+      return {position:'absolute', left:x+'px', width:w+'px',
+              top:'5px', bottom:'5px', borderRadius:'3px',
+              background:col, pointerEvents:'auto'};
+    },
+
+    showTip(e,row,seg){
+      const sMs=parseMs(seg.s), eMs=seg.e?parseMs(seg.e):this.tMax;
+      this.tip={show:true,ip:row.ip,mid:row.mid||row.dn||'',tp:row.tp||'',status:seg.v,
+        start:fmtTs(sMs),end:seg.e?fmtTs(eMs):'—',dur:durStr(eMs-sMs),
+        x:Math.min(e.clientX+14,window.innerWidth-220),
+        y:Math.min(e.clientY+14,window.innerHeight-140)};
+    },
+    hideTip(){ this.tip.show=false; },
+
+    doZoom(f){
+      const mid  = (this.vMin + this.vMax) / 2;
+      const half = (this.vMax - this.vMin) / 2;
+      const nh   = Math.max(60000, half/f);
+      this.vMin  = mid - nh;   // 不限制 tMin
+      this.vMax  = mid + nh;
+    },
+    onWheel(e){
+      if(e.ctrlKey){
+        const rect  = this.$refs.scroller.getBoundingClientRect();
+        const ratio = Math.max(0,Math.min(1,(e.clientX-rect.left-this.LW)/this.TW));
+        const pivot = this.vMin + ratio*this.range;
+        const f     = e.deltaY < 0 ? 1.25 : 0.8;
+        const nr    = Math.max(60000, this.range/f);
+        this.vMin   = pivot - ratio*nr;   // 不限制 tMin
+        this.vMax   = this.vMin + nr;
+      }else if(e.shiftKey){
+        const shift = this.range * .15 * Math.sign(e.deltaY);
+        this.vMin  += shift;
+        this.vMax  += shift;
+      }else{ this.$refs.scroller.scrollTop += e.deltaY; }
+    },
+    dragStart(e){
+      const rect=this.$refs.scroller.getBoundingClientRect();
+      if(e.clientX-rect.left<this.LW) return;
+      e.preventDefault();
+      this.drag={startX:e.clientX,startVmin:this.vMin,startVmax:this.vMax};
+      this.$refs.scroller.style.cursor='grabbing';
+    },
+    dragMove(e){
+      if(!this.drag) return;
+      const dx   = e.clientX - this.drag.startX;
+      const dtMs = -(dx / this.TW) * this.range;
+      const span = this.drag.startVmax - this.drag.startVmin;
+      this.vMin  = this.drag.startVmin + dtMs;   // 不限制 tMin，自由拖曳
+      this.vMax  = this.vMin + span;
+    },
+    dragEnd(){ this.drag=null; if(this.$refs.scroller)this.$refs.scroller.style.cursor=''; },
+    onScroll(e){ this.scrollTop=e.target.scrollTop; },
+
+    scrubClick(e){
+      const rect=this.$refs.scrubBar.getBoundingClientRect();
+      const ratio=(e.clientX-rect.left)/rect.width, span=this.vMax-this.vMin;
+      const nMin=this.tMin+ratio*(this.tMax-this.tMin)-span/2;
+      this.vMin=Math.max(this.tMin,Math.min(this.tMax-span,nMin)); this.vMax=this.vMin+span;
+    },
+    scrubDragStart(e){ this.scrubDrag={startX:e.clientX,startVmin:this.vMin,startVmax:this.vMax}; },
+    scrubDragMove(e){
+      if(!this.scrubDrag) return;
+      const rect=this.$refs.scrubBar.getBoundingClientRect();
+      const dtMs=(e.clientX-this.scrubDrag.startX)/rect.width*(this.tMax-this.tMin);
+      const span=this.scrubDrag.startVmax-this.scrubDrag.startVmin;
+      const nMin=Math.max(this.tMin,Math.min(this.tMax-span,this.scrubDrag.startVmin+dtMs));
+      this.vMin=nMin; this.vMax=nMin+span;
+    },
+    scrubDragEnd(){ this.scrubDrag=null; },
+
+    updateTW(){ this.TW=Math.max(400,window.innerWidth-this.LW-20); },
+    updateContH(){ if(this.$refs.scroller) this.contH=this.$refs.scroller.clientHeight; },
+  },
+
+  mounted(){
+    this.updateTW();
+    window.addEventListener('resize',()=>{ this.updateTW(); this.updateContH(); });
+    // 先載入卡片，再還原上次選的子網
+    this.init().then(()=>{
+      const view  = localStorage.getItem('tl_view');
+      const label = localStorage.getItem('tl_label');
+      const url   = localStorage.getItem('tl_url');
+      if(view && view !== 'cards' && label && url){
+        this._navigate(view, label, url);
+      }
+    });
+  },
+}).mount('#app');
+</script>
+</body>
+</html>
