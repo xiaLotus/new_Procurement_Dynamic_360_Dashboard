@@ -102,6 +102,14 @@ const app = Vue.createApp({
       if (this.addModal.memberType === '4000') {
         if (!notesId)               { this.addModal.notesErr = 'Notes_ID 不可為空'; return; }
         if (!notesId.includes('@')) { this.addModal.notesErr = 'Notes_ID 格式錯誤，需含 @'; return; }
+        // 🔧 自動將空格替換為下底線（不阻擋，僅修正）
+        if (notesId.includes(' ')) {
+            this.addModal.notesErr = '中間不得有空格，請手動更換成下底線'; return;
+        }
+        if (!notesId.endsWith('@aseglobal.com')) {
+            this.addModal.notesErr = 'Notes_ID 格式錯誤，需以 @aseglobal.com 結尾';
+            return;
+        }
       }
 
       this.cfgLoading = true;

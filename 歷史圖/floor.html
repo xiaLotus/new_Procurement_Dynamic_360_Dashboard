@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EAP 健康度 · EAP Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background-color: #0e1521;
+  background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+/* ── 整頁結構 ─────────────────────── */
+#app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 80px 28px;
+}
+
+/* ── 頁面 Header ─────────────────── */
+.page-header {
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #a8c8ee;
+  letter-spacing: .12em;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.page-header::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 18px;
+  background: #3a6fd8;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(58,111,216,.6);
+}
+
+/* ── 即時監測 badge ─── */
+.live-badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,200,100,.08);
+  border: 1px solid rgba(0,200,100,.25);
+  border-radius: 20px;
+  padding: 6px 14px 6px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4ecca3;
+  letter-spacing: .06em;
+}
+.live-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #3dffa0;
+  box-shadow: 0 0 6px #3dffa0;
+  animation: livepulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes livepulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .4; transform: scale(.65); }
+}
+.live-time {
+  font-size: 11px;
+  color: rgba(78,204,163,.55);
+  letter-spacing: .04em;
+}
+
+/* ── Scene ───────────────────────── */
+.scene {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-height: 0;
+}
+
+/* ── 單棟 ────────────────────────── */
+.bld-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ── 樓層 chips ──────────────────── */
+.floors {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+.floors::-webkit-scrollbar { display: none; }
+
+.floor-chip {
+  background: rgba(58,111,216,.22);
+  border: 1px solid rgba(110,170,239,.38);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 6px;
+  cursor: default;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: background .18s, border-color .18s;
+  flex-shrink: 0;
+}
+.floor-chip:hover {
+  background: rgba(58,111,216,.35);
+  border-color: rgba(110,170,239,.6);
+}
+.chip-other {
+  cursor: pointer;
+  border-style: dashed;
+}
+.chip-other:hover {
+  background: rgba(90,150,255,.25);
+  border-color: rgba(150,200,255,.6);
+  border-style: dashed;
+}
+.chip-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #c8ddf2;
+  letter-spacing: .06em;
+  line-height: 1;
+}
+.chip-subnets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.chip-subnet-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: #90c2f0;
+  background: rgba(30,70,140,.5);
+  border: 1px solid rgba(90,150,230,.35);
+  border-radius: 5px;
+  padding: 3px 7px;
+  letter-spacing: .04em;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+  user-select: none;
+}
+.chip-subnet-tag:hover {
+  background: rgba(58,111,216,.65);
+  border-color: rgba(110,170,239,.8);
+  color: #e0f0ff;
+  transform: translateY(-1px);
+}
+.chip-subnet-tag.active {
+  background: #3a6fd8;
+  border-color: #6eaaef;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(58,111,216,.6);
+}
+
+/* ── 分隔線 ──────────────────────── */
+.sep {
+  height: 1px;
+  background: rgba(255,255,255,.25);
+  margin: 8px 0 0;
+  flex-shrink: 0;
+}
+
+/* ── 棟別名稱 ────────────────────── */
+.bld-name {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6eaaef;
+  letter-spacing: .1em;
+  flex-shrink: 0;
+}
+.bld-other {
+  cursor: pointer;
+  transition: color .15s;
+}
+.bld-other:hover { color: #90c8ff; }
+.bld-other-hint {
+  font-size: 12px;
+  opacity: .6;
+  margin-left: 2px;
+}
+.bld-prefix {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(110,170,239,.55);
+  letter-spacing: .04em;
+  margin-left: 1px;
+}
+
+/* ── Loading / Error ─────────────── */
+.center {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; font-size: 12px; color: #3d5a80;
+}
+.center.err { color: #f87171; }
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid #1a2a40;
+  border-top-color: #3a6fd8;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.slide-up-enter-active, .slide-up-leave-active { transition: transform .2s ease, opacity .2s; }
+.slide-up-enter-from, .slide-up-leave-to { transform: translateY(100%); opacity: 0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="center" v-if="loading && buildings.length === 0">
+    <div class="spinner"></div><span>載入中...</span>
+  </div>
+  <div class="center err" v-else-if="error">⚠ {{ error }}</div>
+
+  <template v-else>
+    <div class="page-header">
+      EAP 健康度
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        即時監測
+        <span class="live-time">{{ nowTime }}</span>
+      </div>
+    </div>
+
+    <div class="scene">
+      <div class="bld-col" v-for="bld in buildings" :key="bld.id">
+
+        <!-- 樓層 -->
+        <div class="floors">
+          <div
+            class="floor-chip"
+            :class="{ 'chip-other': bld.id === '其他' }"
+            @click="bld.id === '其他' && goOther()"
+            v-for="f in bld.floorsDesc"
+            :key="f.name"
+          >
+            <span class="chip-label">{{ f.name }}</span>
+            <div class="chip-subnets" v-if="f.subnets && f.subnets.length && bld.id !== '其他'">
+              <span
+                class="chip-subnet-tag"
+                v-for="s in f.subnets"
+                :key="s"
+                @click.stop="goSubnet(f.subnetPrefix, s)"
+              >{{ s }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 分隔線 -->
+        <div class="sep"></div>
+
+        <!-- 棟別 -->
+        <div class="bld-name">
+          <span>{{ bld.id }}<span class="bld-prefix" v-if="bld.bldOctet">({{ bld.bldOctet }})</span></span>
+        </div>
+
+      </div>
+    </div>
+  </template>
+
+</div>
+
+<script>
+const { createApp, ref, onMounted, nextTick } = Vue;
+
+createApp({
+  setup() {
+    const buildings  = ref([]);
+    const loading    = ref(false);
+    const error      = ref('');
+    const updatedAt  = ref('');
+    const selectedSubnet = ref('');
+    const nowTime    = ref('');
+
+    function updateClock() {
+      const d = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      nowTime.value = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
+    function sortNum(n) {
+      const d = n.replace(/\D/g, '');
+      return d ? parseInt(d) : 999;
+    }
+
+    async function fetchData() {
+      loading.value = true;
+      error.value   = '';
+      try {
+        const r = await fetch('http://127.0.0.1:5000/api/building_floor_status');
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const data = await r.json();
+        if (data.error) throw new Error(data.error);
+
+        updatedAt.value = data.updated_at || '';
+        buildings.value = (data.buildings || []).map(b => {
+          const floorsDesc = [...b.floors]
+            .sort((a, z) => sortNum(z.name) - sortNum(a.name))
+            .map(f => ({ ...f, subnetPrefix: f.subnet_prefix || '' }));
+          // derive building-level prefix from any floor
+          const bldPrefix = floorsDesc.find(f => f.subnetPrefix)?.subnetPrefix || '';
+          const bldOctet = bldPrefix ? bldPrefix.split('.')[1] || '' : '';
+          return { ...b, floorsDesc, bldPrefix, bldOctet };
+        });
+
+        await nextTick();
+        gsap.to('.floor-chip', {
+          opacity: 1, y: 0,
+          duration: 0.4,
+          ease: 'power2.out',
+          stagger: { each: 0.03, from: 'end' },
+          delay: 0.1
+        });
+      } catch (e) {
+        error.value = `無法取得資料：${e.message}`;
+      } finally {
+        loading.value = false;
+      }
+    }
+
+    onMounted(() => {
+      fetchData();
+      updateClock();
+      setInterval(updateClock, 1000);
+    });
+    const BASE = 'http://127.0.0.1:5000';
+
+    function goSubnet(prefix, octet) {
+      const subnet = `${prefix}.${octet}`;
+      window.location.href = `${BASE}/?subnet=${encodeURIComponent(subnet)}`;
+    }
+
+    function goOther() {
+      window.location.href = `${BASE}/?group=10`;
+    }
+
+    return { buildings, loading, error, updatedAt, nowTime, selectedSubnet, goSubnet, goOther };
+  }
+}).mount('#app');
+</script>
+</body>
+</html>

@@ -13,33 +13,6 @@
   ::-webkit-scrollbar-track { background:#0d1117; }
   ::-webkit-scrollbar-thumb { background:#30363d; border-radius:3px; }
 
-  /* ── subnet card ─────────────────────────────────── */
-  .sn-card {
-    background:linear-gradient(145deg,#161b22,#0d1117);
-    border:1px solid #21262d; border-radius:12px;
-    padding:14px 15px; cursor:pointer; transition:all .2s;
-    display:flex; flex-direction:column; gap:8px;
-    position:relative; overflow:hidden;
-  }
-  .sn-card::before {
-    content:''; position:absolute; inset:0;
-    background:linear-gradient(135deg,rgba(88,166,255,.04) 0%,transparent 60%);
-    opacity:0; transition:opacity .2s;
-  }
-  .sn-card:hover { border-color:#388bfd; transform:translateY(-3px);
-    box-shadow:0 8px 24px rgba(31,111,235,.2), 0 0 0 1px rgba(56,139,253,.15); }
-  .sn-card:hover::before { opacity:1; }
-
-  /* ── group hero card (10.x) ──────────────────────── */
-  .group-card {
-    background:linear-gradient(135deg,#0d2137 0%,#0d1117 100%);
-    border:1px solid #1f4a7a; border-radius:14px;
-    padding:20px 24px; cursor:pointer; transition:all .2s;
-    display:flex; align-items:center; gap:20px;
-    box-shadow: inset 0 1px 0 rgba(88,166,255,.08);
-  }
-  .group-card:hover { border-color:#388bfd; transform:translateY(-3px);
-    box-shadow:0 12px 32px rgba(31,111,235,.25), inset 0 1px 0 rgba(88,166,255,.15); }
 
   .seg-alive  { transition:opacity .1s,filter .1s; }
   .seg-alive:hover  { opacity:1!important; filter:brightness(.85); }
@@ -100,7 +73,7 @@
       ◈ STATUS TIMELINE
     </span>
 
-    <button v-if="view!=='cards'" @click="backToCards"
+    <button @click="handleBack"
             class="ctrl-btn" style="color:#58a6ff;border-color:#1f6feb;background:#0d1117">
       ← 返回
     </button>
@@ -115,7 +88,7 @@
       {{ activeLabel }}
     </span>
 
-    <template v-if="view!=='cards'">
+    <template>
       <input v-model="searchQ" class="filter-input" placeholder="搜尋 IP / 設備名稱...">
 
       <!-- 日期區間選擇 -->
@@ -150,11 +123,6 @@
         </template>
       </div>
     </template>
-
-    <template v-if="view==='cards'">
-      <span style="color:#90a4ae;font-size:10px">選擇網段查看時序圖</span>
-      <span v-if="cardLoading" style="color:#f57c00;font-size:10px;animation:pulse 1s infinite">⟳ 載入中...</span>
-    </template>
   </div>
 
   <!-- ═══ ERROR BANNER ════════════════════════════════════════════════ -->
@@ -166,95 +134,8 @@
     <button @click="init" class="ctrl-btn" style="color:#e65100;border-color:#ffb74d">重試</button>
   </div>
 
-  <!-- ═══ CARD VIEW ═══════════════════════════════════════════════════ -->
-  <div v-if="view==='cards'" style="flex:1;overflow-y:auto;padding:20px 24px;background:#0d1117">
-
-    <!-- 10.x 大卡片 -->
-    <div v-if="tenCard" class="fade-in" style="margin-bottom:28px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <span style="font-size:13px;font-weight:600;color:#c9d1d9;letter-spacing:.05em">10.x.*</span>
-        <span style="font-size:10px;color:#8b949e">所有 10.x 裝置</span>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,#21262d,transparent)"></div>
-      </div>
-      <div class="group-card" @click="openGroupTimeline('10', '10.x.*')">
-        <!-- 大標題 -->
-        <div style="flex-shrink:0;text-align:center;padding-right:4px">
-          <div style="font-size:32px;font-weight:600;color:#58a6ff;letter-spacing:-.02em;line-height:1">10.x.*</div>
-          <div style="font-size:10px;color:#484f58;margin-top:4px">ALL SEGMENTS</div>
-        </div>
-        <div style="width:1px;height:48px;background:#21262d;flex-shrink:0"></div>
-        <!-- 統計 + 進度 -->
-        <div style="flex:1">
-          <div style="display:flex;align-items:baseline;gap:16px;margin-bottom:10px">
-            <span style="font-size:13px;color:#3fb950;font-weight:600">● ONLINE &nbsp;{{ tenCard.alive }}</span>
-            <span style="font-size:13px;color:#f85149;font-weight:600">● OFFLINE {{ tenCard.dead }}</span>
-            <span style="font-size:11px;color:#484f58;margin-left:auto">共 {{ tenCard.total }} 台</span>
-          </div>
-          <div style="height:7px;border-radius:4px;background:#21262d;overflow:hidden">
-            <div :style="{
-                   width:tenCard.total?(tenCard.alive/tenCard.total*100)+'%':'0%',
-                   height:'100%',
-                   background:'linear-gradient(90deg,#1a7f37,#3fb950)',
-                   borderRadius:'4px',transition:'width .6s'
-                 }"></div>
-          </div>
-
-        </div>
-        <div style="font-size:18px;color:#30363d;flex-shrink:0">▶</div>
-      </div>
-    </div>
-
-    <!-- 172.xx 各子網卡片 -->
-    <div v-for="grp in oneSeventyGroups" :key="grp.g" class="fade-in" style="margin-bottom:28px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-        <span style="font-size:13px;font-weight:600;color:#79c0ff;letter-spacing:.02em">{{ grp.g }}.*</span>
-        <span style="font-size:10px;color:#8b949e">{{ grp.subnets.length }} 個子網</span>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,#21262d,transparent)"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
-        <div v-for="sn in grp.subnets" :key="sn.subnet"
-             class="sn-card" @click="openSubnetTimeline(sn.subnet)">
-          <!-- 子網標題 -->
-          <div style="font-size:15px;font-weight:600;color:#58a6ff;letter-spacing:.02em">
-            {{ sn.subnet }}.x
-          </div>
-          <!-- 進度條 (alive %) -->
-          <div style="position:relative;height:8px;border-radius:6px;background:#21262d;overflow:hidden;margin:2px 0">
-            <div :style="{
-                   width: sn.total ? (sn.alive/sn.total*100)+'%' : '0%',
-                   height:'100%',
-                   background:'linear-gradient(90deg,#1a7f37,#3fb950)',
-                   borderRadius:'6px', transition:'width .5s'
-                 }"></div>
-            <!-- dead portion -->
-            <div :style="{
-                   position:'absolute', right:'0', top:'0', bottom:'0',
-                   width: sn.total ? (sn.dead/sn.total*100)+'%' : '0%',
-                   background:'rgba(248,81,73,.35)',
-                   borderRadius:'0 6px 6px 0'
-                 }"></div>
-          </div>
-          <!-- 統計 -->
-          <div style="display:flex;align-items:center;font-size:12px;margin-top:2px">
-            <span style="color:#3fb950;font-weight:600">{{ sn.alive }}</span>
-            <span style="color:#484f58;margin:0 4px;font-size:10px">●</span>
-            <span style="color:#f85149;font-weight:600">{{ sn.dead }}</span>
-            <span style="color:#30363d;margin-left:auto;font-size:11px">{{ sn.total }} 台</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="!cardLoading&&!apiError&&!tenCard&&oneSeventyGroups.length===0"
-         style="display:flex;flex-direction:column;align-items:center;
-                justify-content:center;height:60%;gap:12px;opacity:.4">
-      <div style="font-size:36px">◈</div>
-      <div style="font-size:12px">無資料</div>
-    </div>
-  </div>
-
   <!-- ═══ TIMELINE VIEW ════════════════════════════════════════════════ -->
-  <div v-if="view!=='cards'" style="flex:1;overflow:hidden;position:relative">
+  <div style="flex:1;overflow:hidden;position:relative">
     <div ref="scroller"
          style="height:100%;overflow-y:auto;overflow-x:hidden;position:relative;user-select:none"
          @scroll="onScroll"
@@ -468,13 +349,8 @@ const fmtTs = ms => {
 
 createApp({
   data:()=>({
-    view: 'cards',          // 'cards' | 'subnet-timeline' | 'group-timeline'
-    cardLoading: false,
+    view: 'timeline',       // 'timeline' | 'subnet-timeline' | 'group-timeline'
     apiError: '',
-
-    // card data
-    tenCard: null,           // { alive, dead, total, types }
-    oneSeventyGroups: [],    // [{ g:'172.21', subnets:[...] }]
 
     // timeline
     activeLabel: '',
@@ -505,7 +381,7 @@ createApp({
           const l=d.segs[d.segs.length-1];
           return {key:'D:'+d.ip, type:'device', _idx:i,
                   ip:d.ip, oct:d.oct, tp:d.tp, mid:d.mid, dn:d.dn,
-                  segs:d.segs, hasData:true, lastStatus:l?l.v:'alive'};
+                  segs:this.cleanSegs(d.segs), hasData:true, lastStatus:l?l.v:'alive'};
         });
       }
       // group-timeline: grouped with headers
@@ -521,7 +397,7 @@ createApp({
             const l=d.segs[d.segs.length-1];
             rows.push({key:'D:'+d.ip, type:'device', _idx:idx++,
                        ip:d.ip, g:d.g, sub:d.sub, tp:d.tp, mid:d.mid, dn:d.dn,
-                       segs:d.segs, hasData:true, lastStatus:l?l.v:'alive'});
+                       segs:this.cleanSegs(d.segs), hasData:true, lastStatus:l?l.v:'alive'});
           }
       }
       return rows;
@@ -563,40 +439,20 @@ createApp({
   },
 
   methods:{
-    async init(){
-      this.cardLoading=true; this.apiError='';
-      try{
-        const r=await fetch('http://127.0.0.1:5000/api/tl/subnet_stats');
-        if(!r.ok) throw new Error(`HTTP ${r.status}`);
-        const stats=await r.json();
 
-        // 分類：10.x 合併一張，172.xx 各子網一張
-        let tenAlive=0, tenDead=0, tenTotal=0, tenTypes=new Set();
-        const byGroup={};
-
-        for(const sn of stats){
-          const first=sn.subnet.split('.')[0];
-          if(first==='10'){
-            tenAlive+=sn.alive; tenDead+=sn.dead; tenTotal+=sn.total;
-            sn.types.forEach(t=>tenTypes.add(t));
-          } else {
-            const g=sn.subnet.split('.').slice(0,2).join('.');
-            if(!byGroup[g]) byGroup[g]=[];
-            byGroup[g].push(sn);
-          }
-        }
-
-        this.tenCard = tenTotal>0 ? {alive:tenAlive,dead:tenDead,total:tenTotal,types:[...tenTypes]} : null;
-        this.oneSeventyGroups = Object.keys(byGroup).sort().map(g=>({g,subnets:byGroup[g]}));
-        this.apiError='';
-      }catch(e){
-        this.apiError=`http://127.0.0.1:5000/api/tl/subnet_stats 失敗: ${e.message}`;
-      }finally{ this.cardLoading=false; }
+    /* ─── segs 前處理：移除首次記錄、延伸至左側 ─────────── */
+    cleanSegs(segs){
+      if(!segs || segs.length===0) return segs;
+      // 找第一個真實 alive/dead 段
+      let i=0;
+      while(i<segs.length && segs[i].v!=='alive' && segs[i].v!=='dead') i++;
+      if(i===0) return segs;          // 沒有前置段，不需處理
+      if(i>=segs.length) return segs; // 全是未知，原樣保留
+      // 把第一個真實段的起點往前拉到原始開頭，覆蓋首次記錄的空白
+      const result = segs.slice(i);
+      result[0] = { ...result[0], s: segs[0].s };
+      return result;
     },
-
-
-
-
 
     /* ─── 核心導航：任何順序點擊都安全 ─────────────────── */
     _abortPrev(){
@@ -651,16 +507,25 @@ createApp({
     backToCards(){
       this._abortPrev();
       this._reqId++;
-      this.view      = 'cards';
       this.rawDevs   = [];
       this.tMin      = 0; this.tMax = 0;
       this.apiError  = '';
       this.collapsed = {};
       this.tlLoading = false;
-      // 清除記憶
       localStorage.removeItem('tl_view');
       localStorage.removeItem('tl_label');
       localStorage.removeItem('tl_url');
+      localStorage.removeItem('tl_from_floor');
+      window.history.back();
+    },
+
+    handleBack(){
+      const params = new URLSearchParams(location.search);
+      if(params.get('subnet') || params.get('group')){
+        window.history.back();
+      } else {
+        this.backToCards();
+      }
     },
 
 
@@ -743,25 +608,30 @@ createApp({
     hideTip(){ this.tip.show=false; },
 
     doZoom(f){
+      const now  = Date.now();
       const mid  = (this.vMin + this.vMax) / 2;
       const half = (this.vMax - this.vMin) / 2;
       const nh   = Math.max(60000, half/f);
-      this.vMin  = mid - nh;   // 不限制 tMin
-      this.vMax  = mid + nh;
+      this.vMax  = Math.min(mid + nh, now);
+      this.vMin  = this.vMax - nh * 2;
     },
     onWheel(e){
+      const now = Date.now();
       if(e.ctrlKey){
         const rect  = this.$refs.scroller.getBoundingClientRect();
         const ratio = Math.max(0,Math.min(1,(e.clientX-rect.left-this.LW)/this.TW));
         const pivot = this.vMin + ratio*this.range;
         const f     = e.deltaY < 0 ? 1.25 : 0.8;
         const nr    = Math.max(60000, this.range/f);
-        this.vMin   = pivot - ratio*nr;   // 不限制 tMin
-        this.vMax   = this.vMin + nr;
+        this.vMin   = pivot - ratio*nr;
+        this.vMax   = Math.min(this.vMin + nr, now);
       }else if(e.shiftKey){
         const shift = this.range * .15 * Math.sign(e.deltaY);
-        this.vMin  += shift;
-        this.vMax  += shift;
+        let nMax = this.vMax + shift;
+        let nMin = this.vMin + shift;
+        if(nMax > now){ nMax = now; nMin = now - (this.vMax - this.vMin); }
+        this.vMin = nMin;
+        this.vMax = nMax;
       }else{ this.$refs.scroller.scrollTop += e.deltaY; }
     },
     dragStart(e){
@@ -773,11 +643,15 @@ createApp({
     },
     dragMove(e){
       if(!this.drag) return;
+      const now  = Date.now();
       const dx   = e.clientX - this.drag.startX;
       const dtMs = -(dx / this.TW) * this.range;
       const span = this.drag.startVmax - this.drag.startVmin;
-      this.vMin  = this.drag.startVmin + dtMs;   // 不限制 tMin，自由拖曳
-      this.vMax  = this.vMin + span;
+      let nMin   = this.drag.startVmin + dtMs;
+      let nMax   = nMin + span;
+      if(nMax > now){ nMax = now; nMin = now - span; }
+      this.vMin  = nMin;
+      this.vMax  = nMax;
     },
     dragEnd(){ this.drag=null; if(this.$refs.scroller)this.$refs.scroller.style.cursor=''; },
     onScroll(e){ this.scrollTop=e.target.scrollTop; },
@@ -806,15 +680,25 @@ createApp({
   mounted(){
     this.updateTW();
     window.addEventListener('resize',()=>{ this.updateTW(); this.updateContH(); });
-    // 先載入卡片，再還原上次選的子網
-    this.init().then(()=>{
+
+    const params = new URLSearchParams(location.search);
+    const subnetParam = params.get('subnet');
+    const groupParam  = params.get('group');
+
+    if(subnetParam){
+      const url = `http://127.0.0.1:5000/api/tl/subnet_grid?subnet=${subnetParam}`;
+      this._navigate('subnet-timeline', subnetParam, url);
+    } else if(groupParam){
+      const url = `http://127.0.0.1:5000/api/tl/data?prefix=${groupParam}&changed_only=0`;
+      this._navigate('group-timeline', groupParam + '.x.*', url);
+    } else {
       const view  = localStorage.getItem('tl_view');
       const label = localStorage.getItem('tl_label');
       const url   = localStorage.getItem('tl_url');
-      if(view && view !== 'cards' && label && url){
+      if(view && label && url){
         this._navigate(view, label, url);
       }
-    });
+    }
   },
 }).mount('#app');
 </script>

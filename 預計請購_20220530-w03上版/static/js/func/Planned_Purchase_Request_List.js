@@ -3255,6 +3255,11 @@ const app = Vue.createApp({
         },
 
         goMemberManager() {
+            try{
+                this.toggleFilterhis.saveCurrentFilters();
+            }catch (err) {
+                console.error("❌ 沒有任何選擇，直接跳轉至 📋 eRT 驗收總表", err);
+            }
             localStorage.setItem('username', this.username);
             window.location.href = 'Member_manager.html';
         }

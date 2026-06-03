@@ -29,6 +29,10 @@ def ipk(ip):
 def index():
     return send_from_directory(BASE_DIR, 'index.html')
 
+@app.route('/floor.html')
+def floor():
+    return send_from_directory(BASE_DIR, 'floor.html')
+
 
 @app.route('/api/tl/subnet_stats')
 def tl_subnet_stats():
@@ -162,6 +166,86 @@ def tl_data():
             'devs': devs,
             'tmin': min(times) if times else '',
             'tmax': max(times) if times else '',
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+# ── 貼在 app.py，取代舊的 building_floor_status ───────────────────────────
+import datetime
+ 
+@app.route('/api/building_floor_status')
+def building_floor_status():
+    try:
+        # 每個 IP 取最新一筆
+        ip_latest = {}
+        for r in rows():
+            ip = r['IP']
+            if ip not in ip_latest or r['時間'] > ip_latest[ip]['時間']:
+                ip_latest[ip] = r
+ 
+        # 依 棟別/樓層 累計 alive/dead + 收集 subnet
+        from collections import defaultdict
+        bld_floor = defaultdict(lambda: defaultdict(lambda: {
+            'alive': 0, 'dead': 0, 'subnets': set()
+        }))
+ 
+        def subnet3(ip):
+            p = ip.split('.')
+            return '.'.join(p[:3]) if len(p) == 4 else ''
+ 
+        for r in ip_latest.values():
+            bld, fl, st = r['棟別'], r['樓層'], r['新狀態']
+            if bld == '歲修':
+                continue
+            if st in ('alive', 'dead'):
+                bld_floor[bld][fl][st] += 1
+                sn = subnet3(r['IP'])
+                if sn:
+                    bld_floor[bld][fl]['subnets'].add(sn)
+ 
+        BLD_ORDER = ['K11', 'K18', 'K21', 'K22', 'K25', '其他']
+ 
+        def floor_sort_key(name):
+            n = ''.join(filter(str.isdigit, name))
+            return int(n) if n else 999
+ 
+        def subnet_label(sn):
+            # 只取第 3 octet 數字，排序後回傳
+            octets = []
+            for s in sn:
+                p = s.split('.')
+                if len(p) == 3:
+                    octets.append(int(p[2]))
+            return sorted(octets)
+ 
+        result = []
+        for bld in BLD_ORDER:
+            if bld not in bld_floor:
+                continue
+            floors = []
+            for fl, cnt in sorted(bld_floor[bld].items(),
+                                   key=lambda x: floor_sort_key(x[0])):
+                # derive prefix (first 2 octets) from any subnet in the set
+                prefix = ''
+                for sn in cnt['subnets']:
+                    p = sn.split('.')
+                    if len(p) == 3:
+                        prefix = p[0] + '.' + p[1]
+                        break
+                floors.append({
+                    'name':          fl,
+                    'alive':         cnt['alive'],
+                    'dead':          cnt['dead'],
+                    'subnets':       subnet_label(cnt['subnets']),
+                    'subnet_prefix': prefix,
+                })
+            result.append({'id': bld, 'floors': floors})
+ 
+        return jsonify({
+            'buildings':  result,
+            'updated_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -390,24 +390,71 @@ def monthly_expense_analysis():
                 wbs_trend.append({'month': month, 'amount': wbs_monthly.get(month_key, 0)})
         else:
             wbs_trend = [{'month': m, 'amount': 0} for m in all_months]
+
+        # ✅ 新增：讀取 Buyer_detail.csv 計算每月實際入帳 (同 get_monthly_actual_accounting 邏輯)
+        buyer_df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8-sig', dtype='str')
         
+        buyer_df = buyer_df[
+            buyer_df['ePR No.'].notna() & buyer_df['PO No.'].notna() &
+            (buyer_df['ePR No.'] != '') & (buyer_df['PO No.'] != '') &
+            (buyer_df['WBS'].isna() | (buyer_df['WBS'] == ''))
+        ].copy()
+        
+        buyer_df['發票月份_日期'] = pd.to_datetime(buyer_df['發票月份'], errors='coerce', format='mixed')
+        buyer_df = buyer_df[buyer_df['發票月份_日期'].notna()].copy()
+        buyer_df['發票年月'] = buyer_df['發票月份_日期'].dt.to_period('M').astype(str)
+        buyer_df['RT總金額_數值'] = pd.to_numeric(
+            buyer_df['RT總金額'].astype(str).str.replace(',', '').str.replace('$', ''),
+            errors='coerce'
+        )
+        
+        # 依 start_month ~ end_month 範圍篩選
+        buyer_df = buyer_df[
+            (buyer_df['發票年月'] >= start_month) &
+            (buyer_df['發票年月'] <= end_month)
+        ]
+        
+        # 按月加總，對齊 all_months 格式
+        rt_monthly = buyer_df.groupby('發票年月')['RT總金額_數值'].sum().to_dict()
+        rt_trend = [{'month': m, 'amount': int(rt_monthly.get(m, 0))} for m in all_months]
+
         return jsonify({
-            'success': True,
-            'data': {
-                'normal': {
-                    'total': int(df_normal['總金額'].astype(float).sum()) if len(df_normal) > 0 else 0,
-                    'average': int(df_normal['總金額'].astype(float).mean()) if len(df_normal) > 0 else 0,
-                    'count': len(df_normal),
-                    'trend': normal_trend
-                },
-                'wbs': {
-                    'total': int(df_wbs['總金額'].astype(float).sum()) if len(df_wbs) > 0 else 0,
-                    'average': int(df_wbs['總金額'].astype(float).mean()) if len(df_wbs) > 0 else 0,
-                    'count': len(df_wbs),
-                    'trend': wbs_trend
-                }
-            }
-        })
+                    'success': True,
+                    'data': {
+                        'normal': {
+                            'total': int(df_normal['總金額'].astype(float).sum()) if len(df_normal) > 0 else 0,
+                            'average': int(df_normal['總金額'].astype(float).mean()) if len(df_normal) > 0 else 0,
+                            'count': len(df_normal),
+                            'trend': normal_trend
+                        },
+                        'wbs': {
+                            'total': int(df_wbs['總金額'].astype(float).sum()) if len(df_wbs) > 0 else 0,
+                            'average': int(df_wbs['總金額'].astype(float).mean()) if len(df_wbs) > 0 else 0,
+                            'count': len(df_wbs),
+                            'trend': wbs_trend
+                        },
+                        'rt': {                          # ✅ 新增
+                            'trend': rt_trend
+                        }
+                    }
+                })
+        #  return jsonify({
+        #     'success': True,
+        #     'data': {
+        #         'normal': {
+        #             'total': int(df_normal['總金額'].astype(float).sum()) if len(df_normal) > 0 else 0,
+        #             'average': int(df_normal['總金額'].astype(float).mean()) if len(df_normal) > 0 else 0,
+        #             'count': len(df_normal),
+        #             'trend': normal_trend
+        #         },
+        #         'wbs': {
+        #             'total': int(df_wbs['總金額'].astype(float).sum()) if len(df_wbs) > 0 else 0,
+        #             'average': int(df_wbs['總金額'].astype(float).mean()) if len(df_wbs) > 0 else 0,
+        #             'count': len(df_wbs),
+        #             'trend': wbs_trend
+        #         }
+        #     }
+        # })
         
     except Exception as e:
         print(f"月度費用分析錯誤: {str(e)}")
@@ -6176,14 +6223,13 @@ def mb_recall_message():
 
 
 
-
 # ══════════════════════════════════════════════
 #  成員管理 API
 # ══════════════════════════════════════════════
 
 CONFIG_FILE  = "config.cfg"
 PHONE_FILE   = "static/data/phone.json"
-BACKEND_DATA = "Backend_data.json"
+# BACKEND_DATA = "Backend_data.json"
 
 
 # ── 1. 新增需求者 → config.cfg + phone.json + Backend_data.json ──
@@ -6287,6 +6333,8 @@ def remove_requester():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-        
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
