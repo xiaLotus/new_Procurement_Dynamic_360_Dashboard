@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3000 AMHS 系統登入</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loginPage" style="position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg></div>
+      <div style="font-size:11px;color:var(--blue2);font-weight:600;letter-spacing:3px">3000 AMHS</div>
+      <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">人員分級訓練紀錄與評鑑系統</div>
+    </div>
+    <div class="login-card">
+      <h2>系統登入</h2>
+      <div class="login-sub">請輸入您的工號與密碼</div>
+      <div class="login-field"><label>工號</label><input id="loginEmpId" placeholder="請輸入工號" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="login-field"><label>密碼</label><input id="loginPwd" type="password" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="login-btn" onclick="doLogin()">登 入</button>
+      <div id="loginError" class="login-error"></div>
+    </div>
+    <div class="login-footer">AMHS Training &amp; Certification System v11</div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://127.0.0.1:5000';
+
+// 已登入就直接跳 app
+if(sessionStorage.getItem('amhs_token')){
+  location.href = 'app.html';
+}
+
+async function doLogin(){
+  const empId = document.getElementById('loginEmpId').value.trim();
+  const pwd   = document.getElementById('loginPwd').value;
+  const errEl = document.getElementById('loginError');
+  if(!empId || !pwd){
+    errEl.textContent = '請輸入工號與密碼';
+    errEl.style.display = 'block';
+    return;
+  }
+  try{
+    const res  = await fetch(API_BASE + '/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({empId, password: pwd})
+    });
+    const data = await res.json();
+    if(!res.ok){
+      errEl.textContent = data.error || '登入失敗';
+      errEl.style.display = 'block';
+      return;
+    }
+    sessionStorage.setItem('amhs_token', data.token);
+    sessionStorage.setItem('amhs_user',  JSON.stringify(data.user));
+    location.href = 'app.html';
+  }catch(e){
+    errEl.textContent = '無法連線至伺服器（確認 Flask 已啟動）';
+    errEl.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>

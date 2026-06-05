@@ -1,0 +1,58 @@
+2026-06-05 22:20:32 | INFO     | [LOGIN] 成功 | empId=F2568 | role=leader | ip=127.0.0.1
+2026-06-05 22:22:35 | INFO     | [LOGOUT] | empId=F2568 | ip=127.0.0.1
+2026-06-05 22:22:46 | INFO     | [LOGIN] 成功 | empId=K26641 | role=user | ip=127.0.0.1
+2026-06-05 22:22:57 | INFO     | [LOGOUT] | empId=K26641 | ip=127.0.0.1
+2026-06-05 22:28:31 | INFO     | [LOGIN] 成功 | empId=F2568 | role=leader | ip=127.0.0.1
+2026-06-05 22:29:54 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 資料更新 | ip=127.0.0.1
+2026-06-05 22:29:54 | INFO     | [WRITE:signers] F2568(Leader-F2568) | 簽核人員更新 | ip=127.0.0.1
+2026-06-05 22:29:54 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 22:29:54 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 資料更新 | ip=127.0.0.1
+2026-06-05 22:29:54 | INFO     | [WRITE:signers] F2568(Leader-F2568) | 簽核人員更新 | ip=127.0.0.1
+2026-06-05 22:29:54 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 22:29:55 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 資料更新 | ip=127.0.0.1
+2026-06-05 22:29:55 | INFO     | [WRITE:signers] F2568(Leader-F2568) | 簽核人員更新 | ip=127.0.0.1
+2026-06-05 22:29:55 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 22:30:01 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 資料更新 | ip=127.0.0.1
+2026-06-05 22:30:01 | INFO     | [WRITE:signers] F2568(Leader-F2568) | 簽核人員更新 | ip=127.0.0.1
+2026-06-05 22:30:01 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 22:30:05 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 資料更新 | ip=127.0.0.1
+2026-06-05 22:30:05 | INFO     | [WRITE:signers] F2568(Leader-F2568) | 簽核人員更新 | ip=127.0.0.1
+2026-06-05 22:30:05 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 22:30:09 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 資料更新 | ip=127.0.0.1
+2026-06-05 22:30:09 | INFO     | [WRITE:signers] F2568(Leader-F2568) | 簽核人員更新 | ip=127.0.0.1
+2026-06-05 22:30:09 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 22:35:51 | INFO     | [LOGIN] 成功 | empId=F2568 | role=leader | ip=127.0.0.1
+2026-06-05 22:36:00 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K25992(賴劭恆)] 第1天 學習內容: 「測試」 | ip=127.0.0.1
+2026-06-05 22:36:00 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 22:36:00 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K25992(賴劭恆)] 第1天 練習項目: 「測試」 | ip=127.0.0.1
+2026-06-05 22:36:01 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K25992(賴劭恆)] 第1天 備註: 「測試」 | ip=127.0.0.1
+2026-06-05 22:36:10 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K25992(賴劭恆)] 第1天 學長簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 22:36:14 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K25992(賴劭恆)] 第1天 Leader簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 22:36:18 | INFO     | [WRITE:employees] F2568(Leader-F2568) | (無變動) | ip=127.0.0.1
+2026-06-05 22:56:20 | INFO     | [LOGIN] 成功 | empId=F2568 | role=leader | ip=127.0.0.1
+2026-06-05 23:09:46 | INFO     | [WRITE:employees] F2568(Leader-F2568) | (無變動) | ip=127.0.0.1
+2026-06-05 23:09:46 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 23:10:18 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 新增人員=K18251 | ip=127.0.0.1
+2026-06-05 23:10:18 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 23:10:30 | INFO     | [WRITE:employees] F2568(Leader-F2568) | (無變動) | ip=127.0.0.1
+2026-06-05 23:10:33 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] 第1天 學習內容: 「測試」 | ip=127.0.0.1
+2026-06-05 23:10:34 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] 第1天 練習項目: 「測試」 | ip=127.0.0.1
+2026-06-05 23:10:34 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] 第1天 備註: 「測試」 | ip=127.0.0.1
+2026-06-05 23:10:38 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] 第1天 學長簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:10:41 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] 第1天 Leader簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:16:25 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 移除人員=K18251 | ip=127.0.0.1
+2026-06-05 23:16:25 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 23:16:56 | INFO     | [WRITE:employees] F2568(Leader-F2568) | 新增人員=K18251 | ip=127.0.0.1
+2026-06-05 23:21:40 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A1(智能巡檢) 分數: — → 80 | ip=127.0.0.1
+2026-06-05 23:21:40 | INFO     | [WRITE:accounts] F2568(Leader-F2568) | 帳號資料更新 | ip=127.0.0.1
+2026-06-05 23:21:43 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A2(SOP 操作) 分數: — → 80 | ip=127.0.0.1
+2026-06-05 23:21:46 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A3(系統登入) 分數: — → 80 | ip=127.0.0.1
+2026-06-05 23:21:48 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A4(交接班作業) 分數: — → 80 | ip=127.0.0.1
+2026-06-05 23:21:53 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A1(智能巡檢) 學長簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:21:56 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A2(SOP 操作) 學長簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:21:56 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A3(系統登入) 學長簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:21:57 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A4(交接班作業) 學長簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:21:59 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A1(智能巡檢) 主管簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:22:00 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A3(系統登入) 主管簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:22:02 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A2(SOP 操作) 主管簽核 ← F2568 | ip=127.0.0.1
+2026-06-05 23:22:04 | INFO     | [WRITE:employees] F2568(Leader-F2568) | [K18251(詹睿穎)] OJT A4(交接班作業) 主管簽核 ← F2568 | ip=127.0.0.1

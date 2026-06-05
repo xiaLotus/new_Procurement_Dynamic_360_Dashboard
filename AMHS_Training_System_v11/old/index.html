@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3000 AMHS 人員分級訓練紀錄與評鑑系統</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0c0f1a;--surface:#151929;--surface2:#1a1f36;--border:#1e293b;--border2:#2d3654;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--text4:#475569;
+  --blue:#3b82f6;--blue2:#60a5fa;--sky:#0ea5e9;--amber:#f59e0b;--violet:#8b5cf6;--red:#ef4444;--green:#16a34a;--green2:#4ade80;
+  --font:'Noto Sans TC','Segoe UI',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.5}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface2)}
+::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pop{0%{transform:scale(.95);opacity:0}100%{transform:scale(1);opacity:1}}
+.fade-up{animation:fadeUp .4s ease-out both}
+.slide-in{animation:slideIn .35s ease-out both}
+.pop{animation:pop .3s ease-out both}
+
+/* Layout */
+.wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.card-head{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card-body{padding:20px}
+
+/* Inputs */
+.field{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;font-family:var(--font)}
+.field:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.field::placeholder{color:var(--text4)}
+select.field{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+textarea.field{resize:vertical;min-height:50px}
+.field-sm{padding:6px 10px;font-size:12px}
+.label{font-size:11px;color:var(--text3);margin-bottom:4px;display:block;font-weight:500}
+.label-hint{color:var(--text4);font-weight:400}
+
+/* Grid */
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g-auto{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+@media(max-width:700px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid;font-family:var(--font);transition:all .2s;white-space:nowrap}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-ghost{background:transparent;border-color:var(--border2);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--blue);color:var(--blue2)}
+.btn-danger{background:#ef444418;border-color:#ef444450;color:#f87171}
+.btn-danger:hover{background:#ef444430}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn-xs{padding:3px 8px;font-size:11px;border-radius:6px}
+
+.sign-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;border:1px solid;font-family:var(--font)}
+.sign-unsigned{background:var(--surface2);border-color:#334155;color:var(--text2)}
+.sign-unsigned:hover{border-color:var(--blue);color:var(--blue2)}
+.sign-signed{background:#16a34a18;border-color:#16a34a50;color:var(--green2)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:var(--bg);border-radius:10px;padding:4px;border:1px solid var(--border)}
+.tab{padding:9px 20px;border:none;cursor:pointer;font-size:13px;font-weight:500;border-radius:8px;transition:all .25s;font-family:var(--font);background:transparent;color:var(--text3)}
+.tab.active{background:var(--border);color:var(--blue2);box-shadow:inset 0 0 0 1px rgba(37,99,235,.25)}
+.tab:hover:not(.active){color:var(--text2)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.level-badge{width:38px;height:24px;border-radius:6px;font-size:12px;font-weight:700;font-family:var(--mono);letter-spacing:.5px;display:inline-flex;align-items:center;justify-content:center}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{padding:10px 14px;font-size:11px;font-weight:600;color:var(--text3);text-align:left;white-space:nowrap;border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 14px;font-size:13px;border-bottom:1px solid rgba(30,41,59,.3)}
+.tbl tr:hover td{background:rgba(30,41,59,.2)}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;animation:pop .3s ease-out}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-body{padding:20px}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* Tag chip for signers */
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 12px;border-radius:20px;font-size:12px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2)}
+.chip-del{background:none;border:none;color:var(--text4);cursor:pointer;font-size:14px;padding:0 2px;line-height:1}
+.chip-del:hover{color:var(--red)}
+
+/* Signer lookup result */
+.signer-result{padding:6px 10px;border-radius:6px;font-size:12px;display:flex;align-items:center;gap:8px;margin-top:4px;animation:fadeUp .2s ease-out}
+.signer-found{background:#16a34a12;border:1px solid #16a34a30;color:var(--green2)}
+.signer-notfound{background:#ef444412;border:1px solid #ef444430;color:#f87171}
+
+/* Search bar */
+.search-bar{position:relative}
+.search-bar .field{padding-left:36px}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text4);pointer-events:none}
+
+/* Pagination dots */
+.page-dots{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.page-dot{width:32px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text3);font-size:12px;font-family:var(--mono);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.page-dot.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.page-dot:hover:not(.active){border-color:var(--blue);color:var(--blue2)}
+
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:12px;opacity:.4}
+
+/* Misc */
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.flex{display:flex}.items-center{align-items:center}.gap-8{gap:8px}.gap-10{gap:10px}.gap-12{gap:12px}
+.ml-auto{margin-left:auto}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-20{margin-bottom:20px}
+.fw-wrap{flex-wrap:wrap}
+.hidden{display:none!important}
+
+/* Login Page */
+#loginPage{position:fixed;inset:0;z-index:200;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.login-box{width:100%;max-width:400px;padding:0 20px}
+.login-logo{text-align:center;margin-bottom:36px}
+.login-logo .logo-icon{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#1e3a5f,#2563eb);display:inline-flex;align-items:center;justify-content:center;margin-bottom:16px;box-shadow:0 8px 32px rgba(37,99,235,.25)}
+.login-logo .logo-icon svg{width:36px;height:36px;fill:none;stroke:#e2e8f0;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.login-card h2{font-size:18px;font-weight:700;margin-bottom:4px;text-align:center}
+.login-card .login-sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:24px}
+.login-field{margin-bottom:16px}
+.login-field label{font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px}
+.login-field input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:14px;font-family:var(--font);outline:none;transition:border-color .2s,box-shadow .2s}
+.login-field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.login-field input::placeholder{color:var(--text4)}
+.login-btn{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:opacity .2s,transform .1s;margin-top:8px}
+.login-btn:hover{opacity:.9}
+.login-btn:active{transform:scale(.98)}
+.login-error{background:#ef444418;border:1px solid #ef444440;color:#f87171;font-size:12px;padding:8px 12px;border-radius:8px;margin-top:12px;text-align:center;display:none}
+.login-footer{text-align:center;margin-top:20px;font-size:11px;color:var(--text4)}
+.user-bar{display:flex;align-items:center;gap:10px;padding:6px 14px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2)}
+.user-bar .user-avatar{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.user-bar .user-info{font-size:12px;line-height:1.4}
+.user-bar .user-name{font-weight:600;color:var(--text)}
+.user-bar .user-role{color:var(--text3);font-size:10px}
+.logout-btn{background:none;border:1px solid var(--border2);border-radius:8px;padding:5px 12px;font-size:11px;color:var(--text3);cursor:pointer;font-family:var(--font);transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:#f87171}
+
+/* ===== Stat Cards (headcount summary) ===== */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:760px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:440px){.stat-grid{grid-template-columns:1fr}}
+.stat-card{position:relative;background:linear-gradient(135deg,#11162a,#0e1322);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:12px;padding:16px 18px;overflow:hidden;transition:transform .18s,box-shadow .18s,border-color .18s;cursor:default}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35);border-color:var(--border2)}
+.stat-card .stat-top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.stat-card .stat-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--amber);background:rgba(245,158,11,.12)}
+.stat-card .stat-ic svg{width:20px;height:20px;fill:currentColor}
+.stat-card .stat-name{font-size:14px;font-weight:700;color:var(--text)}
+.stat-card .stat-sub{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--amber);text-transform:uppercase}
+.stat-card .stat-val{font-family:var(--mono);font-size:34px;font-weight:900;line-height:1;color:#fbbf24}
+.stat-card .stat-unit{font-size:13px;color:var(--text3);font-weight:500;margin-left:4px}
+.stat-card .stat-tag{position:absolute;right:14px;bottom:12px;font-size:13px;font-weight:700;color:var(--blue2)}
+.stat-card.amber{border-left-color:var(--amber)}
+.stat-card.amber .stat-ic{color:var(--amber);background:rgba(245,158,11,.12)} .stat-card.amber .stat-val{color:#fbbf24}
+.stat-card.green{border-left-color:var(--green2)} .stat-card.green .stat-ic{color:var(--green2);background:rgba(74,222,128,.12)} .stat-card.green .stat-val{color:var(--green2)} .stat-card.green .stat-sub{color:var(--green2)}
+.stat-card.sky{border-left-color:var(--sky)} .stat-card.sky .stat-ic{color:var(--blue2);background:rgba(14,165,233,.12)} .stat-card.sky .stat-val{color:var(--blue2)} .stat-card.sky .stat-sub{color:var(--blue2)}
+.stat-card.violet{border-left-color:var(--violet)} .stat-card.violet .stat-ic{color:#a78bfa;background:rgba(139,92,246,.12)} .stat-card.violet .stat-val{color:#a78bfa} .stat-card.violet .stat-sub{color:#a78bfa}
+
+/* ===== Radar Chart ===== */
+.radar-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.radar-svg{flex:0 0 auto}
+.radar-svg text{font-family:var(--font)}
+.radar-legend{flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px}
+.radar-leg-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.radar-leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.radar-leg-name{color:var(--text2);flex:1}
+.radar-leg-score{font-family:var(--mono);font-weight:700;color:var(--text)}
+
+/* ===== Save Bar ===== */
+.save-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 16px;margin-bottom:16px}
+.save-bar .save-title{font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:7px}
+.save-status{display:inline-flex;align-items:center;gap:6px;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.save-status.saved{background:#16a34a18;border:1px solid #16a34a40;color:var(--green2)}
+.save-status.dirty{background:#f59e0b18;border:1px solid #f59e0b40;color:var(--amber)}
+.save-status.locked{background:#ef444418;border:1px solid #ef444440;color:#f87171}
+.save-meta{font-size:11px;color:var(--text3)}
+.save-meta strong{font-family:var(--mono);color:var(--blue2)}
+.toggle{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text2);user-select:none}
+.toggle input{display:none}
+.toggle .track{width:38px;height:20px;border-radius:20px;background:var(--border2);transition:background .2s;position:relative;flex-shrink:0}
+.toggle .track:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle input:checked + .track{background:var(--green)}
+.toggle input:checked + .track:after{transform:translateX(18px)}
+.save-warn{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1a1020;border:1px solid #ef444460;color:#fca5a5;padding:12px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:500;box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;transition:transform .3s,opacity .3s;display:flex;align-items:center;gap:10px;pointer-events:none}
+.save-warn.show{transform:translateX(-50%) translateY(0);opacity:1}
+.save-toast{position:fixed;bottom:24px;right:24px;background:#0f1f16;border:1px solid #16a34a55;color:var(--green2);padding:11px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:500;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;transform:translateY(20px);transition:opacity .3s,transform .3s;display:flex;align-items:center;gap:8px}
+.save-toast.show{opacity:1;transform:translateY(0)}
+
+/* ===== Redesigned Personal Info Panel ===== */
+.emp-detail-body{padding:0!important}
+.emp-hero{display:flex;align-items:center;gap:18px;padding:20px 24px;background:linear-gradient(135deg,#0f1a36 0%,#1a1040 50%,#0f1a36 100%);border-bottom:1px solid var(--border2);flex-wrap:wrap}
+.emp-avatar{width:62px;height:62px;border-radius:16px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;flex-shrink:0;box-shadow:0 6px 20px rgba(37,99,235,.35)}
+.emp-hero-main{flex:1;min-width:160px}
+.emp-hero-name{font-size:22px;font-weight:900;color:var(--text);line-height:1.15;margin-bottom:4px}
+.emp-hero-id{font-family:var(--mono);font-size:13px;color:var(--blue2);font-weight:700;letter-spacing:.5px}
+.emp-hero-tags{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.emp-type-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:rgba(139,92,246,.18);border:1px solid rgba(139,92,246,.4);color:#c4b5fd;font-size:12px;font-weight:700}
+.emp-hero-stat{display:flex;flex-direction:column;align-items:center;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border2);min-width:88px}
+.emp-hero-stat .v{font-family:var(--mono);font-size:18px;font-weight:900;color:var(--blue2);line-height:1}
+.emp-hero-stat .l{font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:3px;text-transform:uppercase}
+
+.emp-info-body{padding:18px 22px;border-bottom:1px solid var(--border2)}
+.emp-info-section + .emp-info-section{margin-top:18px}
+.emp-section-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.emp-section-title .pip{width:8px;height:8px;border-radius:2px}
+
+.emp-field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.emp-field-row{grid-template-columns:1fr}}
+.emp-field-row > div{display:flex;flex-direction:column;gap:4px}
+.emp-field-row label{font-size:11px;color:var(--text3);font-weight:600}
+
+.emp-signer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.emp-signer-grid{grid-template-columns:1fr}}
+.emp-signer-card{padding:12px 14px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);transition:border-color .2s}
+.emp-signer-card:hover{border-color:var(--blue)}
+.emp-signer-head{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:1.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.emp-signer-head .pip{width:6px;height:6px;border-radius:50%}
+.emp-signer-body{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.emp-signer-av{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px;flex-shrink:0}
+.emp-signer-name{font-weight:700;font-size:14px;color:var(--text);line-height:1.2}
+.emp-signer-pos{font-size:11px;color:var(--text3);margin-top:2px}
+.emp-signer-empty{display:flex;align-items:center;gap:8px;color:var(--text4);font-size:12px;padding:4px 0;font-style:italic}
+
+/* Right column: training progress */
+.emp-prog-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.emp-prog-row:last-child{margin-bottom:0}
+.emp-prog-ic{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.emp-prog-mid{flex:1}
+.emp-prog-label{font-size:12px;color:var(--text2);font-weight:600;display:flex;justify-content:space-between;margin-bottom:4px}
+.emp-prog-label .num{font-family:var(--mono);color:var(--text3);font-weight:700}
+.emp-prog-bar{height:7px;border-radius:4px;background:var(--surface2);overflow:hidden;border:1px solid var(--border2)}
+.emp-prog-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.emp-prog-pct{font-family:var(--mono);font-size:13px;font-weight:800;min-width:42px;text-align:right}
+
+/* Score + Radar combined panel */
+.emp-skill-panel{display:grid;grid-template-columns:240px 1fr;gap:0;background:linear-gradient(135deg,#0d1426 0%,#0e1322 100%)}
+@media(max-width:760px){.emp-skill-panel{grid-template-columns:1fr}}
+.emp-score-box{padding:24px 22px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;border-right:1px solid var(--border2);background:rgba(255,255,255,.015)}
+@media(max-width:760px){.emp-score-box{border-right:none;border-bottom:1px solid var(--border2);align-items:center}}
+.emp-score-label{font-size:11px;color:var(--text3);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.emp-score-big{display:flex;align-items:baseline;gap:6px;margin-bottom:14px}
+.emp-score-num{font-family:var(--mono);font-size:64px;font-weight:900;line-height:.95}
+.emp-score-unit{font-size:20px;font-weight:600;color:var(--text3)}
+.emp-score-grade{font-family:var(--mono);font-size:24px;font-weight:900;padding:6px 16px;border-radius:10px;letter-spacing:1px}
+.emp-score-empty{font-family:var(--mono);font-size:48px;color:var(--text4);font-weight:900}
+.emp-score-note{font-size:11px;color:var(--text3);margin-top:10px}
+
+.emp-radar-box{padding:18px 22px}
+.emp-radar-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.emp-radar-title .ic{font-size:18px}
+.emp-radar-title .t{font-size:14px;font-weight:700;color:var(--text)}
+.emp-radar-title .s{font-size:11px;color:var(--text3);margin-left:6px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="loginPage" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg></div>
+      <div style="font-size:11px;color:var(--blue2);font-weight:600;letter-spacing:3px">3000 AMHS</div>
+      <div style="font-size:18px;font-weight:900;color:var(--text);margin-top:4px">人員分級訓練紀錄與評鑑系統</div>
+    </div>
+    <div class="login-card">
+      <h2>系統登入</h2>
+      <div class="login-sub">請輸入您的工號與密碼</div>
+      <div class="login-field"><label>工號</label><input id="loginEmpId" placeholder="請輸入工號" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="login-field"><label>密碼</label><input id="loginPwd" type="password" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="login-btn" onclick="doLogin()">登 入</button>
+      <div id="loginError" class="login-error"></div>
+    </div>
+    <div class="login-footer">AMHS Training &amp; Certification System v11</div>
+  </div>
+</div>
+
+<!-- APP MAIN (hidden until login) -->
+<div id="appMain" style="display:none">
+
+<!-- HEADER -->
+<div style="background:linear-gradient(135deg,#0f172a 0%,#1a1040 50%,#0f172a 100%);border-bottom:1px solid var(--border);padding:26px 0 18px">
+  <div class="wrap">
+    <div class="flex items-center gap-12 fw-wrap">
+      <div>
+        <div style="font-size:11px;color:var(--blue2);font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">3000 AMHS · TRAINING SYSTEM</div>
+        <h1 style="font-size:24px;font-weight:900;background:linear-gradient(135deg,#e2e8f0,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.3">人員分級訓練紀錄與評鑑</h1>
+      </div>
+      <div class="ml-auto flex items-center gap-8 fw-wrap">
+        <div id="userBarContainer"></div>
+        <button class="btn btn-ghost btn-sm leader-only" onclick="exportData()" title="匯出 JSON">⬇ 匯出</button>
+        <button class="btn btn-ghost btn-sm leader-only" onclick="document.getElementById('importFile').click()" title="匯入 JSON">⬆ 匯入</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="logout-btn" onclick="doLogout()">登出</button>
+      </div>
+    </div>
+    <div class="tabs mt-16" style="display:inline-flex">
+      <button class="tab active" data-tab="training" onclick="switchTab('training')">訓練紀錄表</button>
+      <button class="tab leader-only" data-tab="ojt" onclick="switchTab('ojt')">學長 OJT 簽核</button>
+      <button class="tab" data-tab="cert" onclick="switchTab('cert')">認證標準總覽</button>
+      <button class="tab leader-only" data-tab="settings" onclick="switchTab('settings')">⚙ 系統設定</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" style="padding-top:24px;padding-bottom:60px">
+
+  <!-- ===== SAVE CONTROL BAR (global) ===== -->
+  <div id="saveBar"></div>
+
+  <!-- ============ TAB: TRAINING ============ -->
+  <div id="tab-training">
+
+    <!-- Headcount Stats -->
+    <div id="statsBar" class="mb-16 fade-up"></div>
+
+    <!-- Search & Add -->
+    <div class="flex items-center gap-12 mb-16 fw-wrap fade-up">
+      <div class="search-bar" style="flex:1;min-width:220px">
+        <span class="search-icon">🔍</span>
+        <input class="field" id="searchInput" placeholder="搜尋工號或姓名..." oninput="filterEmployees()">
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="filterEmployees('all')" id="btnAll">全部人員</button>
+      <button class="btn btn-primary btn-sm leader-only" onclick="openAddEmployee()">＋ 新增人員</button>
+    </div>
+
+    <!-- Score Grade Reference -->
+    <div id="scoreGradeBar" class="mb-16 fade-up" style="animation-delay:.02s"></div>
+
+    <!-- Employee List -->
+    <div id="employeeList" class="mb-20 fade-up" style="animation-delay:.05s"></div>
+
+    <!-- Selected Employee Detail -->
+    <div id="employeeDetail" class="hidden"></div>
+  </div>
+
+  <!-- ============ TAB: OJT ============ -->
+  <div id="tab-ojt" class="hidden"></div>
+
+  <!-- ============ TAB: CERTIFICATION ============ -->
+  <div id="tab-cert" class="hidden"></div>
+
+  <!-- ============ TAB: SETTINGS ============ -->
+  <div id="tab-settings" class="hidden"></div>
+
+</div>
+
+<!-- Modal container -->
+<div id="modalRoot"></div>
+
+<!-- Global save notifications -->
+<div id="saveWarn" class="save-warn">⚠ <span id="saveWarnMsg">請稍待再進行儲存</span></div>
+<div id="saveToast" class="save-toast">✓ <span id="saveToastMsg">已儲存</span></div>
+
+</div><!-- end #appMain -->
+
+<script>
+
+// ─── EMBEDDED SEED DATA (used only when localStorage is empty) ───
+const EMBEDDED_SEED_DATA = {"employees":[{"id":"mpweghp1wqye","empId":"K26285","name":"邱立承","startDate":"2026-03-16","mentor":"D8977","leader":"G4535","type":"新人訓練","dailyRecords":[{"day":1,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"B","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"C","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"C","score":"79","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L3","score":"82","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""}]},{"id":"mpwei2u1xv4f","empId":"K26287","name":"吳俊耀","startDate":"2026-03-16","mentor":"G0181","leader":"C8849","type":"新人訓練","dailyRecords":[{"day":1,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"L3","score":"85","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L4","score":"100","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L4","score":"100","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L1","score":"50","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L1","score":"50","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L1","score":"50","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L1","score":"60","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L3","score":"89","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""}]},{"id":"mpwej2ts8mg0","empId":"K26491","name":"林軒羽","startDate":"2026-03-23","mentor":"G0181","leader":"C8849","type":"新人訓練","dailyRecords":[{"day":1,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"L2","score":"76","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"L3","score":"88","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"L3","score":"89","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L1","score":"68","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L3","score":"89","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L3","score":"85","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L2","score":"73","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""}]},{"id":"mpwemabi8c73","empId":"K25578","name":"梁凱葳","startDate":"2026-01-19","mentor":"F1350","leader":"F9144","type":"新人訓練","dailyRecords":[{"day":1,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L2","score":"73","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""}]},{"id":"mpwenqhjhgw4","empId":"K26641","name":"高偉豪","startDate":"2026-04-07","mentor":"G0181","leader":"C8849","type":"新人訓練","dailyRecords":[{"day":1,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"L4","score":"100","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"L1","score":"50","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"L1","score":"50","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L3","score":"89","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L3","score":"89","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L2","score":"72","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L2","score":"72","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L2","score":"72","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L2","score":"72","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L2","score":"72","mentorNote":"","mentorSignerId":"","supervisorSignerId":""}]},{"id":"mpwep93meenv","empId":"K26288","name":"林冠何","startDate":"2026-03-16","mentor":"F1350","leader":"F9144","type":"新人訓練","dailyRecords":[{"day":1,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"L3","score":"88","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"L3","score":"89","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L3","score":"82","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L3","score":"82","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L2","score":"75","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L1","score":"69","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L3","score":"85","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L2","score":"75","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L3","score":"88","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""}]},{"id":"mpweqpe1y0nx","empId":"K25992","name":"賴劭恆","startDate":"2026-02-23","mentor":"F9473","leader":"F8950","type":"新人訓練","dailyRecords":[{"day":1,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L2","score":"75","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L3","score":"89","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L3","score":"86","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L4","score":"97","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L2","score":"73","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L2","score":"73","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L3","score":"88","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""}]},{"id":"mpwery3rzaqp","empId":"K25715","name":"洪偉展","startDate":"2026-02-02","mentor":"F9473","leader":"F8950","type":"新人訓練","dailyRecords":[{"day":1,"date":"2026-03-11","learningItems":"01.K11-5F 3380 自動化烤箱操作\n02.K11-5F 3390 PLASMA自動化作業流程","practiceItems":"01.概述3380、3390自動化派貨流程\n02.流道卡料處理手法","mentorScore":"80","mentorAttitude":"3","leaderScore":"7","total":90,"notes":"透過實際操作學習自動化烤箱搬運流程，熟悉設備運作與操作步驟，提升作業效率、安全意識及異常處理能力。","mentorSignerId":"F9473","leaderSignerId":"F2568"},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"B","score":"80","mentorNote":"能獨自操作完成巡檢","mentorSignerId":"F8950","supervisorSignerId":"C9228"},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"L2","score":"79","mentorNote":"能獨自操作，但不熟悉","mentorSignerId":"F8950","supervisorSignerId":"F2568"},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"C","score":"75","mentorNote":"部分功能尚需提醒","mentorSignerId":"F8950","supervisorSignerId":"C9228"},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"L2","score":"79","mentorNote":"提醒處理異常需拍照","mentorSignerId":"F8950","supervisorSignerId":"F2568"},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L3","score":"82","mentorNote":"一般卡料已可處理","mentorSignerId":"F9473","supervisorSignerId":"C9228"},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"基礎Alarm已可排除","mentorSignerId":"F8950","supervisorSignerId":"F2568"},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L2","score":"75","mentorNote":"尚無法獨自查修處理","mentorSignerId":"F9473","supervisorSignerId":"F2568"},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"可獨自操作回Home","mentorSignerId":"F8950","supervisorSignerId":"F2568"},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L2","score":"76","mentorNote":"一般卡帳已可處理","mentorSignerId":"F8950","supervisorSignerId":"C9228"},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L3","score":"86","mentorNote":"已熟悉自動搬運流程","mentorSignerId":"F1350","supervisorSignerId":"C9228"},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L2","score":"79","mentorNote":"派貨Rule邏輯還需要了解","mentorSignerId":"29711","supervisorSignerId":"C9228"},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"已可獨自切換手/自動","mentorSignerId":"F8950","supervisorSignerId":"F2568"},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"初步過帳流程理解","mentorSignerId":"29711","supervisorSignerId":"C9228"},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L2","score":"72","mentorNote":"尚無法獨自判斷機故等級","mentorSignerId":"G4535","supervisorSignerId":"C9228"},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"還需要學長協助幫忙","mentorSignerId":"F8950","supervisorSignerId":"C9228"},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L2","score":"71","mentorNote":"尚無法獨自處理突發異常","mentorSignerId":"29711","supervisorSignerId":"F2568"},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L2","score":"72","mentorNote":"已可記錄機故，尚需補充","mentorSignerId":"F1350","supervisorSignerId":"F2568"}]},{"id":"mpwetc08w5zd","empId":"K26490","name":"賴俞達","startDate":"2026-02-02","mentor":"F9473","leader":"F8950","type":"新人訓練","dailyRecords":[{"day":1,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":2,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":3,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":4,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""},{"day":5,"date":"","learningItems":"","practiceItems":"","mentorScore":"","mentorAttitude":"","leaderScore":"","total":"","notes":"","mentorSignerId":"","leaderSignerId":""}],"ojtRecords":[{"id":"A1","category":"A","name":"智能巡檢","desc":"日常設備確認","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A2","category":"A","name":"SOP 操作","desc":"標準流程執行","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A3","category":"A","name":"系統登入","desc":"MES 使用 / Alarm 確認 / 基本異常辨識","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"A4","category":"A","name":"交接班作業","desc":"班報與資訊交接","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B1","category":"B","name":"Jam 排除","desc":"卡料異常處理","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B2","category":"B","name":"Alarm Reset","desc":"Alarm 復歸","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B3","category":"B","name":"Sensor 異常","desc":"I/O 與 Sensor 確認","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B4","category":"B","name":"Robot Recovery","desc":"手臂復歸處理","targetLevel":"L1","currentLevel":"L2","score":"78","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"B5","category":"B","name":"帳籍卡站處理","desc":"生產異常排除","targetLevel":"L1","currentLevel":"L3","score":"88","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C1","category":"C","name":"AMHS 流程","desc":"搬送流程概念","targetLevel":"L1","currentLevel":"L4","score":"93","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C2","category":"C","name":"Conveyor 邏輯","desc":"自動派貨 Rule 理解","targetLevel":"L1","currentLevel":"L4","score":"93","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C3","category":"C","name":"Auto / Manual","desc":"模式切換理解","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"C4","category":"C","name":"系統關聯性","desc":"Auto Move In/Out 理解","targetLevel":"L1","currentLevel":"L2","score":"70","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D1","category":"D","name":"異常回報","desc":"Escalation 判斷","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D2","category":"D","name":"MFG 溝通","desc":"現場協調能力","targetLevel":"L1","currentLevel":"L3","score":"80","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D3","category":"D","name":"夜班應變","desc":"緊急狀況處理","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""},{"id":"D4","category":"D","name":"問題紀錄","desc":"Issue 紀錄完整度","targetLevel":"L1","currentLevel":"L4","score":"90","mentorNote":"","mentorSignerId":"","supervisorSignerId":""}]}],"signers":[{"signerId":"F2568","name":"Chichen Lin","position":"主任"},{"signerId":"C9228","name":"Otis Wang","position":"資深工程師"},{"signerId":"G9745","name":"LC WANG","position":"主任"},{"signerId":"C8849","name":"林郁祥","position":"組長"},{"signerId":"G4535","name":"陳思維","position":"組長"},{"signerId":"G0181","name":"吳培銘","position":"組長"},{"signerId":"D8977","name":"陳彥名","position":"組長"},{"signerId":"F9144","name":"張誌中","position":"組長"},{"signerId":"F1350","name":"黃慕生","position":"組長"},{"signerId":"F8950","name":"黃偉利","position":"組長"},{"signerId":"F9473","name":"江政樺","position":"組長"},{"signerId":"G7083","name":"吳和諺","position":"L4 資深值班"},{"signerId":"29711","name":"陳源德","position":"L4 資深值班"}]};
+// ─── ACCOUNTS ───
+const ACCOUNTS_DEFAULT = [
+  {empId:'F2568', password:'F2568', role:'leader', name:'Leader-F2568'},
+  {empId:'C9228', password:'C9228', role:'leader', name:'Leader-C9228'},
+  {empId:'K25578', password:'K25578', role:'user', name:'User-K25578'},
+  {empId:'K25715', password:'K25715', role:'user', name:'User-K25715'},
+  {empId:'K25992', password:'K25992', role:'user', name:'User-K25992'},
+  {empId:'K26285', password:'K26285', role:'user', name:'User-K26285'},
+  {empId:'K26287', password:'K26287', role:'user', name:'User-K26287'},
+  {empId:'K26288', password:'K26288', role:'user', name:'User-K26288'},
+  {empId:'K26490', password:'K26490', role:'user', name:'User-K26490'},
+  {empId:'K26491', password:'K26491', role:'user', name:'User-K26491'},
+  {empId:'K26641', password:'K26641', role:'user', name:'User-K26641'}
+];
+let ACCOUNTS = JSON.parse(JSON.stringify(ACCOUNTS_DEFAULT));
+// Load saved accounts
+try{ const sa=localStorage.getItem('amhs_accounts'); if(sa) ACCOUNTS=JSON.parse(sa); }catch(e){}
+let currentUser = null;
+function doLogin(){
+  const empId=document.getElementById('loginEmpId').value.trim();
+  const pwd=document.getElementById('loginPwd').value;
+  const errEl=document.getElementById('loginError');
+  if(!empId||!pwd){errEl.textContent='請輸入工號與密碼';errEl.style.display='block';return;}
+  const acct=ACCOUNTS.find(a=>a.empId===empId&&a.password===pwd);
+  if(!acct){errEl.textContent='工號或密碼錯誤，請重新輸入';errEl.style.display='block';return;}
+  currentUser={empId:acct.empId,role:acct.role,name:acct.name};
+  localStorage.setItem('amhs_session',JSON.stringify(currentUser));
+  enterApp();
+}
+function doLogout(){
+  currentUser=null;
+  localStorage.removeItem('amhs_session');
+  document.getElementById('appMain').style.display='none';
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('loginEmpId').value='';
+  document.getElementById('loginPwd').value='';
+  document.getElementById('loginError').style.display='none';
+}
+function enterApp(){
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('appMain').style.display='block';
+  applyRoleUI();
+  renderSaveBar();
+  switchTab('training');
+}
+function isLeader(){return currentUser&&currentUser.role==='leader';}
+function applyRoleUI(){
+  const bar=document.getElementById('userBarContainer');
+  const roleLabel=isLeader()?'Leader':'User';
+  const roleColor=isLeader()?'#16a34a':'#0ea5e9';
+  bar.innerHTML='<div class="user-bar"><div class="user-avatar" style="background:'+roleColor+'">'+currentUser.empId.charAt(0)+'</div><div class="user-info"><div class="user-name">'+currentUser.empId+'</div><div class="user-role" style="color:'+roleColor+'">'+roleLabel+'</div></div></div>';
+  document.querySelectorAll('.leader-only').forEach(function(el){el.style.display=isLeader()?'':'none';});
+}
+
+// ─── DATA MODEL ───
+const ABILITY_DATA = {
+  A:{label:"基礎操作能力",en:"BASIC OPERATIONS",color:"#0ea5e9",items:[
+    {id:"A1",name:"智能巡檢",desc:"日常設備確認"},
+    {id:"A2",name:"SOP 操作",desc:"標準流程執行"},
+    {id:"A3",name:"系統登入",desc:"MES 使用 / Alarm 確認 / 基本異常辨識"},
+    {id:"A4",name:"交接班作業",desc:"班報與資訊交接"}
+  ]},
+  B:{label:"異常處理能力",en:"FAULT HANDLING",color:"#f59e0b",items:[
+    {id:"B1",name:"Jam 排除",desc:"卡料異常處理"},
+    {id:"B2",name:"Alarm Reset",desc:"Alarm 復歸"},
+    {id:"B3",name:"Sensor 異常",desc:"I/O 與 Sensor 確認"},
+    {id:"B4",name:"Robot Recovery",desc:"手臂復歸處理"},
+    {id:"B5",name:"帳籍卡站處理",desc:"生產異常排除"}
+  ]},
+  C:{label:"系統理解能力",en:"SYSTEM KNOWLEDGE",color:"#8b5cf6",items:[
+    {id:"C1",name:"AMHS 流程",desc:"搬送流程概念"},
+    {id:"C2",name:"Conveyor 邏輯",desc:"自動派貨 Rule 理解"},
+    {id:"C3",name:"Auto / Manual",desc:"模式切換理解"},
+    {id:"C4",name:"系統關聯性",desc:"Auto Move In/Out 理解"}
+  ]},
+  D:{label:"值班應對能力",en:"ON-DUTY RESPONSE",color:"#ef4444",items:[
+    {id:"D1",name:"異常回報",desc:"Escalation 判斷"},
+    {id:"D2",name:"MFG 溝通",desc:"現場協調能力"},
+    {id:"D3",name:"夜班應變",desc:"緊急狀況處理"},
+    {id:"D4",name:"問題紀錄",desc:"Issue 紀錄完整度"}
+  ]}
+};
+
+const LEVELS_DATA = [
+  {level:"L1",title:"訓練初期",subtitle:"需學長陪同",method:"觀察法 OBSERVATION",
+   conditions:["正確說明 SOP 步驟，全程不需提示","執行設備巡檢無跳漏任何項目","遇 Alarm 能說出第一步處置動作"],
+   tools:"訓練紀錄表 / 學長現場觀察",pass:"三項全達標・學長簽核 ✓",color:"#64748b"},
+  {level:"L2",title:"基本值班",subtitle:"依 SOP 獨立",method:"實作驗證 PRACTICAL TEST",
+   conditions:["獨立完成指定 SOP，無需任何提示","Alarm Reset 於時限內復歸完成","交接班清單填寫完整無缺漏"],
+   tools:"操作檢核表 / 計時驗收",pass:"零提示零重工・主管簽核 ✓",color:"#0ea5e9"},
+  {level:"L3",title:"正式值班",subtitle:"獨立處理異常",method:"模擬情境測試 SCENARIO TEST",
+   conditions:["異常排除於規定時間內完成","能研判異常原因並正確處理","異常回報含時間・現況・處置"],
+   tools:"情境題卡 / 值班觀察記錄",pass:"2 題全通過・早夜值班各 1 輪 ✓",color:"#f59e0b"},
+  {level:"L4",title:"資深值班",subtitle:"主導＋教學",method:"綜合評核 PEER REVIEW",
+   conditions:["能帶領 L2 以下工程師排除異常","完成一次新人教學並由主管評分","獨立撰寫或更新至少 1 份 SOP"],
+   tools:"主管訪談 / 問卷 + SOP 審查",pass:"三項均達標・部門主管核准 ✓",color:"#ef4444"}
+];
+
+const SCORE_LABELS = [
+  {min:90,max:100,label:"非常熟練",grade:"L4",color:"#16a34a"},
+  {min:80,max:89,label:"熟練",grade:"L3",color:"#0ea5e9"},
+  {min:70,max:79,label:"操作正確但不熟練",grade:"L2",color:"#f59e0b"},
+  {min:0,max:69,label:"操作錯誤，須重新訓練",grade:"L1",color:"#ef4444"}
+];
+
+function getScoreInfo(s){
+  if(s===''||s===null||s===undefined)return null;
+  const n=Number(s);if(isNaN(n))return null;
+  return SCORE_LABELS.find(l=>n>=l.min&&n<=l.max)||null;
+}
+
+function getEmpCatSummary(emp, catKey) {
+  const catItems = emp.ojtRecords.filter(r => r.category === catKey);
+  const scored = catItems.filter(r => r.score !== '' && r.score !== null && r.score !== undefined);
+  const gradeCount = {L4:0,L3:0,L2:0,L1:0};
+  scored.forEach(r => { const si = getScoreInfo(r.score); if(si) gradeCount[si.grade]++; });
+  return { scored: scored.length, total: catItems.length, gradeCount };
+}
+
+function getEmpCatLevel(emp, catKey) {
+  const catItems = emp.ojtRecords.filter(r => r.category === catKey);
+  const scored = catItems.filter(r => r.score !== '' && r.score !== null && r.score !== undefined);
+  if(scored.length === 0) return null;
+  const avg = Math.round(scored.reduce((a,r) => a + Number(r.score), 0) / scored.length);
+  return getScoreInfo(avg);
+}
+
+function catSummaryCell(emp, catKey, color) {
+  const si = getEmpCatLevel(emp, catKey);
+  if(!si) return '<span style="color:var(--text4);font-size:12px">—</span>';
+  return '<span class="level-badge" style="background:' + si.color + '20;color:' + si.color + ';border:1px solid ' + si.color + '40">' + si.grade + '</span>';
+}
+
+function getEmpOjtAvgScore(emp) {
+  const scored = emp.ojtRecords.filter(r => r.score !== '' && r.score !== null && r.score !== undefined);
+  if(scored.length === 0) return null;
+  return Math.round(scored.reduce((a,r) => a + Number(r.score), 0) / scored.length);
+}
+
+// Average raw score (0-100) for one category, or null if none scored
+function getEmpCatAvgScore(emp, catKey){
+  const scored = emp.ojtRecords.filter(r => r.category === catKey && r.score !== '' && r.score !== null && r.score !== undefined);
+  if(scored.length === 0) return null;
+  return Math.round(scored.reduce((a,r) => a + Number(r.score), 0) / scored.length);
+}
+
+// Overall grade bucket for headcount stats: 'L4','L3','L2','L1', or 'new' (no scores yet)
+function getEmpOverallGrade(emp){
+  const avg = getEmpOjtAvgScore(emp);
+  if(avg === null) return 'new';
+  const si = getScoreInfo(avg);
+  return si ? si.grade : 'L1';
+}
+
+// ─── REDESIGN HELPERS ───
+function daysSince(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr);
+  if(isNaN(d.getTime())) return null;
+  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+}
+function colorFromId(s){
+  s = s || '?';
+  let h = 0;
+  for(let i=0;i<s.length;i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  const palette = ['#3b82f6','#8b5cf6','#0ea5e9','#16a34a','#f59e0b','#ef4444','#ec4899','#14b8a6','#6366f1','#d946ef'];
+  return palette[Math.abs(h) % palette.length];
+}
+function firstChar(s){
+  if(!s) return '?';
+  const c = String(s).trim().charAt(0);
+  return c ? c.toUpperCase() : '?';
+}
+function fmtDateZh(d){
+  if(!d) return '—';
+  return String(d).replace(/-/g,'/');
+}
+function getEmpProgress(emp){
+  const daily = emp.dailyRecords || [];
+  const ojt   = emp.ojtRecords || [];
+  const dailyDone = daily.filter(r => (r.learningItems||r.practiceItems||r.notes||r.date||'').toString().trim().length > 0).length;
+  const ojtScored = ojt.filter(r => r.score!=='' && r.score!==null && r.score!==undefined).length;
+  const mentorSigned = ojt.filter(r => r.mentorSignerId).length;
+  const supSigned    = ojt.filter(r => r.supervisorSignerId).length;
+  return {
+    dailyDone, dailyTotal: daily.length,
+    ojtScored, ojtTotal: ojt.length,
+    mentorSigned, supSigned
+  };
+}
+
+function scoreGradeBarHTML() {
+  return '<div style="display:flex;gap:10px;flex-wrap:wrap">' + SCORE_LABELS.map(function(s) {
+    return '<div style="flex:1;min-width:170px;display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:10px;background:var(--surface);border:1px solid ' + s.color + '30">' +
+    '<span style="font-family:var(--mono);font-size:18px;font-weight:900;color:' + s.color + ';min-width:30px">' + s.grade + '</span>' +
+    '<div><div style="font-size:13px;font-weight:600;color:' + s.color + '">' + s.min + '–' + s.max + ' 分</div>' +
+    '<div style="font-size:11px;color:var(--text2)">' + s.label + '</div></div></div>';
+  }).join('') + '</div>';
+}
+
+function levelToNum(l){return l?parseInt(l.replace('L','')):0}
+
+// ─── HEADCOUNT STATS (live) ───
+function statIcon(name){
+  const I = {
+    total:'<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-.35 0-.68.06-1 .17C15.63 5.96 16 6.93 16 8s-.37 2.04-1 2.83c.32.11.65.17 1 .17zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>',
+    check:'<path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-2.5 6L7 15.5l1.4-1.4 1.1 1.1 3.1-3.1 1.4 1.4L9.5 18z"/><path d="M12 13c-2.67 0-8 1.34-8 4v3h7.5l-.5-.5V18c0-1.1.45-2.1 1.18-2.83C11.5 13.92 11.7 13 12 13z" opacity=".55"/>',
+    cap:'<path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>',
+    plus:'<path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-1V8H4v3H1v2h3v3h2v-3h3v-2H6zm9 2c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4z"/>'
+  };
+  return '<svg viewBox="0 0 24 24">'+(I[name]||I.total)+'</svg>';
+}
+
+function renderStatsBar(){
+  const el = document.getElementById('statsBar');
+  if(!el) return;
+  if(!isLeader()){ el.innerHTML=''; return; }   // management dashboard
+  let emps = state.employees;
+  let total=emps.length, hi=0, l2=0, l1=0;
+  emps.forEach(e=>{
+    const g = getEmpOverallGrade(e);
+    if(g==='L4'||g==='L3') hi++;
+    else if(g==='L2') l2++;
+    else l1++;                       // L1 or 'new' (新人訓練)
+  });
+  el.innerHTML =
+    '<div class="stat-grid">'+
+      statCard('total','amber','人員數','TOTAL', total, '') +
+      statCard('check','green','L4–L3','SENIOR', hi, '') +
+      statCard('cap','sky','L2','QUALIFIED', l2, '') +
+      statCard('plus','violet','L1','TRAINEE', l1, '新人訓練') +
+    '</div>';
+}
+function statCard(icon, cls, name, sub, val, tag){
+  return '<div class="stat-card '+cls+'">'+
+    '<div class="stat-top"><span class="stat-ic">'+statIcon(icon)+'</span>'+
+      '<div><div class="stat-name">'+name+'</div><div class="stat-sub">'+sub+'</div></div></div>'+
+    '<div><span class="stat-val">'+val+'</span><span class="stat-unit">位</span></div>'+
+    (tag?'<span class="stat-tag">'+tag+'</span>':'')+
+  '</div>';
+}
+
+// ─── RADAR CHART (live, SVG, no external libs) ───
+// Maps each category's average score (0-100) onto a 0-4 scale (L1=1 … L4=4).
+function scoreToLevelVal(score){
+  if(score===null) return 0;
+  return Math.max(0, Math.min(4, score/25));   // 100→4, 75→3, 50→2, 25→1
+}
+function renderRadar(emp){
+  const cats = ['A','B','C','D'];
+  const labels = {A:'A 基礎操作', B:'B 異常處理', C:'C 系統理解', D:'D 值班應對'};
+  const cx=200, cy=160, R=98, MAX=4;
+  // axis angles: A top, B right, C bottom, D left
+  const ang = {A:-90, B:0, C:90, D:180};
+  const rad = a => a*Math.PI/180;
+  const pt = (a,r) => [ cx + r*Math.cos(rad(a)), cy + r*Math.sin(rad(a)) ];
+
+  const accent = '#22d3ee';   // cyan, matches reference
+  let svg = '<svg class="radar-svg" width="400" height="320" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">';
+
+  // grid rings (1..4)
+  for(let lvl=1; lvl<=MAX; lvl++){
+    const r = R*lvl/MAX;
+    const poly = cats.map(c=>{ const [x,y]=pt(ang[c],r); return x.toFixed(1)+','+y.toFixed(1); }).join(' ');
+    const ringStroke = (lvl===MAX) ? '#37445f' : '#2a3550';
+    svg += '<polygon points="'+poly+'" fill="none" stroke="'+ringStroke+'" stroke-width="1"/>';
+  }
+  // spokes
+  cats.forEach(c=>{ const [x,y]=pt(ang[c],R); svg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#2a3550" stroke-width="1"/>'; });
+  // scale numbers along the top (A) axis
+  for(let lvl=1; lvl<=MAX; lvl++){
+    const [x,y]=pt(-90, R*lvl/MAX);
+    svg += '<text x="'+(x+8)+'" y="'+(y+4)+'" font-size="10" fill="#64748b">'+lvl+'</text>';
+  }
+  // data polygon
+  const vals = {};
+  let hasAny=false;
+  cats.forEach(c=>{ const s=getEmpCatAvgScore(emp,c); vals[c]={score:s,v:scoreToLevelVal(s)}; if(s!==null) hasAny=true; });
+  if(hasAny){
+    const dpoly = cats.map(c=>{ const [x,y]=pt(ang[c], R*vals[c].v/MAX); return x.toFixed(1)+','+y.toFixed(1); }).join(' ');
+    svg += '<polygon points="'+dpoly+'" fill="'+accent+'33" stroke="'+accent+'" stroke-width="2" stroke-linejoin="round"/>';
+    cats.forEach(c=>{ const [x,y]=pt(ang[c], R*vals[c].v/MAX); svg += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3.5" fill="'+accent+'"/>'; });
+  }
+  // axis labels
+  const labOff = {A:[0,-16,'middle'], B:[18,4,'start'], C:[0,22,'middle'], D:[-18,4,'end']};
+  cats.forEach(c=>{ const [x,y]=pt(ang[c],R); const o=labOff[c];
+    svg += '<text x="'+(x+o[0])+'" y="'+(y+o[1])+'" font-size="12" font-weight="600" fill="#cbd5e1" text-anchor="'+o[2]+'">'+labels[c]+'</text>'; });
+  svg += '</svg>';
+
+  // legend with live scores + grades
+  let legend = '<div class="radar-legend">';
+  const catColors = {A:'#0ea5e9', B:'#f59e0b', C:'#8b5cf6', D:'#ef4444'};
+  cats.forEach(c=>{
+    const s = vals[c].score;
+    const si = s!==null ? getScoreInfo(s) : null;
+    legend += '<div class="radar-leg-row">'+
+      '<span class="radar-leg-dot" style="background:'+catColors[c]+'"></span>'+
+      '<span class="radar-leg-name">'+labels[c]+'</span>'+
+      (si ? '<span class="level-badge" style="background:'+si.color+'20;color:'+si.color+';border:1px solid '+si.color+'40;width:30px;height:20px;font-size:11px">'+si.grade+'</span>' : '')+
+      '<span class="radar-leg-score">'+(s!==null? s+'分' : '—')+'</span>'+
+    '</div>';
+  });
+  legend += '</div>';
+
+  return '<div class="radar-wrap">'+svg+legend+'</div>';
+}
+
+// ─── STATE ───
+let state = {
+  employees: [],    // [{id, empId, name, startDate, mentor, leader, type, dailyRecords:[], ojtRecords:[]}]
+  signers: [],      // [{signerId, name, position}]
+  selectedEmpId: null,
+  selectedDay: 0    // index for daily record pagination
+};
+
+// ─── SAVE SYSTEM (auto-save toggle + concurrency lock + last-saver) ───
+const SAVE_LOCK_MS = 1500;      // window during which another user's save blocks ours
+let autoSave = true;            // 即時更新 (real-time) on by default
+let isDirty = false;            // pending unsaved changes (when auto-save off)
+let lastSaver = null;           // {by, at}
+let _warnTimer = null, _toastTimer = null, _retryTimer = null;
+
+try{ autoSave = localStorage.getItem('amhs_autosave') !== 'off'; }catch(e){}
+try{ const ls = localStorage.getItem('amhs_last_saver'); if(ls) lastSaver = JSON.parse(ls); }catch(e){}
+
+// raw write to storage
+function _persist(){
+  localStorage.setItem('amhs_state', JSON.stringify(state));
+  localStorage.setItem('amhs_accounts', JSON.stringify(ACCOUNTS));
+}
+
+// try to acquire a short cross-tab lock; returns the holder's id if blocked, else null
+function _checkLock(){
+  const now = Date.now();
+  let lock = null;
+  try{ lock = JSON.parse(localStorage.getItem('amhs_save_lock')||'null'); }catch(e){}
+  const me = currentUser ? currentUser.empId : '?';
+  if(lock && lock.by !== me && (now - lock.at) < SAVE_LOCK_MS){
+    return lock.by;            // someone else holds a fresh lock
+  }
+  localStorage.setItem('amhs_save_lock', JSON.stringify({by:me, at:now}));
+  return null;
+}
+function _releaseLock(){
+  const me = currentUser ? currentUser.empId : '?';
+  try{
+    const lock = JSON.parse(localStorage.getItem('amhs_save_lock')||'null');
+    if(lock && lock.by === me) localStorage.removeItem('amhs_save_lock');
+  }catch(e){}
+}
+
+// Unified save entry point used everywhere.
+//   save()            -> respects auto-save toggle (field edits)
+//   save({force:true}) -> always writes now (structural ops / 立即更新 button)
+function save(opts){
+  opts = opts || {};
+  const force = !!opts.force;
+  if(!autoSave && !force){           // auto-save OFF: just mark dirty, don't write
+    isDirty = true;
+    renderSaveBar();
+    return;
+  }
+  const blockedBy = _checkLock();
+  if(blockedBy){                     // another user is saving right now
+    isDirty = true;
+    showSaveWarn('請稍待再進行儲存（'+blockedBy+' 正在儲存）');
+    renderSaveBar();
+    clearTimeout(_retryTimer);
+    _retryTimer = setTimeout(function(){ save({force:force, silent:true}); }, SAVE_LOCK_MS + 120);
+    return;
+  }
+  _persist();
+  const me = currentUser ? currentUser.empId : '?';
+  lastSaver = {by: me, at: Date.now()};
+  localStorage.setItem('amhs_last_saver', JSON.stringify(lastSaver));
+  isDirty = false;
+  _releaseLock();
+  renderSaveBar();
+  if(!opts.silent && opts.toast) showSaveToast('已由 '+me+' 儲存');
+}
+
+// 立即更新 button — manual immediate save
+function saveNow(){
+  save({force:true, toast:true});
+}
+
+// 即時更新 toggle
+function toggleAutoSave(on){
+  autoSave = on;
+  localStorage.setItem('amhs_autosave', on ? 'on' : 'off');
+  if(on && isDirty) save({force:true, toast:true});   // flush pending when re-enabling
+  renderSaveBar();
+}
+
+function showSaveWarn(msg){
+  const w = document.getElementById('saveWarn');
+  if(!w) return;
+  document.getElementById('saveWarnMsg').textContent = msg || '請稍待再進行儲存';
+  w.classList.add('show');
+  clearTimeout(_warnTimer);
+  _warnTimer = setTimeout(function(){ w.classList.remove('show'); }, 2600);
+}
+function showSaveToast(msg){
+  const t = document.getElementById('saveToast');
+  if(!t) return;
+  document.getElementById('saveToastMsg').textContent = msg || '已儲存';
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+
+function fmtTime(ts){
+  if(!ts) return '—';
+  const d = new Date(ts);
+  const p = function(n){ return String(n).padStart(2,'0'); };
+  return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+
+function renderSaveBar(){
+  const el = document.getElementById('saveBar');
+  if(!el) return;
+  let statusCls, statusTxt;
+  if(isDirty){ statusCls='dirty'; statusTxt='● 有未儲存變更'; }
+  else { statusCls='saved'; statusTxt='✓ 已儲存'; }
+  const saverTxt = lastSaver
+    ? '最後儲存者 <strong>'+lastSaver.by+'</strong> · '+fmtTime(lastSaver.at)
+    : '尚無儲存紀錄';
+  el.innerHTML =
+    '<div class="save-bar">'+
+      '<span class="save-title">💾 儲存控制</span>'+
+      '<span class="save-status '+statusCls+'">'+statusTxt+'</span>'+
+      '<span class="save-meta">'+saverTxt+'</span>'+
+      '<div class="ml-auto flex items-center gap-12 fw-wrap">'+
+        '<label class="toggle" title="開啟後，任何修改會即時自動儲存">'+
+          '<input type="checkbox" '+(autoSave?'checked':'')+' onchange="toggleAutoSave(this.checked)">'+
+          '<span class="track"></span><span>即時更新</span>'+
+        '</label>'+
+        '<button class="btn btn-primary btn-sm" onclick="saveNow()">⬇ 立即更新</button>'+
+      '</div>'+
+    '</div>';
+}
+
+// keep tabs/instances in sync when another tab saves
+window.addEventListener('storage', function(e){
+  if(e.key === 'amhs_last_saver'){
+    try{ lastSaver = JSON.parse(e.newValue); }catch(_){}
+    renderSaveBar();
+  }
+  if(e.key === 'amhs_state' && e.newValue){
+    try{
+      const loaded = JSON.parse(e.newValue);
+      if(loaded && loaded.employees){
+        const sel = state.selectedEmpId, day = state.selectedDay;
+        state = loaded; state.selectedEmpId = sel; state.selectedDay = day;
+        isDirty = false;
+        if(typeof currentTab !== 'undefined') switchTab(currentTab);
+      }
+    }catch(_){}
+  }
+});
+
+function newEmployee(empId, name){
+  const ojtRecs = [];
+  Object.entries(ABILITY_DATA).forEach(([cat, data])=>{
+    data.items.forEach(item=>{
+      ojtRecs.push({id:item.id, category:cat, name:item.name, desc:item.desc,
+        currentLevel:"", score:"", mentorNote:"",
+        mentorSignerId:"", supervisorSignerId:""});
+    });
+  });
+  return {
+    id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    empId: empId||"", name: name||"", startDate:"", mentor:"", leader:"", type:"新人訓練",
+    dailyRecords: Array.from({length:5},(_,i)=>({
+      day:i+1, date:"", learningItems:"", practiceItems:"",
+      mentorScore:"", mentorAttitude:"", leaderScore:"", total:"", notes:"",
+      mentorSignerId:"", leaderSignerId:""
+    })),
+    ojtRecords: ojtRecs
+  };
+}
+
+// ─── SIGNER LOOKUP ───
+function findSigner(signerId){
+  return state.signers.find(s=>s.signerId===signerId)||null;
+}
+
+function signerDisplay(signerId){
+  if(!signerId) return '';
+  const s = findSigner(signerId);
+  return s ? `${s.name}（${s.position}）` : `⚠ 未知工號 ${signerId}`;
+}
+
+function signerBadgeHTML(signerId, cls){
+  if(!signerId) return `<span class="sign-btn sign-unsigned ${cls}">○ 待簽核</span>`;
+  const s = findSigner(signerId);
+  if(s) return `<span class="sign-btn sign-signed ${cls}" title="工號: ${s.signerId}">✓ ${s.name}（${s.position}）</span>`;
+  return `<span class="sign-btn sign-unsigned ${cls}" style="border-color:#ef444450;color:#f87171">⚠ ${signerId}</span>`;
+}
+
+// ─── COMPUTED ───
+function getEmpAvgScore(emp){
+  const scored = emp.dailyRecords.filter(r=>r.total!==''&&r.total!==null);
+  if(!scored.length) return null;
+  return Math.round(scored.reduce((a,r)=>a+Number(r.total),0)/scored.length);
+}
+
+function getEmpOjtLevel(emp){
+  const withLevel = emp.ojtRecords.filter(r=>r.currentLevel);
+  if(!withLevel.length) return null;
+  const avg = withLevel.reduce((a,r)=>a+levelToNum(r.currentLevel),0)/withLevel.length;
+  return 'L'+Math.round(avg);
+}
+
+// ─── TAB SWITCHING ───
+let currentTab = 'training';
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.classList.toggle('active', t.dataset.tab===tab);
+  });
+  ['training','ojt','cert','settings'].forEach(t=>{
+    document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
+  });
+  if(tab==='training'){
+    renderEmployeeList();
+    // keep an open detail (and its radar) in sync with edits made elsewhere
+    if(state.selectedEmpId && state.employees.find(e=>e.id===state.selectedEmpId)){
+      renderEmployeeDetail();
+    }
+  }
+  if(tab==='ojt') renderOJT();
+  if(tab==='cert') renderCert();
+  if(tab==='settings') renderSettings();
+  renderSaveBar();
+}
+
+// ─── EMPLOYEE LIST ───
+let searchQuery = '';
+function filterEmployees(mode){
+  if(mode==='all'){
+    document.getElementById('searchInput').value='';
+    searchQuery='';
+  } else {
+    searchQuery = document.getElementById('searchInput').value.trim();
+  }
+  renderEmployeeList();
+}
+
+function renderEmployeeList(){
+  renderStatsBar();
+  const el = document.getElementById('employeeList');
+  const sgb = document.getElementById('scoreGradeBar');
+  if(sgb) sgb.innerHTML = isLeader() ? scoreGradeBarHTML() : '';
+  let emps = state.employees;
+  if(currentUser && !isLeader()){
+    emps = emps.filter(e=>e.empId===currentUser.empId);
+  }
+  if(searchQuery){
+    const q = searchQuery.toLowerCase();
+    emps = emps.filter(e=>e.empId.toLowerCase().includes(q)||e.name.toLowerCase().includes(q));
+  }
+  if(!emps.length && !state.employees.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div>尚無人員資料</div><div style="font-size:12px;margin-top:8px;color:var(--text4)">點擊「＋ 新增人員」或「⬆ 匯入」開始</div></div>`;
+    return;
+  }
+  if(!emps.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div>找不到符合「${searchQuery}」的人員</div></div>`;
+    return;
+  }
+
+  let html = `<div class="card"><table class="tbl"><thead><tr>
+    <th>工號</th><th>姓名</th>
+    ${isLeader()?`
+    <th style="text-align:center"><span style="color:#0ea5e9;font-family:var(--mono);font-weight:900">A</span> 基礎操作</th>
+    <th style="text-align:center"><span style="color:#f59e0b;font-family:var(--mono);font-weight:900">B</span> 異常處理</th>
+    <th style="text-align:center"><span style="color:#8b5cf6;font-family:var(--mono);font-weight:900">C</span> 系統理解</th>
+    <th style="text-align:center"><span style="color:#ef4444;font-family:var(--mono);font-weight:900">D</span> 值班應對</th>
+    <th style="text-align:center;background:var(--surface2)"><span style="font-family:var(--mono);font-weight:900;color:var(--blue2);font-size:13px">總平均</span></th>
+    `:''}
+    <th>開始日期</th><th>操作</th>
+  </tr></thead><tbody>`;
+  emps.forEach(emp=>{
+    html+=`<tr style="cursor:pointer" onclick="selectEmployee('${emp.id}')">
+      <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${emp.empId||'—'}</span></td>
+      <td style="font-weight:600">${emp.name||'—'}</td>
+      ${isLeader()?`
+      <td style="text-align:center">${catSummaryCell(emp, 'A', '#0ea5e9')}</td>
+      <td style="text-align:center">${catSummaryCell(emp, 'B', '#f59e0b')}</td>
+      <td style="text-align:center">${catSummaryCell(emp, 'C', '#8b5cf6')}</td>
+      <td style="text-align:center">${catSummaryCell(emp, 'D', '#ef4444')}</td>
+      <td style="text-align:center;background:var(--surface2)">${(()=>{ const ojtAvg=getEmpOjtAvgScore(emp); const ojtSi=getScoreInfo(ojtAvg); return ojtAvg!==null && ojtSi ? '<div><span class="level-badge" style="background:'+ojtSi.color+'25;color:'+ojtSi.color+';border:2px solid '+ojtSi.color+'60;font-size:16px;width:48px;height:30px">'+ojtSi.grade+'</span><div style="font-size:11px;color:var(--text2);margin-top:3px;font-family:var(--mono);font-weight:600">'+ojtAvg+'分</div></div>' : '<span style="color:var(--text4)">—</span>'; })()}</td>
+      `:''}
+      <td style="color:var(--text2);font-size:12px">${emp.startDate||'—'}</td>
+      <td>
+        <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();selectEmployee('${emp.id}')">查看</button>
+        ${isLeader()?'<button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteEmployee(\''+emp.id+'\')">刪除</button>':''}
+      </td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  html+=`<div style="margin-top:8px;font-size:11px;color:var(--text4)">共 ${emps.length} 位人員${searchQuery?' (篩選結果)':''}</div>`;
+  el.innerHTML=html;
+}
+
+// ─── ADD EMPLOYEE MODAL ───
+function openAddEmployee(){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-head"><span style="font-weight:700;font-size:15px">新增訓練人員</span><button class="btn btn-ghost btn-xs" onclick="closeModal()">✕</button></div>
+      <div class="modal-body">
+        <div class="grid g2 mb-16">
+          <div><label class="label">工號 <span style="color:var(--red)">*</span></label><input class="field" id="newEmpId" placeholder="例: F12345"></div>
+          <div><label class="label">姓名 <span style="color:var(--red)">*</span></label><input class="field" id="newEmpName" placeholder="姓名"></div>
+        </div>
+        <div class="grid g2 mb-16">
+          <div><label class="label">開始訓練日期</label><input type="date" class="field" id="newEmpDate"></div>
+          <div><label class="label">訓練類型</label><select class="field" id="newEmpType"><option>新人訓練</option><option>第二專長訓練</option><option>調站</option></select></div>
+        </div>
+        <div class="grid g2">
+          <div><label class="label">指導學長工號</label><input class="field" id="newEmpMentor" placeholder="輸入工號" oninput="previewSigner(this,'newMentorPreview')"><div id="newMentorPreview"></div></div>
+          <div><label class="label">組長工號</label><input class="field" id="newEmpLeader" placeholder="輸入工號" oninput="previewSigner(this,'newLeaderPreview')"><div id="newLeaderPreview"></div></div>
+        </div>
+      </div>
+      <div class="modal-foot"><button class="btn btn-ghost btn-sm" onclick="closeModal()">取消</button><button class="btn btn-primary btn-sm" onclick="confirmAddEmployee()">確認新增</button></div>
+    </div>
+  </div>`;
+}
+
+function previewSigner(input, targetId){
+  const el = document.getElementById(targetId);
+  if(!input.value.trim()){el.innerHTML='';return;}
+  const s = findSigner(input.value.trim());
+  el.innerHTML = s
+    ? `<div class="signer-result signer-found">✓ ${s.name}（${s.position}）</div>`
+    : `<div class="signer-result signer-notfound">⚠ 此工號不在簽核人員清單中</div>`;
+}
+
+function confirmAddEmployee(){
+  const empId = document.getElementById('newEmpId').value.trim();
+  const name = document.getElementById('newEmpName').value.trim();
+  if(!empId||!name){alert('請填寫工號與姓名');return;}
+  if(state.employees.find(e=>e.empId===empId)){alert('此工號已存在');return;}
+  const emp = newEmployee(empId, name);
+  emp.startDate = document.getElementById('newEmpDate').value;
+  emp.type = document.getElementById('newEmpType').value;
+  emp.mentor = document.getElementById('newEmpMentor').value.trim();
+  emp.leader = document.getElementById('newEmpLeader').value.trim();
+  state.employees.push(emp);
+  save({force:true});
+  closeModal();
+  renderEmployeeList();
+}
+
+function deleteEmployee(id){
+  if(!confirm('確定刪除此人員？所有紀錄將無法復原。'))return;
+  state.employees = state.employees.filter(e=>e.id!==id);
+  if(state.selectedEmpId===id){state.selectedEmpId=null;document.getElementById('employeeDetail').classList.add('hidden');}
+  save({force:true});
+  renderEmployeeList();
+}
+
+function closeModal(){document.getElementById('modalRoot').innerHTML='';}
+
+// ─── EMPLOYEE DETAIL (TRAINING RECORDS) ───
+function selectEmployee(id){
+  state.selectedEmpId = id;
+  state.selectedDay = 0;
+  renderEmployeeDetail(true);
+}
+
+function renderEmployeeDetail(doScroll){
+  const emp = state.employees.find(e=>e.id===state.selectedEmpId);
+  if(!emp){document.getElementById('employeeDetail').classList.add('hidden');return;}
+  const el = document.getElementById('employeeDetail');
+  el.classList.remove('hidden');
+
+  const avg = getEmpAvgScore(emp);
+  const si = getScoreInfo(avg);
+  const mentorInfo = findSigner(emp.mentor);
+  const leaderInfo = findSigner(emp.leader);
+  const catA = getEmpCatSummary(emp, 'A');
+  const catB = getEmpCatSummary(emp, 'B');
+  const catC = getEmpCatSummary(emp, 'C');
+  const catD = getEmpCatSummary(emp, 'D');
+
+  let html = '';
+
+  // Person Info Card — redesigned (hero + info grid + score/radar panel)
+  const prog = getEmpProgress(emp);
+  const pct = (n,t) => t>0 ? Math.round(n*100/t) : 0;
+  const trainDays = daysSince(emp.startDate);
+  const avatarBg = colorFromId(emp.empId || emp.name);
+  const mentorBg = emp.mentor ? colorFromId(emp.mentor) : '#475569';
+  const leaderBg = emp.leader ? colorFromId(emp.leader) : '#475569';
+
+  function signerCardHTML(role, value, info, fieldKey, accent){
+    const inputId = fieldKey+'-'+emp.id;
+    return `<div class="emp-signer-card">
+      <div class="emp-signer-head"><span class="pip" style="background:${accent}"></span>${role}</div>
+      ${info ? `
+        <div class="emp-signer-body">
+          <div class="emp-signer-av" style="background:${colorFromId(value)}">${firstChar(info.name)}</div>
+          <div><div class="emp-signer-name">${info.name}</div><div class="emp-signer-pos">${info.position}</div></div>
+        </div>` : (value ? `
+        <div class="emp-signer-empty" style="color:#f87171">⚠ 工號 ${value} 不在簽核清單</div>` : `
+        <div class="emp-signer-empty">尚未指定 ${role}</div>`)
+      }
+      <input class="field field-sm" value="${value||''}" placeholder="輸入工號"
+             onchange="updateEmpField('${emp.id}','${fieldKey}',this.value);renderEmployeeDetail()"
+             oninput="showInlineSigner(this,'${inputId}')">
+      <div id="${inputId}"></div>
+    </div>`;
+  }
+
+  function progRowHTML(){ return ''; }  // (removed in v11 — kept as no-op for compat)
+
+  html+=`<div class="card mb-16 fade-up">
+    <div class="card-head">
+      <div class="dot" style="background:var(--blue)"></div>
+      <span style="font-size:13px;font-weight:700;color:var(--text2);letter-spacing:1px">人員資料</span>
+      <button class="btn btn-ghost btn-xs ml-auto" onclick="state.selectedEmpId=null;document.getElementById('employeeDetail').classList.add('hidden');renderEmployeeList()">← 返回列表</button>
+    </div>
+    <div class="card-body emp-detail-body">
+
+      <!-- HERO STRIP -->
+      <div class="emp-hero">
+        <div class="emp-avatar" style="background:linear-gradient(135deg,${avatarBg},${avatarBg}aa)">${firstChar(emp.name||emp.empId)}</div>
+        <div class="emp-hero-main">
+          <div class="emp-hero-name">${emp.name||'—'}</div>
+          <div class="emp-hero-id">${emp.empId||'—'}</div>
+        </div>
+        <div class="emp-hero-tags">
+          <span class="emp-type-chip">🎓 ${emp.type||'—'}</span>
+          <div class="emp-hero-stat"><span class="v">${trainDays!==null?trainDays:'—'}</span><span class="l">訓練天數</span></div>
+          <div class="emp-hero-stat"><span class="v" style="font-size:14px">${fmtDateZh(emp.startDate)||'—'}</span><span class="l">開始日期</span></div>
+        </div>
+      </div>
+
+      <!-- INFO BODY: 基本資訊 + 簽核人員（兩張卡並排） -->
+      <div class="emp-info-body">
+        <div class="emp-info-section">
+          <div class="emp-section-title"><span class="pip" style="background:var(--blue)"></span>基本資訊</div>
+          <div class="emp-field-row">
+            <div>
+              <label>開始日期</label>
+              <input type="date" class="field field-sm" value="${emp.startDate||''}" onchange="updateEmpField('${emp.id}','startDate',this.value);renderEmployeeDetail()">
+            </div>
+            <div>
+              <label>訓練類型</label>
+              <select class="field field-sm" onchange="updateEmpField('${emp.id}','type',this.value);renderEmployeeDetail()">
+                <option ${emp.type==='新人訓練'?'selected':''}>新人訓練</option>
+                <option ${emp.type==='第二專長訓練'?'selected':''}>第二專長訓練</option>
+                <option ${emp.type==='調站'?'selected':''}>調站</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="emp-info-section">
+          <div class="emp-section-title"><span class="pip" style="background:var(--amber)"></span>簽核人員</div>
+          <div class="emp-signer-grid">
+            ${signerCardHTML('指導學長', emp.mentor, mentorInfo, 'mentor', '#f59e0b')}
+            ${signerCardHTML('組　　長', emp.leader, leaderInfo, 'leader', '#0ea5e9')}
+          </div>
+        </div>
+      </div>
+
+      ${isLeader()?`
+      <!-- SCORE + RADAR COMBINED PANEL -->
+      <div class="emp-skill-panel">
+        <div class="emp-score-box">
+          <div class="emp-score-label">📈 目前評鑑分數</div>
+          ${(()=>{ const a=getEmpOjtAvgScore(emp); const si=getScoreInfo(a);
+            if(a===null) return '<div class="emp-score-empty">—</div><div class="emp-score-note">尚未開始評分</div>';
+            return '<div class="emp-score-big">'+
+              '<span class="emp-score-num" style="color:'+(si?si.color:'var(--text)')+'">'+a+'</span>'+
+              '<span class="emp-score-unit">分</span></div>'+
+              (si?'<span class="emp-score-grade" style="background:'+si.color+'25;color:'+si.color+';border:1px solid '+si.color+'60">'+si.grade+'</span>':'')+
+              '<div class="emp-score-note">'+(si?si.label:'')+'</div>';
+          })()}
+        </div>
+        <div class="emp-radar-box">
+          <div class="emp-radar-title">
+            <span class="ic">📡</span>
+            <span class="t">平均技能雷達圖</span>
+            <span class="s">四大核心技能全方位評估（L1–L4）</span>
+          </div>
+          ${renderRadar(emp)}
+        </div>
+      </div>
+      `:''}
+
+    </div>
+  </div>`;
+
+  // Daily Records with date pagination
+  const dayIdx = state.selectedDay;
+  const rec = emp.dailyRecords[dayIdx];
+  const recSi = getScoreInfo(rec.total);
+
+  // Add day button
+  const maxVisible = 5;
+  const totalDays = emp.dailyRecords.length;
+  let dotStart = 0;
+  if(totalDays > maxVisible){
+    dotStart = Math.min(Math.max(0, dayIdx - Math.floor(maxVisible/2)), totalDays - maxVisible);
+  }
+  const dotEnd = Math.min(dotStart + maxVisible, totalDays);
+
+  html+=`<div class="flex items-center gap-12 mb-12 fw-wrap">
+    <h3 style="font-size:15px;font-weight:700">每日訓練紀錄</h3>
+    <div class="page-dots">`;
+  if(dotStart > 0){
+    html+=`<button class="page-dot" onclick="state.selectedDay=0;renderEmployeeDetail()" title="第 1 天" style="font-size:10px">≪</button>`;
+  }
+  for(let i=dotStart;i<dotEnd;i++){
+    const r = emp.dailyRecords[i];
+    html+=`<button class="page-dot ${i===dayIdx?'active':''}" onclick="state.selectedDay=${i};renderEmployeeDetail()" title="第 ${r.day} 天${r.date?' ('+r.date+')':''}">${r.day}</button>`;
+  }
+  if(dotEnd < totalDays){
+    html+=`<button class="page-dot" onclick="state.selectedDay=${totalDays-1};renderEmployeeDetail()" title="第 ${totalDays} 天" style="font-size:10px">≫</button>`;
+  }
+  html+=`<button class="page-dot leader-only" onclick="addDay('${emp.id}')" title="新增一天" style="color:var(--blue2);border-color:var(--blue);font-size:16px">+</button>`;
+  html+=`</div>`;
+  // Date search
+  html+=`<div class="flex items-center gap-8" style="margin-left:auto">
+    <input type="date" class="field field-sm" style="width:150px" id="daySearchDate" placeholder="搜尋日期" onchange="searchDayByDate('${emp.id}',this.value)">
+    <button class="btn btn-ghost btn-xs" onclick="searchDayByDate('${emp.id}',document.getElementById('daySearchDate').value)">🔍 搜尋</button>
+    <span style="font-size:11px;color:var(--text4)">共 ${totalDays} 天</span>
+  </div>`;
+  // Score summary removed
+  html+=`</div>`;
+
+  // Day card
+  html+=`<div class="card fade-up" style="animation-delay:.08s">
+    <div class="card-head">
+      <span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--blue)">DAY ${String(rec.day).padStart(2,'0')}</span>
+      <input type="date" class="field field-sm" style="width:160px" value="${rec.date}" onchange="updateDay('${emp.id}',${dayIdx},'date',this.value)">
+      ${emp.dailyRecords.length>1?`<button class="btn btn-danger btn-xs ml-auto" onclick="removeDay('${emp.id}',${dayIdx})">刪除此天</button>`:''}
+    </div>
+    <div class="card-body">
+      <div class="grid g2 mb-16">
+        <div><label class="label">學習項目</label><textarea class="field" placeholder="今日學習課程..." onchange="updateDay('${emp.id}',${dayIdx},'learningItems',this.value)">${rec.learningItems}</textarea></div>
+        <div><label class="label">實做項目</label><textarea class="field" placeholder="今日實做內容..." onchange="updateDay('${emp.id}',${dayIdx},'practiceItems',this.value)">${rec.practiceItems}</textarea></div>
+      </div>
+      <div class="mb-16"><label class="label">今日學習心得</label><textarea class="field" placeholder="具體說明今日學習重點..." onchange="updateDay('${emp.id}',${dayIdx},'notes',this.value)">${rec.notes}</textarea></div>
+      <div class="flex gap-10 fw-wrap">
+        <div>
+          <label class="label">指導學長簽核（輸入工號）</label>
+          <div class="flex items-center gap-8 mt-4">
+            <input class="field field-sm" style="width:120px" placeholder="簽核人工號" value="${rec.mentorSignerId||''}" onchange="updateDay('${emp.id}',${dayIdx},'mentorSignerId',this.value);renderEmployeeDetail()" oninput="showInlineSigner(this,'dayMentor-${dayIdx}')">
+            ${signerBadgeHTML(rec.mentorSignerId,'')}
+          </div>
+          <div id="dayMentor-${dayIdx}"></div>
+        </div>
+        <div>
+          <label class="label">組長 / 主管簽核（輸入工號）</label>
+          <div class="flex items-center gap-8 mt-4">
+            <input class="field field-sm" style="width:120px" placeholder="簽核人工號" value="${rec.leaderSignerId||''}" onchange="updateDay('${emp.id}',${dayIdx},'leaderSignerId',this.value);renderEmployeeDetail()" oninput="showInlineSigner(this,'dayLeader-${dayIdx}')">
+            ${signerBadgeHTML(rec.leaderSignerId,'')}
+          </div>
+          <div id="dayLeader-${dayIdx}"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+  if(doScroll) el.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function showInlineSigner(input, targetId){
+  const el = document.getElementById(targetId);
+  if(!el)return;
+  if(!input.value.trim()){el.innerHTML='';return;}
+  const s = findSigner(input.value.trim());
+  el.innerHTML = s
+    ? `<div class="signer-result signer-found">✓ ${s.name}（${s.position}）</div>`
+    : `<div class="signer-result signer-notfound">⚠ 此工號不在簽核人員清單中</div>`;
+}
+
+function updateEmpField(id, field, value){
+  const emp = state.employees.find(e=>e.id===id);
+  if(emp) emp[field]=value;
+  save();
+}
+
+function updateDay(empId, dayIdx, field, value){
+  const emp = state.employees.find(e=>e.id===empId);
+  if(emp) emp.dailyRecords[dayIdx][field]=value;
+  save();
+}
+
+function updateDayScore(empId, dayIdx, field, value){
+  const emp = state.employees.find(e=>e.id===empId);
+  if(!emp) return;
+  emp.dailyRecords[dayIdx][field]=value;
+  const r = emp.dailyRecords[dayIdx];
+  const ms = Number(r.mentorScore)||0;
+  const ma = Number(r.mentorAttitude)||0;
+  const ls = Number(r.leaderScore)||0;
+  r.total = (ms||ma||ls) ? Math.min(100, ms+ma+ls) : '';
+  save();
+  renderEmployeeDetail();
+  renderEmployeeList();
+}
+
+function addDay(empId){
+  const emp = state.employees.find(e=>e.id===empId);
+  if(!emp)return;
+  const nextDay = emp.dailyRecords.length+1;
+  emp.dailyRecords.push({day:nextDay,date:"",learningItems:"",practiceItems:"",mentorScore:"",mentorAttitude:"",leaderScore:"",total:"",notes:"",mentorSignerId:"",leaderSignerId:""});
+  state.selectedDay = emp.dailyRecords.length-1;
+  save({force:true});
+  renderEmployeeDetail();
+}
+
+function searchDayByDate(empId, dateVal){
+  if(!dateVal) return;
+  const emp = state.employees.find(e=>e.id===empId);
+  if(!emp) return;
+  const idx = emp.dailyRecords.findIndex(r=>r.date===dateVal);
+  if(idx>=0){
+    state.selectedDay = idx;
+    renderEmployeeDetail();
+  } else {
+    alert('找不到日期「'+dateVal+'」的訓練紀錄');
+  }
+}
+
+function removeDay(empId, dayIdx){
+  const emp = state.employees.find(e=>e.id===empId);
+  if(!emp||emp.dailyRecords.length<=1)return;
+  if(!confirm('確定刪除第 '+emp.dailyRecords[dayIdx].day+' 天紀錄？'))return;
+  emp.dailyRecords.splice(dayIdx,1);
+  emp.dailyRecords.forEach((r,i)=>r.day=i+1);
+  if(state.selectedDay>=emp.dailyRecords.length) state.selectedDay=emp.dailyRecords.length-1;
+  save({force:true});
+  renderEmployeeDetail();
+  renderEmployeeList();
+}
+
+// ─── OJT TAB ───
+let ojtSelectedCat = 'A';
+let ojtSelectedEmpId = null;
+
+function renderOJT(){
+  const el = document.getElementById('tab-ojt');
+  if(!state.employees.length){
+    el.innerHTML=`<div class="empty fade-up"><div class="empty-icon">📝</div><div>請先在「訓練紀錄表」新增人員</div></div>`;
+    return;
+  }
+  let ojtEmps = state.employees;
+  if(currentUser && !isLeader()){
+    ojtEmps = ojtEmps.filter(e=>e.empId===currentUser.empId);
+  }
+  if(!ojtEmps.length){
+    el.innerHTML=`<div class="empty fade-up"><div class="empty-icon">📝</div><div>尚無您的訓練資料</div></div>`;
+    return;
+  }
+  if(!ojtSelectedEmpId || !ojtEmps.find(e=>e.id===ojtSelectedEmpId)){
+    ojtSelectedEmpId = ojtEmps[0].id;
+  }
+  const emp = state.employees.find(e=>e.id===ojtSelectedEmpId);
+  const cat = ABILITY_DATA[ojtSelectedCat];
+  const catRecs = emp.ojtRecords.filter(r=>r.category===ojtSelectedCat);
+
+  let html = `<div class="fade-up">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:14px">能力項目 OJT 簽核紀錄</h2>
+
+    <!-- Employee selector -->
+    <div class="flex items-center gap-12 mb-16 fw-wrap">
+      <label class="label" style="margin:0">選擇人員</label>
+      <select class="field field-sm" style="width:220px" onchange="ojtSelectedEmpId=this.value;renderOJT()">
+        ${ojtEmps.map(e=>`<option value="${e.id}" ${e.id===ojtSelectedEmpId?'selected':''}>${e.empId} — ${e.name}</option>`).join('')}
+      </select>
+      ${(()=>{
+        const sA=getEmpCatLevel(emp,'A'),sB=getEmpCatLevel(emp,'B'),sC=getEmpCatLevel(emp,'C'),sD=getEmpCatLevel(emp,'D');
+        const ojtAvg=getEmpOjtAvgScore(emp); const ojtSi=getScoreInfo(ojtAvg);
+        function lb(label,si){ return '<span style="color:var(--text3);font-weight:500">'+label+'</span>' + (si ? '<span class="level-badge" style="background:'+si.color+'20;color:'+si.color+';border:1px solid '+si.color+'40;font-size:11px;width:30px;height:20px">'+si.grade+'</span>' : '<span style="color:var(--text4)">—</span>'); }
+        return '<div class="flex items-center gap-8 ml-auto" style="font-family:var(--mono);font-size:12px">' +
+          lb('A',sA) + lb('B',sB) + lb('C',sC) + lb('D',sD) +
+          (ojtAvg!==null ? '<span style="margin-left:8px;padding:3px 10px;border-radius:6px;background:'+(ojtSi?.color||'#475569')+'15;color:'+(ojtSi?.color||'var(--text3)')+';font-weight:700;border:1px solid '+(ojtSi?.color||'#475569')+'30">'+ojtAvg+'分</span>' : '') +
+          '</div>';
+      })()}
+    </div>
+
+    <!-- Category tabs -->
+    <div class="flex gap-8 mb-20 fw-wrap">
+      ${Object.entries(ABILITY_DATA).map(([key,c])=>`
+        <button onclick="ojtSelectedCat='${key}';renderOJT()" style="padding:10px 18px;border-radius:10px;border:1px solid ${ojtSelectedCat===key?c.color+'60':'var(--border)'};background:${ojtSelectedCat===key?c.color+'15':'var(--surface)'};color:${ojtSelectedCat===key?c.color:'var(--text3)'};cursor:pointer;font-size:13px;font-weight:600;font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:8px">
+          <span style="font-family:var(--mono);font-size:16px;font-weight:900">${key}</span>${c.label}
+        </button>
+      `).join('')}
+    </div>
+
+    <!-- Score Grade Reference -->
+    <div class="mb-16">${scoreGradeBarHTML()}</div>
+
+    <!-- Items table -->
+    <div class="card" style="border-color:${cat.color}30">
+      <div class="card-head" style="background:${cat.color}08">
+        <span style="font-family:var(--mono);font-size:20px;font-weight:900;color:${cat.color}">${ojtSelectedCat}</span>
+        <div><div style="font-size:14px;font-weight:700">${cat.label}</div><div style="font-size:11px;color:var(--text3)">${cat.en}</div></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl" style="min-width:900px">
+          <thead><tr>
+            <th>項目</th><th>說明</th><th>評分</th><th>目前等級</th><th>指導學長備註</th><th>學長簽核</th><th>主管簽核</th>
+          </tr></thead>
+          <tbody>`;
+
+  catRecs.forEach(rec=>{
+    const gIdx = emp.ojtRecords.findIndex(r=>r.id===rec.id);
+    const rsi = getScoreInfo(rec.score);
+    html+=`<tr>
+      <td style="font-weight:600;white-space:nowrap">${rec.name}</td>
+      <td style="font-size:12px;color:var(--text2)">${rec.desc}</td>
+      <td><div class="flex items-center gap-8">
+        <input type="number" min="0" max="100" class="field field-sm" style="width:62px;text-align:center${isLeader()?'':';opacity:.6'}" value="${rec.score}" placeholder="分" onchange="updateOjtField('${emp.id}',${gIdx},'score',this.value);renderOJT()" ${isLeader()?'':'disabled'}>
+      </div></td>
+      <td style="text-align:center">${rsi?`<span class="level-badge" style="background:${rsi.color}20;color:${rsi.color};border:1px solid ${rsi.color}40">${rsi.grade}</span>`:'<span style="color:var(--text4)">—</span>'}</td>
+      <td><input class="field field-sm" style="min-width:110px${isLeader()?'':';opacity:.6'}" placeholder="備註..." value="${rec.mentorNote||''}" onchange="updateOjtField('${emp.id}',${gIdx},'mentorNote',this.value)" ${isLeader()?'':'disabled'}></td>
+      <td>
+        <input class="field field-sm" style="width:90px" placeholder="工號" value="${rec.mentorSignerId||''}"
+          onchange="updateOjtField('${emp.id}',${gIdx},'mentorSignerId',this.value);renderOJT()"
+          oninput="showInlineSigner(this,'ojtM-${rec.id}')">
+        <div id="ojtM-${rec.id}"></div>
+        ${rec.mentorSignerId?`<div style="margin-top:3px">${signerBadgeHTML(rec.mentorSignerId,'')}</div>`:''}
+      </td>
+      <td>
+        <input class="field field-sm" style="width:90px" placeholder="工號" value="${rec.supervisorSignerId||''}"
+          onchange="updateOjtField('${emp.id}',${gIdx},'supervisorSignerId',this.value);renderOJT()"
+          oninput="showInlineSigner(this,'ojtS-${rec.id}')">
+        <div id="ojtS-${rec.id}"></div>
+        ${rec.supervisorSignerId?`<div style="margin-top:3px">${signerBadgeHTML(rec.supervisorSignerId,'')}</div>`:''}
+      </td>
+    </tr>`;
+  });
+
+  const mentorSigned = catRecs.filter(r=>r.mentorSignerId).length;
+  const supSigned = catRecs.filter(r=>r.supervisorSignerId).length;
+  const catAvg = catRecs.filter(r=>r.score).length>0 ? Math.round(catRecs.filter(r=>r.score).reduce((a,r)=>a+Number(r.score),0)/catRecs.filter(r=>r.score).length) : null;
+
+  html+=`</tbody></table></div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);background:#0f1220;display:flex;gap:20px;flex-wrap:wrap;font-size:12px">
+        <span style="color:var(--text3)">學長簽核: <strong style="color:var(--green2)">${mentorSigned}</strong>/${catRecs.length}</span>
+        <span style="color:var(--text3)">主管簽核: <strong style="color:var(--blue2)">${supSigned}</strong>/${catRecs.length}</span>
+        <span style="color:var(--text3)">平均分數: <strong style="color:var(--text)">${catAvg!==null?catAvg:'—'}</strong></span>
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML = html;
+}
+
+function updateOjtField(empId, idx, field, value){
+  const emp = state.employees.find(e=>e.id===empId);
+  if(emp && emp.ojtRecords[idx]) {
+    emp.ojtRecords[idx][field]=value;
+    if(field==='score'){
+      const si = getScoreInfo(value);
+      emp.ojtRecords[idx].currentLevel = si ? si.grade : '';
+    }
+    save();
+  }
+}
+
+// ─── CERT TAB ───
+function renderCert(){
+  const el = document.getElementById('tab-cert');
+  let html = `<div class="fade-up">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">各等級能力驗證標準</h2>
+    <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:14px">`;
+  LEVELS_DATA.forEach((lv,i)=>{
+    html+=`<div class="card slide-in" style="border-color:${lv.color}30;animation-delay:${i*.07}s">
+      <div style="padding:16px 20px;border-bottom:2px solid ${lv.color}30;background:linear-gradient(135deg,${lv.color}08,transparent)">
+        <div class="flex items-center gap-10" style="margin-bottom:6px">
+          <span class="level-badge" style="background:${lv.color}20;color:${lv.color};border:1px solid ${lv.color}40">${lv.level}</span>
+          <div><div style="font-size:14px;font-weight:700">${lv.title}</div><div style="font-size:11px;color:var(--text3)">${lv.subtitle}</div></div>
+        </div>
+        <div style="font-size:11px;color:${lv.color};font-weight:600;letter-spacing:.5px;margin-top:4px">${lv.method}</div>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px">通過條件（3 項全達標）</div>
+        ${lv.conditions.map((c,ci)=>`<div class="flex gap-8" style="margin-bottom:8px;font-size:12px;color:#cbd5e1;line-height:1.5"><span style="color:${lv.color};font-weight:700;flex-shrink:0;font-family:var(--mono)">${ci+1}.</span>${c}</div>`).join('')}
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">驗收工具</div>
+          <div style="font-size:12px;color:var(--text2)">${lv.tools}</div>
+        </div>
+        <div style="margin-top:10px;padding:8px 12px;border-radius:8px;background:${lv.color}10;border:1px solid ${lv.color}20;font-size:12px;font-weight:600;color:${lv.color}">${lv.pass}</div>
+      </div>
+    </div>`;
+  });
+  html+=`</div>
+    <div class="card mt-20" style="border-color:#ef444430">
+      <div style="padding:14px 20px;background:#ef444408;font-size:12px;color:#f87171;line-height:1.6">
+        ⚠ 各等級驗收須由直屬主管或資深工程師（L4）擔任評核人；同一人不得自行簽核自身晉級。
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML = html;
+}
+
+// ─── SETTINGS TAB ───
+function renderSettings(){
+  const el = document.getElementById('tab-settings');
+  let html=`<div class="fade-up">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:6px">系統設定</h2>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:20px">管理帳號權限與可簽核人員清單</p>
+
+    <!-- Account Management -->
+    <div class="card mb-20">
+      <div class="card-head">
+        <div class="dot" style="background:var(--blue)"></div>
+        <span style="font-size:13px;font-weight:700;color:var(--text2)">帳號權限管理</span>
+        <span class="badge ml-auto" style="background:var(--surface2);color:var(--text3);border:1px solid var(--border2)">${ACCOUNTS.length} 組帳號</span>
+      </div>
+      <div class="card-body">
+        <div class="flex items-center gap-10 mb-16 fw-wrap" style="padding-bottom:16px;border-bottom:1px solid var(--border)">
+          <input class="field field-sm" id="newAcctId" placeholder="工號" style="width:120px">
+          <input class="field field-sm" id="newAcctPwd" placeholder="密碼" style="width:120px">
+          <input class="field field-sm" id="newAcctName" placeholder="姓名（選填）" style="width:120px">
+          <select class="field field-sm" id="newAcctRole" style="width:120px">
+            <option value="leader">Leader</option>
+            <option value="user" selected>User</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="addAccount()">新增帳號</button>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>工號</th><th>姓名</th><th>密碼</th><th>角色</th><th>操作</th></tr></thead>
+          <tbody>
+            ${ACCOUNTS.map((a,i)=>{
+              const isCurrentUser = currentUser && a.empId===currentUser.empId;
+              const rc = a.role==='leader' ? '#16a34a' : '#0ea5e9';
+              return `<tr>
+                <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${a.empId}</span></td>
+                <td style="font-weight:500">${a.name||'—'}</td>
+                <td><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">${a.password}</span></td>
+                <td>
+                  <select class="field field-sm" style="width:100px;color:${rc};font-weight:600" onchange="changeAccountRole(${i},this.value)" ${isCurrentUser?'disabled title="無法變更自己的角色"':''}>
+                    <option value="leader" ${a.role==='leader'?'selected':''} style="color:#16a34a">Leader</option>
+                    <option value="user" ${a.role==='user'?'selected':''} style="color:#0ea5e9">User</option>
+                  </select>
+                </td>
+                <td>${isCurrentUser?'<span style="font-size:11px;color:var(--text4)">目前登入</span>':'<button class="btn btn-danger btn-xs" onclick="removeAccount('+i+')">\u522a\u9664</button>'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Signer List -->
+
+    <div class="card mb-20">
+      <div class="card-head">
+        <div class="dot" style="background:var(--amber)"></div>
+        <span style="font-size:13px;font-weight:700;color:var(--text2)">可簽核人員清單</span>
+        <span class="badge ml-auto" style="background:var(--surface2);color:var(--text3);border:1px solid var(--border2)">${state.signers.length} 人</span>
+      </div>
+      <div class="card-body">
+        <!-- Add new signer -->
+        <div class="flex items-center gap-10 mb-16 fw-wrap" style="padding-bottom:16px;border-bottom:1px solid var(--border)">
+          <input class="field field-sm" id="newSignerId" placeholder="工號" style="width:120px">
+          <input class="field field-sm" id="newSignerName" placeholder="姓名" style="width:120px">
+          <select class="field field-sm" id="newSignerPos" style="width:140px">
+            <option>指導學長</option><option>資深工程師</option><option>組長</option><option>主任</option><option>經理</option><option>L4 資深值班</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="addSigner()">新增</button>
+        </div>
+
+        ${state.signers.length===0?`<div class="empty" style="padding:24px"><div class="empty-icon">👤</div><div>尚無簽核人員</div><div style="font-size:12px;margin-top:6px;color:var(--text4)">請新增可簽核的學長、主管等人員</div></div>`:`
+        <table class="tbl">
+          <thead><tr><th>工號</th><th>姓名</th><th>職位</th><th>操作</th></tr></thead>
+          <tbody>
+            ${state.signers.map((s,i)=>`<tr>
+              <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${s.signerId}</span></td>
+              <td style="font-weight:600">${s.name}</td>
+              <td><span class="badge" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text2)">${s.position}</span></td>
+              <td><button class="btn btn-danger btn-xs" onclick="removeSigner(${i})">移除</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`}
+      </div>
+    </div>
+
+    <!-- Score Guide -->
+    <div class="card">
+      <div class="card-head">
+        <div class="dot" style="background:var(--violet)"></div>
+        <span style="font-size:13px;font-weight:700;color:var(--text2)">評分標準對照</span>
+      </div>
+      <div class="card-body">
+        <div class="grid g4">
+          ${SCORE_LABELS.map(s=>`
+            <div style="background:${s.color}10;border:1px solid ${s.color}30;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+              <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:${s.color};min-width:28px">${s.grade}</span>
+              <div><div style="font-size:12px;font-weight:600;color:${s.color}">${s.min}–${s.max} 分</div><div style="font-size:11px;color:var(--text2)">${s.label}</div></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+  el.innerHTML=html;
+}
+
+function addAccount(){
+  const empId=document.getElementById('newAcctId').value.trim();
+  const pwd=document.getElementById('newAcctPwd').value.trim();
+  const name=document.getElementById('newAcctName').value.trim();
+  const role=document.getElementById('newAcctRole').value;
+  if(!empId||!pwd){alert('請填寫工號與密碼');return;}
+  if(ACCOUNTS.find(a=>a.empId===empId)){alert('此工號已存在');return;}
+  ACCOUNTS.push({empId, password:pwd, role, name: name||(role==='leader'?'Leader-':'User-')+empId});
+  save({force:true});
+  document.getElementById('newAcctId').value='';
+  document.getElementById('newAcctPwd').value='';
+  document.getElementById('newAcctName').value='';
+  renderSettings();
+}
+function changeAccountRole(idx, newRole){
+  if(ACCOUNTS[idx]) ACCOUNTS[idx].role=newRole;
+  save({force:true});
+  renderSettings();
+}
+function removeAccount(idx){
+  if(!confirm('確定刪除此帳號？'))return;
+  ACCOUNTS.splice(idx,1);
+  save({force:true});
+  renderSettings();
+}
+
+function addSigner(){
+  const id=document.getElementById('newSignerId').value.trim();
+  const name=document.getElementById('newSignerName').value.trim();
+  const pos=document.getElementById('newSignerPos').value;
+  if(!id||!name){alert('請填寫工號與姓名');return;}
+  if(state.signers.find(s=>s.signerId===id)){alert('此工號已存在');return;}
+  state.signers.push({signerId:id,name,position:pos});
+  save({force:true});
+  document.getElementById('newSignerId').value='';
+  document.getElementById('newSignerName').value='';
+  renderSettings();
+}
+
+function removeSigner(idx){
+  if(!confirm('確定移除此簽核人員？'))return;
+  state.signers.splice(idx,1);
+  save({force:true});
+  renderSettings();
+}
+
+// ─── IMPORT / EXPORT ───
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `AMHS_Training_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(data.employees && data.signers){
+        // Migrate old data: ensure all fields exist
+        data.employees.forEach(emp=>{
+          emp.dailyRecords.forEach(r=>{
+            if(!('mentorSignerId' in r)){r.mentorSignerId='';r.leaderSignerId='';}
+          });
+          emp.ojtRecords.forEach(r=>{
+            if(!('mentorSignerId' in r)){r.mentorSignerId='';r.supervisorSignerId='';}
+          });
+        });
+        state = data;
+        state.selectedEmpId = null;
+        state.selectedDay = 0;
+        save({force:true});
+        document.getElementById('employeeDetail').classList.add('hidden');
+        switchTab(currentTab);
+        alert('匯入成功！共 '+state.employees.length+' 位人員、'+state.signers.length+' 位簽核人員');
+      } else {
+        alert('檔案格式錯誤，請確認為本系統匯出的 JSON 檔案');
+      }
+    }catch(err){
+      alert('匯入失敗：'+err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// ─── INIT ───
+(function initApp(){
+  // Load state from localStorage; on first run, seed from embedded data
+  let loadedFromStorage = false;
+  try{
+    const ss = localStorage.getItem('amhs_state');
+    if(ss){
+      const loaded = JSON.parse(ss);
+      if(loaded && loaded.employees){ state = loaded; loadedFromStorage = true; }
+    }
+  }catch(e){}
+  if(!loadedFromStorage){
+    try{
+      const seed = JSON.parse(JSON.stringify(EMBEDDED_SEED_DATA));
+      if(seed && seed.employees){
+        // Migration: ensure all fields exist on records
+        (seed.employees||[]).forEach(emp=>{
+          (emp.dailyRecords||[]).forEach(r=>{ if(!('mentorSignerId' in r)){ r.mentorSignerId=''; r.leaderSignerId=''; } });
+          (emp.ojtRecords||[]).forEach(r=>{ if(!('mentorSignerId' in r)){ r.mentorSignerId=''; r.supervisorSignerId=''; } });
+        });
+        seed.signers = seed.signers || [];
+        state = seed;
+        // Persist seed so it becomes the user's own editable copy
+        localStorage.setItem('amhs_state', JSON.stringify(state));
+        // Mark first-saver in audit trail
+        localStorage.setItem('amhs_last_saver', JSON.stringify({by:'(seed)', at: Date.now()}));
+      }
+    }catch(e){ console.warn('Seed load failed:', e); }
+  }
+
+  // Always start at the login screen (v11): clear any previous session and force login UI.
+  try{ localStorage.removeItem('amhs_session'); }catch(e){}
+  currentUser = null;
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('appMain').style.display='none';
+})();
+</script>
+</body>
+</html>

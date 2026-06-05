@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3000 AMHS 人員分級訓練紀錄與評鑑系統</title>
+<link rel="stylesheet" href="style.css">
+<!-- Vue 3 CDN -->
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+<div id="app">
+<!-- HEADER -->
+<div style="background:linear-gradient(135deg,#0f172a 0%,#1a1040 50%,#0f172a 100%);border-bottom:1px solid var(--border);padding:26px 0 18px">
+  <div class="wrap">
+    <div class="flex items-center gap-12 fw-wrap">
+      <div>
+        <div style="font-size:11px;color:var(--blue2);font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">3000 AMHS · TRAINING SYSTEM</div>
+        <h1 style="font-size:24px;font-weight:900;background:linear-gradient(135deg,#e2e8f0,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.3">人員分級訓練紀錄與評鑑</h1>
+      </div>
+      <div class="ml-auto flex items-center gap-8 fw-wrap">
+        <div id="userBarContainer"></div>
+        <button class="btn btn-ghost btn-sm leader-only" onclick="exportData()" title="匯出 JSON">⬇ 匯出</button>
+        <button class="btn btn-ghost btn-sm leader-only" onclick="document.getElementById('importFile').click()" title="匯入 JSON">⬆ 匯入</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+        <button class="logout-btn" onclick="doLogout()">登出</button>
+      </div>
+    </div>
+    <div class="tabs mt-16" style="display:inline-flex">
+      <button class="tab active" data-tab="training" onclick="switchTab('training')">訓練紀錄表</button>
+      <button class="tab leader-only" data-tab="ojt" onclick="switchTab('ojt')">學長 OJT 簽核</button>
+      <button class="tab" data-tab="cert" onclick="switchTab('cert')">認證標準總覽</button>
+      <button class="tab leader-only" data-tab="settings" onclick="switchTab('settings')">⚙ 系統設定</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" style="padding-top:24px;padding-bottom:60px">
+
+  <!-- SAVE BAR -->
+  <div id="saveBar"></div>
+
+  <!-- TAB: TRAINING -->
+  <div id="tab-training">
+    <div id="statsBar" class="mb-16 fade-up"></div>
+    <div class="flex items-center gap-12 mb-16 fw-wrap fade-up">
+      <div class="search-bar" style="flex:1;min-width:220px">
+        <span class="search-icon">🔍</span>
+        <input class="field" id="searchInput" placeholder="搜尋工號或姓名..." oninput="filterEmployees()">
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="filterEmployees('all')" id="btnAll">全部人員</button>
+      <button class="btn btn-primary btn-sm leader-only" onclick="openAddEmployee()">＋ 新增人員</button>
+    </div>
+    <div id="scoreGradeBar" class="mb-16 fade-up" style="animation-delay:.02s"></div>
+    <div id="employeeList" class="mb-20 fade-up" style="animation-delay:.05s"></div>
+    <div id="employeeDetail" class="hidden"></div>
+  </div>
+
+  <!-- TAB: OJT -->
+  <div id="tab-ojt" class="hidden"></div>
+
+  <!-- TAB: CERTIFICATION -->
+  <div id="tab-cert" class="hidden"></div>
+
+  <!-- TAB: SETTINGS -->
+  <div id="tab-settings" class="hidden"></div>
+
+</div>
+
+<!-- Modal -->
+<div id="modalRoot"></div>
+
+<!-- Notifications -->
+<div id="saveWarn" class="save-warn">⚠ <span id="saveWarnMsg">請稍待再進行儲存</span></div>
+<div id="saveToast" class="save-toast">✓ <span id="saveToastMsg">已儲存</span></div>
+
+</div><!-- #app -->
+<script src="script.js"></script>
+</body>
+</html>

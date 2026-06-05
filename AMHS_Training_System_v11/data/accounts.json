@@ -1,0 +1,68 @@
+[
+  {
+    "empId": "F2568",
+    "name": "Leader-F2568",
+    "password": "F2568",
+    "role": "leader"
+  },
+  {
+    "empId": "C9228",
+    "name": "Leader-C9228",
+    "password": "C9228",
+    "role": "leader"
+  },
+  {
+    "empId": "K25578",
+    "name": "User-K25578",
+    "password": "K25578",
+    "role": "user"
+  },
+  {
+    "empId": "K25715",
+    "name": "User-K25715",
+    "password": "K25715",
+    "role": "user"
+  },
+  {
+    "empId": "K25992",
+    "name": "User-K25992",
+    "password": "K25992",
+    "role": "user"
+  },
+  {
+    "empId": "K26285",
+    "name": "User-K26285",
+    "password": "K26285",
+    "role": "user"
+  },
+  {
+    "empId": "K26287",
+    "name": "User-K26287",
+    "password": "K26287",
+    "role": "user"
+  },
+  {
+    "empId": "K26288",
+    "name": "User-K26288",
+    "password": "K26288",
+    "role": "user"
+  },
+  {
+    "empId": "K26490",
+    "name": "User-K26490",
+    "password": "K26490",
+    "role": "user"
+  },
+  {
+    "empId": "K26491",
+    "name": "User-K26491",
+    "password": "K26491",
+    "role": "user"
+  },
+  {
+    "empId": "K26641",
+    "name": "User-K26641",
+    "password": "K26641",
+    "role": "user"
+  }
+]
