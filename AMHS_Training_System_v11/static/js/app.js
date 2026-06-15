@@ -1,5 +1,6 @@
 // ─── API BASE (調整這裡即可切換後台位址) ───
 const API_BASE = 'http://127.0.0.1:5000';
+
 const ABILITY_DATA = {
   A:{label:"基礎操作能力",en:"BASIC OPERATIONS",color:"#0ea5e9",items:[
     {id:"A1",name:"智能巡檢",desc:"日常設備確認"},
@@ -63,7 +64,7 @@ const vueApp = Vue.createApp({
       autoSave: true,
       isDirty: false,
       lastSaver: null,
-      _lastPersistedState: null,
+      _lastPersistedSigners: null,
       _lastPersistedAccounts: null,
       _warnTimer: null,
       _toastTimer: null,
@@ -81,25 +82,52 @@ const vueApp = Vue.createApp({
 apiFetch(path, opts){
   opts = opts || {};
   opts.headers = Object.assign({'Content-Type':'application/json','X-Auth-Token':this._authToken}, opts.headers||{});
-  return fetch(API_BASE + path, opts);
+  return fetch(API_BASE + path, opts).then(res=>{
+    if(res.status===401){
+      sessionStorage.removeItem('amhs_token');
+      sessionStorage.removeItem('amhs_user');
+      location.href='AMHS_Training_System.html';
+      return Promise.reject(new Error('401'));
+    }
+    return res;
+  });
 },
 async doLogout(){
   try{await this.apiFetch('/api/logout', {method:'POST'});}catch(e){}
   sessionStorage.removeItem('amhs_token');
   sessionStorage.removeItem('amhs_user');
-  location.href = 'index.html';
+  location.href = 'AMHS_Training_System.html';
 },
 async enterApp(){
   // Load state from Flask
   try{
     const res=await this.apiFetch('/api/state', {});
-    if(res.ok){const d=await res.json();this.state.employees=d.employees||[];this.state.signers=d.signers||[];}
+    if(res.ok){
+      const d=await res.json();
+      this.state.employees=d.employees||[];
+      this.state.signers=d.signers||[];
+      // 修剪尾端全空的天（相容舊版固定 5 天結構）
+      this.state.employees.forEach(emp=>{
+        while(emp.dailyRecords.length>1){
+          const last=emp.dailyRecords[emp.dailyRecords.length-1];
+          const isEmpty=!last.date&&!last.learningItems&&!last.practiceItems&&
+                        !last.notes&&!last.mentorScore&&!last.leaderScore&&
+                        !last.mentorSignerId&&!last.leaderSignerId&&!last.leaderComment;
+          if(isEmpty) emp.dailyRecords.pop();
+          else break;
+        }
+        emp.dailyRecords.forEach((r,i)=>r.day=i+1);
+      });
+      // 載入後建立快照，避免第一次 save 誤判全員髒掉
+      this.state.employees.forEach(emp=>{ this['_snap_'+emp.id]=JSON.stringify(emp); });
+      this._lastPersistedSigners = JSON.stringify(this.state.signers);
+    }
   }catch(e){console.error('Failed to load state:',e);}
   // Load accounts if leader
   if(this.isLeader()){
     try{
       const res=await this.apiFetch('/api/accounts', {});
-      if(res.ok){const d=await res.json();this.ACCOUNTS=d.accounts||[];}
+      if(res.ok){const d=await res.json();this.ACCOUNTS=d.accounts||[];this._lastPersistedAccounts=JSON.stringify(this.ACCOUNTS);}
     }catch(e){}
   }
   this.applyRoleUI();
@@ -330,15 +358,26 @@ renderRadar(emp){
 
 async _persist(){
   try{
-    const stateSnap    = JSON.stringify({employees:this.state.employees, signers:this.state.signers});
+    const signersSnap  = JSON.stringify(this.state.signers);
     const accountsSnap = JSON.stringify(this.ACCOUNTS);
 
-    // 只在內容實際有變動時才送
-    if(stateSnap !== this._lastPersistedState){
-      await this.apiFetch('/api/state', {method:'POST',
-        body:JSON.stringify({employees:this.state.employees,signers:this.state.signers})});
-      this._lastPersistedState = stateSnap;
+    // 逐一比對並只儲存有變動的員工（避免全包覆蓋造成資料遺失）
+    for(const emp of this.state.employees){
+      const snap = JSON.stringify(emp);
+      const key  = '_snap_'+emp.id;
+      if(snap !== this[key]){
+        await this.apiFetch('/api/employee/'+emp.empId, {method:'POST', body:snap});
+        this[key] = snap;
+      }
     }
+
+    // signers 仍用整包（資料量小，結構不複雜）
+    if(signersSnap !== this._lastPersistedSigners){
+      await this.apiFetch('/api/state', {method:'POST',
+        body:JSON.stringify({signers:this.state.signers})});
+      this._lastPersistedSigners = signersSnap;
+    }
+
     if(this.isLeader() && accountsSnap !== this._lastPersistedAccounts){
       await this.apiFetch('/api/accounts', {method:'POST',
         body:JSON.stringify({accounts:this.ACCOUNTS})});
@@ -366,10 +405,10 @@ save(opts){
   this.lastSaver = {by: me, at: Date.now()};
   this.isDirty = false;
   this.renderSaveBar();
-  this._persist().then(function(){
+  this._persist().then(()=>{
     if(!opts.silent && opts.toast) this.showSaveToast('已由 '+me+' 儲存');
     this.renderSaveBar();
-  }).catch(function(){
+  }).catch(()=>{
     this.isDirty = true;
     this.renderSaveBar();
   });
@@ -451,11 +490,11 @@ newEmployee(empId, name){
   return {
     id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     empId: empId||"", name: name||"", startDate:"", mentor:"", leader:"", type:"新人訓練",
-    dailyRecords: Array.from({length:5},(_,i)=>({
-      day:i+1, date:"", learningItems:"", practiceItems:"",
+    dailyRecords: [{
+      day:1, date:"", learningItems:"", practiceItems:"",
       mentorScore:"", mentorAttitude:"", leaderScore:"", total:"", notes:"",
-      mentorSignerId:"", leaderSignerId:""
-    })),
+      mentorSignerId:"", leaderSignerId:"", leaderComment:""
+    }],
     ojtRecords: ojtRecs
   };
 },
@@ -631,11 +670,18 @@ confirmAddEmployee(){
   this.renderEmployeeList();
 },
 
-deleteEmployee(id){
+async deleteEmployee(id){
   if(!confirm('確定刪除此人員？所有紀錄將無法復原。'))return;
+  const emp = this.state.employees.find(e=>e.id===id);
+  if(emp){
+    try{
+      await this.apiFetch('/api/employee/'+emp.empId, {method:'DELETE'});
+      // 清除本地快照，避免下次 _persist 誤判為新增
+      delete this['_snap_'+emp.id];
+    }catch(e){ console.error('Delete failed:',e); }
+  }
   this.state.employees = this.state.employees.filter(e=>e.id!==id);
   if(this.state.selectedEmpId===id){this.state.selectedEmpId=null;document.getElementById('employeeDetail').classList.add('hidden');}
-  this.save({force:true});
   this.renderEmployeeList();
 },
 
@@ -841,6 +887,7 @@ renderEmployeeDetail(doScroll){
           <div id="dayLeader-${dayIdx}"></div>
         </div>
       </div>
+      <div class="mt-16"><label class="label">長官評語</label><textarea class="field" placeholder="長官評語..." onchange="updateDay('${emp.id}',${dayIdx},'leaderComment',this.value)">${rec.leaderComment||''}</textarea></div>
     </div>
   </div>`;
 
@@ -866,8 +913,17 @@ updateEmpField(id, field, value){
 
 updateDay(empId, dayIdx, field, value){
   const emp = this.state.employees.find(e=>e.id===empId);
-  if(emp) emp.dailyRecords[dayIdx][field]=value;
-  this.save();
+  if(!emp) return;
+  emp.dailyRecords[dayIdx][field]=value;
+  const rec = emp.dailyRecords[dayIdx];
+  if(rec.date){
+    this.apiFetch('/api/employee/'+emp.empId+'/day/'+rec.date,
+      {method:'PATCH', body:JSON.stringify({[field]:value})})
+      .then(r=>r&&r.ok?r.json():null).catch(()=>null);
+    this['_snap_'+emp.id]=JSON.stringify(emp);
+  } else {
+    this.save();
+  }
 },
 
 updateDayScore(empId, dayIdx, field, value){
@@ -879,7 +935,16 @@ updateDayScore(empId, dayIdx, field, value){
   const ma = Number(r.mentorAttitude)||0;
   const ls = Number(r.leaderScore)||0;
   r.total = (ms||ma||ls) ? Math.min(100, ms+ma+ls) : '';
-  this.save();
+  if(r.date){
+    this.apiFetch('/api/employee/'+emp.empId+'/day/'+r.date,
+      {method:'PATCH', body:JSON.stringify({[field]:value})})
+      .then(res=>res&&res.ok?res.json():null)
+      .then(d=>{ if(d&&d.total!==undefined) r.total=d.total; })
+      .catch(()=>null);
+    this['_snap_'+emp.id]=JSON.stringify(emp);
+  } else {
+    this.save();
+  }
   this.renderEmployeeDetail();
   this.renderEmployeeList();
 },
@@ -888,7 +953,7 @@ addDay(empId){
   const emp = this.state.employees.find(e=>e.id===empId);
   if(!emp)return;
   const nextDay = emp.dailyRecords.length+1;
-  emp.dailyRecords.push({day:nextDay,date:"",learningItems:"",practiceItems:"",mentorScore:"",mentorAttitude:"",leaderScore:"",total:"",notes:"",mentorSignerId:"",leaderSignerId:""});
+  emp.dailyRecords.push({day:nextDay,date:"",learningItems:"",practiceItems:"",mentorScore:"",mentorAttitude:"",leaderScore:"",total:"",notes:"",mentorSignerId:"",leaderSignerId:"",leaderComment:""});
   this.state.selectedDay = emp.dailyRecords.length-1;
   this.save({force:true});
   this.renderEmployeeDetail();
@@ -1095,7 +1160,6 @@ renderSettings(){
       <div class="card-body">
         <div class="flex items-center gap-10 mb-16 fw-wrap" style="padding-bottom:16px;border-bottom:1px solid var(--border)">
           <input class="field field-sm" id="newAcctId" placeholder="工號" style="width:120px">
-          <input class="field field-sm" id="newAcctPwd" placeholder="密碼" style="width:120px">
           <input class="field field-sm" id="newAcctName" placeholder="姓名（選填）" style="width:120px">
           <select class="field field-sm" id="newAcctRole" style="width:120px">
             <option value="leader">Leader</option>
@@ -1104,7 +1168,7 @@ renderSettings(){
           <button class="btn btn-primary btn-sm" onclick="addAccount()">新增帳號</button>
         </div>
         <table class="tbl">
-          <thead><tr><th>工號</th><th>姓名</th><th>密碼</th><th>角色</th><th>操作</th></tr></thead>
+          <thead><tr><th>工號</th><th>姓名</th><th>角色</th><th>操作</th></tr></thead>
           <tbody>
             ${this.ACCOUNTS.map((a,i)=>{
               const isCurrentUser = this.currentUser && a.empId===this.currentUser.empId;
@@ -1112,7 +1176,6 @@ renderSettings(){
               return `<tr>
                 <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${a.empId}</span></td>
                 <td style="font-weight:500">${a.name||'—'}</td>
-                <td><span style="font-family:var(--mono);font-size:12px;color:var(--text3)">${a.password}</span></td>
                 <td>
                   <select class="field field-sm" style="width:100px;color:${rc};font-weight:600" onchange="changeAccountRole(${i},this.value)" ${isCurrentUser?'disabled title="無法變更自己的角色"':''}>
                     <option value="leader" ${a.role==='leader'?'selected':''} style="color:#16a34a">Leader</option>
@@ -1182,18 +1245,55 @@ renderSettings(){
   el.innerHTML=html;
 },
 
+// addAccount(){
+//   const empId=document.getElementById('newAcctId').value.trim();
+//   const pwd=document.getElementById('newAcctPwd').value.trim();
+//   const name=document.getElementById('newAcctName').value.trim();
+//   const role=document.getElementById('newAcctRole').value;
+//   if(!empId||!pwd){alert('請填寫工號與密碼');return;}
+//   if(this.ACCOUNTS.find(a=>a.empId===empId)){
+//       alert('此工號已存在');
+//       return;
+//   }
+//   this.ACCOUNTS.push({empId, password:pwd, role, name: name||(role==='leader'?'Leader-':'User-')+empId});
+//   this.save({force:true});
+//   document.getElementById('newAcctId').value='';
+//   document.getElementById('newAcctPwd').value='';
+//   document.getElementById('newAcctName').value='';
+//   this.renderSettings();
+// },
+
 addAccount(){
-  const empId=document.getElementById('newAcctId').value.trim();
-  const pwd=document.getElementById('newAcctPwd').value.trim();
-  const name=document.getElementById('newAcctName').value.trim();
-  const role=document.getElementById('newAcctRole').value;
-  if(!empId||!pwd){alert('請填寫工號與密碼');return;}
-  if(this.ACCOUNTS.find(a=>a.empId===empId)){alert('此工號已存在');return;}
-  this.ACCOUNTS.push({empId, password:pwd, role, name: name||(role==='leader'?'Leader-':'User-')+empId});
+  const empId = document.getElementById('newAcctId').value.trim();
+  // const pwd = document.getElementById('newAcctPwd').value.trim();
+  const name = document.getElementById('newAcctName').value.trim();
+  const role = document.getElementById('newAcctRole').value;
+
+  // 只檢查工號必填
+  if(!empId){
+    alert('請填寫工號');
+    return;
+  }
+
+  if(this.ACCOUNTS.find(a => a.empId === empId)){
+    alert('此工號已存在');
+    return;
+  }
+
+  // 密碼允許空白，沒輸入就是 ""
+  this.ACCOUNTS.push({
+    empId,
+    password: "",
+    role,
+    name: name || (role === 'leader' ? 'Leader-' : 'User-') + empId
+  });
+
   this.save({force:true});
-  document.getElementById('newAcctId').value='';
-  document.getElementById('newAcctPwd').value='';
-  document.getElementById('newAcctName').value='';
+
+  document.getElementById('newAcctId').value = '';
+  // document.getElementById('newAcctPwd').value = '';
+  document.getElementById('newAcctName').value = '';
+
   this.renderSettings();
 },
 changeAccountRole(idx, newRole){
@@ -1243,15 +1343,37 @@ importData(e){
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
-  reader.onload = async function(ev){
+  reader.onload = async (ev) => {
     try{
       const data = JSON.parse(ev.target.result);
       if(data.employees && data.signers){
         // Migrate old data: ensure all fields exist
         data.employees.forEach(emp=>{
-          emp.dailyRecords.forEach(r=>{
-            if(!('mentorSignerId' in r)){r.mentorSignerId='';r.leaderSignerId='';}
-          });
+          // 補齊每筆 dailyRecord 的欄位（舊資料相容），不補天數
+          emp.dailyRecords = emp.dailyRecords.map((r,i)=>({
+            day: r.day!==undefined ? r.day : i+1,
+            date: r.date||"",
+            learningItems: r.learningItems||"",
+            practiceItems: r.practiceItems||"",
+            notes: r.notes||"",
+            mentorScore: r.mentorScore||"",
+            mentorAttitude: r.mentorAttitude||"",
+            leaderScore: r.leaderScore||"",
+            total: r.total||"",
+            mentorSignerId: r.mentorSignerId||"",
+            leaderSignerId: r.leaderSignerId||"",
+            leaderComment: r.leaderComment||""
+          }));
+          // 修剪尾端全空的天
+          while(emp.dailyRecords.length>1){
+            const last=emp.dailyRecords[emp.dailyRecords.length-1];
+            const isEmpty=!last.date&&!last.learningItems&&!last.practiceItems&&
+                          !last.notes&&!last.mentorScore&&!last.leaderScore&&
+                          !last.mentorSignerId&&!last.leaderSignerId&&!last.leaderComment;
+            if(isEmpty) emp.dailyRecords.pop();
+            else break;
+          }
+          emp.dailyRecords.forEach((r,i)=>r.day=i+1);
           emp.ojtRecords.forEach(r=>{
             if(!('mentorSignerId' in r)){r.mentorSignerId='';r.supervisorSignerId='';}
           });
@@ -1281,7 +1403,7 @@ importData(e){
   mounted() {
     const token = sessionStorage.getItem('amhs_token');
     const user  = sessionStorage.getItem('amhs_user');
-    if (!token || !user) { location.href = 'index.html'; return; }
+    if (!token || !user) { location.href = 'AMHS_Training_System.html'; return; }
     this._authToken  = token;
     this.currentUser = JSON.parse(user);
     try { this.autoSave = localStorage.getItem('amhs_autosave') !== 'off'; } catch(e) {}
@@ -1292,4 +1414,8 @@ importData(e){
 
 const _vm = vueApp.mount('#app');
 const _exposed = ['apiFetch', 'isLeader', 'applyRoleUI', 'doLogout', 'enterApp', 'getScoreInfo', 'getEmpCatSummary', 'getEmpCatLevel', 'catSummaryCell', 'getEmpOjtAvgScore', 'getEmpCatAvgScore', 'getEmpOverallGrade', 'daysSince', 'colorFromId', 'firstChar', 'fmtDateZh', 'getEmpProgress', 'scoreGradeBarHTML', 'levelToNum', 'statIcon', 'renderStatsBar', 'statCard', 'scoreToLevelVal', 'renderRadar', '_persist', 'save', 'saveNow', 'toggleAutoSave', 'showSaveWarn', 'showSaveToast', 'fmtTime', 'renderSaveBar', 'newEmployee', 'findSigner', 'signerDisplay', 'signerBadgeHTML', 'getEmpAvgScore', 'getEmpOjtLevel', 'switchTab', 'filterEmployees', 'renderEmployeeList', 'openAddEmployee', 'previewSigner', 'confirmAddEmployee', 'deleteEmployee', 'closeModal', 'selectEmployee', 'renderEmployeeDetail', 'showInlineSigner', 'updateEmpField', 'updateDay', 'updateDayScore', 'addDay', 'searchDayByDate', 'removeDay', 'renderOJT', 'updateOjtField', 'renderCert', 'renderSettings', 'addAccount', 'changeAccountRole', 'removeAccount', 'addSigner', 'removeSigner', 'exportData', 'importData'];
-_exposed.forEach(m => { if (typeof _vm[m] === 'function') window[m] = (...a) => _vm[m](...a); });
+_exposed.forEach(m => { 
+    if (typeof _vm[m] === 'function') 
+        window[m] = (...a) => _vm[m](...a); 
+      }
+    );

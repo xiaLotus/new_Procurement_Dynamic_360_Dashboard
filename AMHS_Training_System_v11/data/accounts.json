@@ -64,5 +64,113 @@
     "name": "User-K26641",
     "password": "K26641",
     "role": "user"
+  },
+  {
+    "empId": "K18251",
+    "name": "User-K18251",
+    "password": "K18251",
+    "role": "leader"
+  },
+  {
+    "empId": "K268880",
+    "name": "User-K26880",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K26880",
+    "name": "User-K26880",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K26881",
+    "name": "User-K26881",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K26882",
+    "name": "User-K26882",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K27124",
+    "name": "User-K27124",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K27125",
+    "name": "User-K27125",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K27799",
+    "name": "User-K27799",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K27800",
+    "name": "User-K27800",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K26647",
+    "name": "User-K26647",
+    "password": "",
+    "role": "user"
+  },
+  {
+    "empId": "K21295",
+    "name": "陳瑞寶",
+    "password": "",
+    "role": "leader"
+  },
+  {
+    "empId": "G4535",
+    "name": "陳思維",
+    "password": "",
+    "role": "leader"
+  },
+  {
+    "empId": "C8849",
+    "name": "林郁祥",
+    "password": "",
+    "role": "leader"
+  },
+  {
+    "empId": "F1350",
+    "name": "黃慕生",
+    "password": "",
+    "role": "leader"
+  },
+  {
+    "empId": "F8950",
+    "name": "黃偉利",
+    "password": "",
+    "role": "leader"
+  },
+  {
+    "empId": "F9144",
+    "name": "張誌中",
+    "password": "",
+    "role": "leader"
+  },
+  {
+    "empId": "F9473",
+    "name": "江政樺",
+    "password": "",
+    "role": "leader"
+  },
+  {
+    "empId": "G0181",
+    "name": "吳培銘",
+    "password": "",
+    "role": "leader"
   }
 ]

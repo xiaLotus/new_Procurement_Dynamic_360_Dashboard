@@ -2,14 +2,19 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from loguru import logger
 import json, os, secrets, glob
+from ldap3 import Server, Connection, ALL, NTLM # type: ignore
+from ldap3.core.exceptions import LDAPException, LDAPBindError # type: ignore
+
 
 app = Flask(__name__, static_folder='static')
 CORS(app, origins='*', allow_headers=['Content-Type', 'X-Auth-Token'])
 
 BASE_DIR  = os.path.dirname(__file__)
 DATA_DIR  = os.path.join(BASE_DIR, 'data')
+# DATA_DIR = rf"D:\Data\ChiChen_AMHS_值班訓練表單\data"
 EMP_DIR   = os.path.join(DATA_DIR, 'employees')
 LOG_DIR   = os.path.join(BASE_DIR, 'logs')
+# LOG_DIR = rf"D:\Data\ChiChen_AMHS_值班訓練表單\logs"
 
 os.makedirs(EMP_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -25,8 +30,24 @@ logger.add(
     level='INFO',
 )
 
-# ─── In-memory token store ────────────────────────────────────────────────────
-_tokens = {}
+# ─── Persistent token store ──────────────────────────────────────────────────
+_TOKENS_FILE = os.path.join(DATA_DIR, 'tokens.json')
+
+def _load_tokens():
+    try:
+        with open(_TOKENS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def _save_tokens(tokens):
+    try:
+        with open(_TOKENS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(tokens, f, ensure_ascii=False)
+    except Exception:
+        pass
+
+_tokens = _load_tokens()
 
 # ─── Data helpers ─────────────────────────────────────────────────────────────
 def _read(path):
@@ -106,30 +127,98 @@ def static_files(filename):
     return send_from_directory(app.static_folder, filename)
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
+def authenticate_user(username, password):
+    try:
+        server = Server('ldap://KHADDC02.kh.asegroup.com', get_info = ALL)
+        # 使用 NTLM
+        user = f'kh\\{username}'
+        password = f'{password}'
+        return True
+
+        logger.info(f"帳號: {username} 密碼: {password}")
+        # # 建立連接
+        conn = Connection(server, user = user, password = password, authentication = NTLM)
+
+        # # 嘗試綁定
+        if conn.bind():
+            logger.info(f"User {username} login successful.")
+            return True
+        else:
+            logger.warning(f"Login failed for user {username}: {conn.last_error}")
+            return False
+    except Exception as e:
+        # app.logger.error(f"Error during authentication for user {username}: {e}")
+        return False
+
+
+
+
 @app.route('/api/login', methods=['POST'])
 def login():
     body   = request.get_json() or {}
     emp_id = body.get('empId', '').strip()
     pwd    = body.get('password', '')
-    if not emp_id or not pwd:
-        logger.warning(f"[LOGIN] 空白工號或密碼 | ip={client_ip()}")
-        return jsonify({'error': '請輸入工號與密碼'}), 400
+    logger.info("帳號: ", emp_id, " 密碼: ", pwd)
+
+    # 1. 工號與 AD 密碼都要輸入
+    # 注意：這裡的密碼是 AD 密碼，不是 accounts.json 的 password
+    if not emp_id:
+        logger.warning(f"[LOGIN] 空白工號 | ip={client_ip()}")
+        return jsonify({'error': '請輸入工號'}), 400
+
+    if not pwd:
+        logger.warning(f"[LOGIN] 空白 AD 密碼 | empId={emp_id} | ip={client_ip()}")
+        return jsonify({'error': '請輸入 AD 密碼'}), 400
+
+    # 2. 先讀取 accounts.json
     accounts = load_accounts()
-    acct = next((a for a in accounts
-                 if a['empId'] == emp_id and a['password'] == pwd), None)
+
+    # 3. 只確認工號是否存在，不比對 password
+    acct = next(
+        (
+            a for a in accounts
+            if a.get('empId', '').strip().upper() == emp_id.upper()
+        ),
+        None
+    )
+
+    # 4. 如果 accounts.json 找不到工號，代表沒有系統權限
     if not acct:
-        logger.warning(f"[LOGIN] 失敗 | empId={emp_id} | ip={client_ip()}")
-        return jsonify({'error': '工號或密碼錯誤，請重新輸入'}), 401
+        logger.warning(f"[LOGIN] 無系統權限 | empId={emp_id} | ip={client_ip()}")
+        return jsonify({'error': '此工號尚未建立系統權限，無法登入'}), 403
+
+    # 5. 工號存在後，再進行 AD 驗證
+    if not authenticate_user(emp_id, pwd):
+        logger.warning(f"[LOGIN] AD 驗證失敗 | empId={emp_id} | ip={client_ip()}")
+        return jsonify({'error': 'AD 帳號或密碼錯誤，請重新輸入'}), 401
+
+    # 6. AD 驗證成功後，用 accounts.json 的角色 / 姓名建立登入資訊
     token = secrets.token_hex(24)
-    user  = {'empId': acct['empId'], 'role': acct['role'], 'name': acct['name']}
+
+    user = {
+        'empId': acct.get('empId', emp_id),
+        'role': acct.get('role', 'user'),
+        'name': acct.get('name', emp_id)
+    }
+
     _tokens[token] = user
-    logger.info(f"[LOGIN] 成功 | empId={emp_id} | role={acct['role']} | ip={client_ip()}")
+    _save_tokens(_tokens)
+
+    logger.info(
+        f"[LOGIN] 成功 | empId={user['empId']} | role={user['role']} | ip={client_ip()}"
+    )
+
     return jsonify({'user': user, 'token': token})
+
+
+
+
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
     u = current_user()
     _tokens.pop(request.headers.get('X-Auth-Token', ''), None)
+    _save_tokens(_tokens)
     if u:
         logger.info(f"[LOGOUT] | empId={u['empId']} | ip={client_ip()}")
     return jsonify({'ok': True})
@@ -154,6 +243,7 @@ _FIELD_LABEL = {
     'leaderScore':     'Leader評分',
     'total':           '總分',
     'mentorNote':      '學長備註',
+    'leaderComment':   '長官評語',
 }
 
 def _v(val):
@@ -209,7 +299,7 @@ def _diff_employee(old_emp, new_emp):
                     f"[{eid}({name})] 第{day}天 {_FIELD_LABEL[field]}: {_v(ov)} → {_v(nv)}")
 
         # 文字欄位：記錄內容（截斷過長的）
-        for field in ('learningItems','practiceItems','notes'):
+        for field in ('learningItems','practiceItems','notes','leaderComment'):
             ov, nv = o.get(field,''), r.get(field,'')
             if ov != nv and nv:
                 preview = nv.replace('\n', ' ')[:60]
@@ -287,6 +377,78 @@ def post_state():
 
     return jsonify({'ok': True, 'savedBy': current_user()['empId']})
 
+# ─── Single employee save (prevents full-overwrite race condition) ────────────
+@app.route('/api/employee/<emp_id>', methods=['POST'])
+def post_employee(emp_id):
+    err = require_login()
+    if err: return err
+    emp = request.get_json() or {}
+    if emp.get('empId') != emp_id:
+        return jsonify({'error': 'empId mismatch'}), 400
+    try:
+        old_emp = _read(os.path.join(EMP_DIR, f'{emp_id}.json'))
+        changes = _diff_employee(old_emp, emp)
+    except Exception:
+        changes = [f"{emp_id} 資料新增"]
+    save_employee(emp)
+    if changes:
+        for c in changes:
+            logger.info(f"[WRITE:employee] {who()} | {c} | ip={client_ip()}")
+    else:
+        logger.info(f"[WRITE:employee] {who()} | {emp_id} (無變動) | ip={client_ip()}")
+    return jsonify({'ok': True})
+
+
+# ─── Patch single day record (by date) ───────────────────────────────────────
+@app.route('/api/employee/<emp_id>/day/<date>', methods=['PATCH'])
+def patch_employee_day(emp_id, date):
+    err = require_login()
+    if err: return err
+    u = current_user()
+    if u.get('role') != 'leader' and u.get('empId','').upper() != emp_id.upper():
+        return jsonify({'error': '權限不足，只能修改自己的訓練紀錄'}), 403
+    patch = request.get_json() or {}
+    try:
+        emp = _read(os.path.join(EMP_DIR, f'{emp_id}.json'))
+    except Exception:
+        return jsonify({'error': '找不到員工資料'}), 404
+    rec = next((r for r in emp.get('dailyRecords', []) if r.get('date') == date), None)
+    if rec is None:
+        return jsonify({'error': f'找不到日期 {date} 的紀錄'}), 404
+    old_rec = dict(rec)
+    _ALLOWED_DAY_FIELDS = {
+        'learningItems','practiceItems','notes','leaderComment',
+        'mentorScore','mentorAttitude','leaderScore',
+        'mentorSignerId','leaderSignerId','date'
+    }
+    rec.update({k: v for k, v in patch.items() if k in _ALLOWED_DAY_FIELDS})
+    ms = float(rec.get('mentorScore') or 0)
+    ma = float(rec.get('mentorAttitude') or 0)
+    ls = float(rec.get('leaderScore') or 0)
+    rec['total'] = min(100, ms + ma + ls) if (ms or ma or ls) else ''
+    save_employee(emp)
+    for field, nv in patch.items():
+        ov = str(old_rec.get(field, ''))
+        nv_s = str(nv)
+        if ov != nv_s and nv_s:
+            fl = _FIELD_LABEL.get(field, field)
+            day_num = rec.get('day', '?')
+            if field in ('mentorScore', 'mentorAttitude', 'leaderScore', 'total'):
+                logger.info(f"[PATCH:day] {who()} | [{emp_id}] 第{day_num}天({date}) {fl}: {_v(ov)} → {_v(nv_s)} | ip={client_ip()}")
+            else:
+                preview = nv_s.replace('\n', ' ')[:60]
+                suffix = '…' if len(nv_s) > 60 else ''
+                logger.info(f"[PATCH:day] {who()} | [{emp_id}] 第{day_num}天({date}) {fl}: 「{preview}{suffix}」 | ip={client_ip()}")
+    return jsonify({'ok': True, 'total': rec['total']})
+
+@app.route('/api/employee/<emp_id>', methods=['DELETE'])
+def delete_employee_api(emp_id):
+    err = require_leader()
+    if err: return err
+    delete_employee(emp_id)
+    logger.info(f"[DELETE:employee] {who()} | empId={emp_id} | ip={client_ip()}")
+    return jsonify({'ok': True})
+
 # ─── Accounts (leader only) ───────────────────────────────────────────────────
 @app.route('/api/accounts', methods=['GET'])
 def get_accounts():
@@ -322,5 +484,9 @@ def post_accounts():
     save_accounts(new_accts)
     return jsonify({'ok': True})
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+if __name__ == "__main__":
+    app.run(debug=True)
+    # serve(app, host='10.11.99.84', port=8091)  
+    # 原狀態
+    # app.run(host="10.11.104.247", port=9017, debug=True)
+    # 0971-50-2211 修哥電話

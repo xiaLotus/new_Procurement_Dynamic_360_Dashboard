@@ -1,37 +1,63 @@
 {
   "dailyRecords": [
     {
-      "date": "2026-06-10",
+      "date": "2026-06-09",
       "day": 1,
       "leaderScore": "",
-      "leaderSignerId": "",
-      "learningItems": "天車末停處理",
+      "leaderSignerId": "C8849",
+      "learningItems": "3400-EPTALK系統介面操作熟悉\n3400-手臂 SMART PAD 操作練習 \n3380-手臂 SMART PAD 操作練習\n3190-投貨*12(進3380)\n貨批帳料查詢",
       "mentorAttitude": "",
       "mentorScore": "",
-      "mentorSignerId": "",
-      "notes": "今天有學習到遇到天車末停時，首先要看末停的那台天車，它的任務以及要下的站點是否正確，如果不正確的話可以把貨清掉刪除天車任務，如果天車載的盒號正確可是不是在此站點下貨，可以戳進階看是否能正常",
-      "practiceItems": "天車末停要如何處理",
+      "mentorSignerId": "G0181",
+      "notes": "透過培銘學長講解及實際操作，更清楚機台操作。",
+      "practiceItems": "貨批帳料查詢\n練習操作3400/3380-手臂 SMART PAD ",
       "total": ""
     },
     {
       "date": "2026-06-11",
       "day": 2,
       "leaderScore": "",
-      "leaderSignerId": "",
-      "learningItems": "k11 6樓3670移動台車 Fork1手臂防撞檢知異常",
+      "leaderSignerId": "C8849",
+      "learningItems": "K22 8F和5F Plasma 機故排除\nK22 5F 烤箱 機故排除\nK22 5F 3400 機故排除\n克雷爾流道 機故排除",
       "mentorAttitude": "",
       "mentorScore": "",
-      "mentorSignerId": "",
-      "notes": "今天因為x1006防撞檢之異常。有跟著組長學習調整鐵塊鬆緊度，後續調整後已改善完畢",
-      "practiceItems": "解除機故，並且跟著組長調整線路",
+      "mentorSignerId": "G0181",
+      "notes": "實際現場排除機故更有經驗。",
+      "practiceItems": "實際排除K22 8F和5F Plasma 機故\n實際排除K22 5F 烤箱 機故\n實際排除K22 5F 3400 機故\n實際排除克雷爾流道 機故",
+      "total": ""
+    },
+    {
+      "date": "2026-06-12",
+      "day": 3,
+      "leaderScore": "",
+      "leaderSignerId": "C8849",
+      "learningItems": "3400 KUGA手臂練習 \n3418 KUGA手臂練習 \n3380 KUGA手臂練習\n3910 人機介面_自動模式選擇練習\nWIP 人機介面操作練習",
+      "mentorAttitude": "",
+      "mentorScore": "",
+      "mentorSignerId": "G0181",
+      "notes": "實際處理機顧增加實作經驗。",
+      "practiceItems": "3400 UDF手臂異常停止機故排除，先取下手臂空盒放回指定處，手臂復歸、手臂啟動。\n3400/3418 KUGA手臂復習操作",
+      "total": ""
+    },
+    {
+      "date": "2026-06-13",
+      "day": 4,
+      "leaderScore": "",
+      "leaderSignerId": "C8849",
+      "learningItems": "3400 機故排除\n2945/3190 WIP旋轉平台夾取異常確認",
+      "mentorAttitude": "",
+      "mentorScore": "",
+      "mentorSignerId": "G0181",
+      "notes": "實際獨立排除機故，便隨時注意突發狀況。",
+      "practiceItems": "1.2945\\3190天車下完空盒MAG至旋轉平台1，但手臂不會執行夾取，及機台也沒跳ALARM，已通知廠商去了解機故原因，則回報值班學長與導入組學長狀況(待釐清)\n2.J08手臂夾取MAG ULD->B3異常\n 停機->開門取下ULD貨批->放至B3->RESET手臂->啟動",
       "total": ""
     }
   ],
-  "empId": "K25578",
-  "id": "mpwemabi8c73",
-  "leader": "F9144",
-  "mentor": "F1350",
-  "name": "梁凱葳",
+  "empId": "K27125",
+  "id": "mq4segc7eb3v",
+  "leader": "C8849",
+  "mentor": "G0181",
+  "name": "莊坤霖",
   "ojtRecords": [
     {
       "category": "A",
@@ -42,8 +68,7 @@
       "mentorSignerId": "",
       "name": "智能巡檢",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "A",
@@ -54,8 +79,7 @@
       "mentorSignerId": "",
       "name": "SOP 操作",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "A",
@@ -66,8 +90,7 @@
       "mentorSignerId": "",
       "name": "系統登入",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "A",
@@ -78,8 +101,7 @@
       "mentorSignerId": "",
       "name": "交接班作業",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "B",
@@ -90,8 +112,7 @@
       "mentorSignerId": "",
       "name": "Jam 排除",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "B",
@@ -102,8 +123,7 @@
       "mentorSignerId": "",
       "name": "Alarm Reset",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "B",
@@ -114,8 +134,7 @@
       "mentorSignerId": "",
       "name": "Sensor 異常",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "B",
@@ -126,8 +145,7 @@
       "mentorSignerId": "",
       "name": "Robot Recovery",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "B",
@@ -138,8 +156,7 @@
       "mentorSignerId": "",
       "name": "帳籍卡站處理",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "C",
@@ -150,8 +167,7 @@
       "mentorSignerId": "",
       "name": "AMHS 流程",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "C",
@@ -162,8 +178,7 @@
       "mentorSignerId": "",
       "name": "Conveyor 邏輯",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "C",
@@ -174,8 +189,7 @@
       "mentorSignerId": "",
       "name": "Auto / Manual",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "C",
@@ -186,8 +200,7 @@
       "mentorSignerId": "",
       "name": "系統關聯性",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "D",
@@ -198,8 +211,7 @@
       "mentorSignerId": "",
       "name": "異常回報",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "D",
@@ -210,8 +222,7 @@
       "mentorSignerId": "",
       "name": "MFG 溝通",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "D",
@@ -222,8 +233,7 @@
       "mentorSignerId": "",
       "name": "夜班應變",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     },
     {
       "category": "D",
@@ -234,10 +244,9 @@
       "mentorSignerId": "",
       "name": "問題紀錄",
       "score": "",
-      "supervisorSignerId": "",
-      "targetLevel": "L1"
+      "supervisorSignerId": ""
     }
   ],
-  "startDate": "2026-01-19",
+  "startDate": "2026-04-27",
   "type": "新人訓練"
 }
