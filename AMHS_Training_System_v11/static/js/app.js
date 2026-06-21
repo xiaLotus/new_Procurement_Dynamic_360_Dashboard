@@ -916,14 +916,10 @@ updateDay(empId, dayIdx, field, value){
   if(!emp) return;
   emp.dailyRecords[dayIdx][field]=value;
   const rec = emp.dailyRecords[dayIdx];
-  if(rec.date){
-    this.apiFetch('/api/employee/'+emp.empId+'/day/'+rec.date,
-      {method:'PATCH', body:JSON.stringify({[field]:value})})
-      .then(r=>r&&r.ok?r.json():null).catch(()=>null);
-    this['_snap_'+emp.id]=JSON.stringify(emp);
-  } else {
-    this.save();
-  }
+  this.apiFetch('/api/employee/'+emp.empId+'/day-num/'+rec.day,
+    {method:'PATCH', body:JSON.stringify({[field]:value})})
+    .then(r=>r&&r.ok?r.json():null).catch(()=>null);
+  this['_snap_'+emp.id]=JSON.stringify(emp);
 },
 
 updateDayScore(empId, dayIdx, field, value){
@@ -935,16 +931,12 @@ updateDayScore(empId, dayIdx, field, value){
   const ma = Number(r.mentorAttitude)||0;
   const ls = Number(r.leaderScore)||0;
   r.total = (ms||ma||ls) ? Math.min(100, ms+ma+ls) : '';
-  if(r.date){
-    this.apiFetch('/api/employee/'+emp.empId+'/day/'+r.date,
-      {method:'PATCH', body:JSON.stringify({[field]:value})})
-      .then(res=>res&&res.ok?res.json():null)
-      .then(d=>{ if(d&&d.total!==undefined) r.total=d.total; })
-      .catch(()=>null);
-    this['_snap_'+emp.id]=JSON.stringify(emp);
-  } else {
-    this.save();
-  }
+  this.apiFetch('/api/employee/'+emp.empId+'/day-num/'+r.day,
+    {method:'PATCH', body:JSON.stringify({[field]:value})})
+    .then(res=>res&&res.ok?res.json():null)
+    .then(d=>{ if(d&&d.total!==undefined) r.total=d.total; })
+    .catch(()=>null);
+  this['_snap_'+emp.id]=JSON.stringify(emp);
   this.renderEmployeeDetail();
   this.renderEmployeeList();
 },

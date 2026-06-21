@@ -399,9 +399,9 @@ def post_employee(emp_id):
     return jsonify({'ok': True})
 
 
-# ─── Patch single day record (by date) ───────────────────────────────────────
-@app.route('/api/employee/<emp_id>/day/<date>', methods=['PATCH'])
-def patch_employee_day(emp_id, date):
+# ─── Patch single day record (by day number) ──────────────────────────────────
+@app.route('/api/employee/<emp_id>/day-num/<int:day_num>', methods=['PATCH'])
+def patch_employee_day_num(emp_id, day_num):
     err = require_login()
     if err: return err
     u = current_user()
@@ -412,9 +412,9 @@ def patch_employee_day(emp_id, date):
         emp = _read(os.path.join(EMP_DIR, f'{emp_id}.json'))
     except Exception:
         return jsonify({'error': '找不到員工資料'}), 404
-    rec = next((r for r in emp.get('dailyRecords', []) if r.get('date') == date), None)
+    rec = next((r for r in emp.get('dailyRecords', []) if r.get('day') == day_num), None)
     if rec is None:
-        return jsonify({'error': f'找不到日期 {date} 的紀錄'}), 404
+        return jsonify({'error': f'找不到第 {day_num} 天紀錄'}), 404
     old_rec = dict(rec)
     _ALLOWED_DAY_FIELDS = {
         'learningItems','practiceItems','notes','leaderComment',
@@ -427,18 +427,18 @@ def patch_employee_day(emp_id, date):
     ls = float(rec.get('leaderScore') or 0)
     rec['total'] = min(100, ms + ma + ls) if (ms or ma or ls) else ''
     save_employee(emp)
+    date_label = rec.get('date') or f'第{day_num}天'
     for field, nv in patch.items():
         ov = str(old_rec.get(field, ''))
         nv_s = str(nv)
         if ov != nv_s and nv_s:
             fl = _FIELD_LABEL.get(field, field)
-            day_num = rec.get('day', '?')
             if field in ('mentorScore', 'mentorAttitude', 'leaderScore', 'total'):
-                logger.info(f"[PATCH:day] {who()} | [{emp_id}] 第{day_num}天({date}) {fl}: {_v(ov)} → {_v(nv_s)} | ip={client_ip()}")
+                logger.info(f"[PATCH:day] {who()} | [{emp_id}] 第{day_num}天({date_label}) {fl}: {_v(ov)} → {_v(nv_s)} | ip={client_ip()}")
             else:
                 preview = nv_s.replace('\n', ' ')[:60]
                 suffix = '…' if len(nv_s) > 60 else ''
-                logger.info(f"[PATCH:day] {who()} | [{emp_id}] 第{day_num}天({date}) {fl}: 「{preview}{suffix}」 | ip={client_ip()}")
+                logger.info(f"[PATCH:day] {who()} | [{emp_id}] 第{day_num}天({date_label}) {fl}: 「{preview}{suffix}」 | ip={client_ip()}")
     return jsonify({'ok': True, 'total': rec['total']})
 
 @app.route('/api/employee/<emp_id>', methods=['DELETE'])
