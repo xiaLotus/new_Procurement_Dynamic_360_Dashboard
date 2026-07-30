@@ -84,6 +84,16 @@ const app = Vue.createApp({
         updateStartMonth() {
             if (this.startYear && this.startMonthNum) {
                 this.startMonth = `${this.startYear}-${this.startMonthNum}`;
+
+                // ✅ 自動將結尾設為開始月份後第 8 個月
+                const end = new Date(`${this.startYear}-${this.startMonthNum}-01`);
+                end.setMonth(end.getMonth() + 7);
+                const endYear = end.getFullYear();
+                const endMonth = String(end.getMonth() + 1).padStart(2, '0');
+                this.endMonth = `${endYear}-${endMonth}`;
+                this.endYear = String(endYear);
+                this.endMonthNum = endMonth;
+
                 this.validateDateRange();
             }
         },
@@ -234,19 +244,9 @@ const app = Vue.createApp({
                 }
             }, 1000);
 
-            this.filteredMonths = this.generateMonthRange(this.startMonth, this.endMonth);
-
             this.error = '';
-
-            if (this.filteredMonths.length === 0) {
-                this.error = '選定範圍內無數據';
-                return;
-            }
-
-            this.info = `已篩選 ${this.filteredMonths.length} 個月的數據`;
-            this.$nextTick(() => {
-                this.updateCharts();
-            });
+            // ✅ 重打 API，確保拿到正確範圍的資料
+            this.fetchMonthlyExpenses();
         },
 
         // 重置筛选
@@ -414,7 +414,7 @@ const app = Vue.createApp({
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '每月花費 (元)',
+                        label: '每月開單 (元)',
                         type: 'bar',
                         data: normalData,
                         backgroundColor: 'rgba(102, 126, 234, 0.85)',
@@ -612,3 +612,5 @@ const app = Vue.createApp({
 });
 
 app.mount('#app');
+
+// 10.11.104.247:7001

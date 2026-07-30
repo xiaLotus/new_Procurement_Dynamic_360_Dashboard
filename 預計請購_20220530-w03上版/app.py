@@ -315,7 +315,7 @@ def get_unordered_count():
             "error": str(e)
         }), 500
 
-# 12/1
+# 12/1 06/04
 # ========================================================================
 # 🆕 新增API：月度花費分析（用於新圖表頁面）
 # ========================================================================
@@ -438,23 +438,6 @@ def monthly_expense_analysis():
                         }
                     }
                 })
-        #  return jsonify({
-        #     'success': True,
-        #     'data': {
-        #         'normal': {
-        #             'total': int(df_normal['總金額'].astype(float).sum()) if len(df_normal) > 0 else 0,
-        #             'average': int(df_normal['總金額'].astype(float).mean()) if len(df_normal) > 0 else 0,
-        #             'count': len(df_normal),
-        #             'trend': normal_trend
-        #         },
-        #         'wbs': {
-        #             'total': int(df_wbs['總金額'].astype(float).sum()) if len(df_wbs) > 0 else 0,
-        #             'average': int(df_wbs['總金額'].astype(float).mean()) if len(df_wbs) > 0 else 0,
-        #             'count': len(df_wbs),
-        #             'trend': wbs_trend
-        #         }
-        #     }
-        # })
         
     except Exception as e:
         print(f"月度費用分析錯誤: {str(e)}")
