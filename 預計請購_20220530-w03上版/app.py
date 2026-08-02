@@ -15,6 +15,11 @@ import shutil
 import numpy as np
 import traceback
 
+# ── 集中式 Log 設定（路徑與輪轉週期定義於 config.ini）──
+from log_config import setup_logging, get_logger
+setup_logging()
+logger = get_logger('app')
+
 BACKEND_DATA = f"Backend_data.json"
 VENDER_FILE_PATH = f'static/data/vender.ini'
 
@@ -23,6 +28,10 @@ CORS(app)
 CSV_FILE = "static/data/Planned_Purchase_Request_List.csv"
 JSON_FILE = f"static/data/money.json"
 BUYER_FILE = f"static/data/Buyer_detail.csv"
+CONFIG_FILE = "config.cfg"
+PHONE_FILE = "static/data/phone.json"
+DELIVERY_RECEIPT_FILE = "static/data/delivery_receipt.csv"
+UPLOAD_DIR = "uploads"
 
 def read_json_file():
     try:
@@ -31,6 +40,50 @@ def read_json_file():
     except FileNotFoundError:
         return {}  # 如果文件不存在，返回空字典
 
+def ensure_current_month_budget():
+    """
+    登入時自動檢查 money.json 是否有當月預算資料，
+    若無則自動填入預設值（當月請購預算 25000000、當月追加預算 0），
+    若已有該月資料則不做任何更動。
+    """
+    try:
+        from datetime import datetime as _dt  # 避免被模組層級的 from datetime import datetime 覆蓋影響
+        current_date = _dt.now()
+        current_year = str(current_date.year)
+        month_no_pad = str(current_date.month)        # '8'
+        month_pad = str(current_date.month).zfill(2)  # '08'
+
+        lock = FileLock(f"{JSON_FILE}.lock", timeout=10)
+        with lock:
+            budget_data = read_json_file()
+
+            if "預算" not in budget_data:
+                budget_data["預算"] = {}
+
+            if current_year not in budget_data["預算"]:
+                budget_data["預算"][current_year] = {}
+
+            year_data = budget_data["預算"][current_year]
+
+            # 兩種月份 key 格式都檢查，任一存在就不更動
+            if month_no_pad in year_data or month_pad in year_data:
+                return
+
+            # 該月無資料 → 自動填入預設值（key 格式與 uploadMoney 一致，不補零）
+            year_data[month_no_pad] = {
+                "當月請購預算": 25000000,
+                "當月追加預算": 0
+            }
+
+            with open(JSON_FILE, 'w', encoding='utf-8') as f:
+                json.dump(budget_data, f, ensure_ascii=False, indent=4)
+
+            print(f"✅ 已自動建立 {current_year} 年 {month_no_pad} 月預算預設資料")
+
+    except Timeout:
+        print("⚠️ ensure_current_month_budget: 取得檔案鎖逾時，略過本次檢查")
+    except Exception as e:
+        print(f"⚠️ ensure_current_month_budget 錯誤: {e}")
 
 def clean_value(val):
     try:
@@ -72,7 +125,7 @@ def getAllLoginer():
         user_id = data.get("username")
         print(user_id)
 
-        with open("Backend_data.json", "r", encoding="utf-8-sig") as f:
+        with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
             items = json.load(f)
 
         for item in items:
@@ -94,6 +147,7 @@ def login():
     password = data.get('password', '').strip()
     
     if authenticate_user(username, password):
+        ensure_current_month_budget()  # 登入成功時檢查當月預算資料
         return jsonify({'message': '登入成功'})
     return jsonify({'message': '帳號或密碼錯誤'}), 401
 
@@ -392,7 +446,7 @@ def monthly_expense_analysis():
             wbs_trend = [{'month': m, 'amount': 0} for m in all_months]
 
         # ✅ 新增：讀取 Buyer_detail.csv 計算每月實際入帳 (同 get_monthly_actual_accounting 邏輯)
-        buyer_df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8-sig', dtype='str')
+        buyer_df = pd.read_csv(BUYER_FILE, encoding='utf-8-sig', dtype='str')
         
         buyer_df = buyer_df[
             buyer_df['ePR No.'].notna() & buyer_df['PO No.'].notna() &
@@ -448,6 +502,8 @@ def monthly_expense_analysis():
 @app.route('/api/getrestofmoney', methods = ['GET'])
 def getrestofmoney():
     import datetime, re, math
+
+    ensure_current_month_budget()  # 載入資料時檢查當月預算，無則自動建立
 
     budget = read_json_file()
     current_date = datetime.datetime.now()
@@ -597,7 +653,7 @@ def uploadMoney():
 @app.route('/api/requesters', methods=['GET'])
 def get_requesters():
     try:
-        with open("config.cfg", "r", encoding="utf-8-sig") as f:
+        with open(CONFIG_FILE, "r", encoding="utf-8-sig") as f:
             lines = f.readlines()
             names = [line.strip() for line in lines if line.strip()]  
             # print("requesters: ", names)
@@ -610,7 +666,7 @@ def get_requesters():
 @app.route('/api/admins', methods=['GET'])
 def get_admins():
     try:
-        with open("Backend_data.json", "r", encoding="utf-8-sig") as f:
+        with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
             data = json.load(f)
             seen = set()
             names = []
@@ -675,7 +731,7 @@ def add_new_item():
 
         # 寫入另一張表
         print("表格列：", table_rows)
-        DETAIL_CSV_FILE = "static/data/Buyer_detail.csv"  # 建議存另一份 CSV 檔
+        # 路徑已統一使用檔案開頭的 BUYER_FILE 常數
 
         detail_columns = [
             "Id", "開單狀態", "交貨驗證", "User", "ePR No.", "PO No.",
@@ -695,14 +751,14 @@ def add_new_item():
             cleaned_rows.append(cleaned_row)
             
         # 如果檔案已存在就 append，否則建立新檔
-        if os.path.exists(DETAIL_CSV_FILE):
-            df_detail = pd.read_csv(DETAIL_CSV_FILE, encoding="utf-8-sig", dtype=str)
+        if os.path.exists(BUYER_FILE):
+            df_detail = pd.read_csv(BUYER_FILE, encoding="utf-8-sig", dtype=str)
             df_detail = pd.concat([df_detail, pd.DataFrame(cleaned_rows)], ignore_index=True)
         else:
             df_detail = pd.DataFrame(cleaned_rows, columns=detail_columns)
 
         # 寫入 CSV
-        df_detail.to_csv(DETAIL_CSV_FILE, index=False, columns=detail_columns, encoding="utf-8-sig")
+        df_detail.to_csv(BUYER_FILE, index=False, columns=detail_columns, encoding="utf-8-sig")
 
         return jsonify({'status': 'success', 'message': '資料新增成功'}), 200
 
@@ -768,7 +824,7 @@ def update_data():
         df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
        
     
-        detail_file = "static/data/Buyer_detail.csv"
+        detail_file = BUYER_FILE
         if os.path.exists(detail_file):
             df_detail = pd.read_csv(detail_file, encoding="utf-8-sig", dtype=str)
             df_detail = df_detail[df_detail["Id"] != target_id]
@@ -801,7 +857,7 @@ def get_username_info():
         if not emp_id:
             return jsonify({"error": "缺少工號"}), 400
 
-        with open("Backend_data.json", "r", encoding="utf-8-sig") as f:
+        with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
             users = json.load(f)
 
         for entry in users:
@@ -844,7 +900,7 @@ def check_edit_permission():
             return jsonify({"allowed": False, "error": "缺少必要參數"}), 400
         
         # 讀取 admin 工號列表
-        with open("Backend_data.json", "r", encoding="utf-8-sig") as f:
+        with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
             backend_data = json.load(f)
             admin_ids = [
                 entry.get("工號", "").strip()
@@ -866,7 +922,7 @@ def check_edit_permission():
         row = matched_row.iloc[0]
         requester = row.get("需求者", "").strip()
 
-        with open("Backend_data.json", "r", encoding="utf-8-sig") as f:
+        with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
             backend_data = json.load(f)
         
         requester_id = ""
@@ -892,7 +948,7 @@ def check_edit_permission():
 @app.route("/api/get_detail/<id>", methods=["GET"])
 def get_detail_by_id(id):
     try:
-        detail_file = "static/data/Buyer_detail.csv"
+        detail_file = BUYER_FILE
         if not os.path.exists(detail_file):
             return jsonify([])  # 沒有資料回傳空陣列
 
@@ -917,7 +973,7 @@ def get_item_name():
         user_name = data.get("NeedPerson")
         print(user_id, user_name)
 
-        with open("Backend_data.json", "r", encoding="utf-8-sig") as f:
+        with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
             items = json.load(f)
 
         for item in items:
@@ -952,7 +1008,7 @@ def delete_entry():
 
     new_df.to_csv(CSV_FILE, index=False, encoding="utf-8-sig")
 
-    detail_file = "static/data/Buyer_detail.csv" 
+    detail_file = BUYER_FILE 
     if os.path.exists(detail_file):
         df_detail = pd.read_csv(detail_file, encoding="utf-8-sig", dtype=str)
         df_detail = df_detail[df_detail["Id"] != target_id]
@@ -1182,7 +1238,7 @@ def get_username():
         print("收到需求者名字：", username)
 
 
-        with open("Backend_data.json", "r", encoding="utf-8-sig") as f:
+        with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
             backend_data = json.load(f)
 
         matched = next((entry for entry in backend_data if entry["姓名"] == username), None)
@@ -1205,7 +1261,7 @@ def get_username():
 def sendmail():
     try:
         data = request.get_json()
-        with open("Backend_data.json", "r", encoding="utf-8-sig") as f:
+        with open(BACKEND_DATA, "r", encoding="utf-8-sig") as f:
             backend_data = json.load(f)
 
         mail_data = data.get("data", {})
@@ -1319,7 +1375,7 @@ def update_for_mail():
 def get_phone():
     data = request.get_json()
     name = data.get("name", "")
-    with open('static/data/phone.json', 'r', encoding='utf-8-sig') as f:
+    with open(PHONE_FILE, 'r', encoding='utf-8-sig') as f:
         phone_data = json.load(f)
 
     phone_number = phone_data.get(name, "未知")
@@ -1393,7 +1449,7 @@ def fuzzy_in(text, keyword):
 def cleanup_temp_csv_files(po_no=None):
     """清理暫存的 CSV 檔案"""
     try:
-        uploads_dir = "uploads"
+        uploads_dir = UPLOAD_DIR
         if not os.path.exists(uploads_dir):
             return
         
@@ -1447,7 +1503,7 @@ def save_csv():
         po_no_clean = str(po_no).strip()
         group_df = df_all[df_all["PO NO 採購單號碼"] == po_no_clean]
 
-        upload_path = f"uploads/{po_no_clean}.csv"
+        upload_path = os.path.join(UPLOAD_DIR, f"{po_no_clean}.csv")
         group_df.to_csv(upload_path, index=False, encoding="utf-8-sig")
 
         saved_files.append({
@@ -2981,7 +3037,7 @@ def save_override_all():
     
     # 刪除暫存檔案
     if po_no_new:
-        temp_file = f"uploads/{po_no_new}.csv"
+        temp_file = os.path.join(UPLOAD_DIR, f"{po_no_new}.csv")
         if os.path.exists(temp_file):
             os.remove(temp_file)
     
@@ -3018,50 +3074,7 @@ def save_override_all():
 
 
 # eRT 驗收表單
-# === 設定 logger ，針對 eRT 驗收表單===
-# log_file_path = "buyer_detail_update_log.log"
-# logging.basicConfig(
-#     filename=log_file_path,
-#     filemode='a',
-#     level=logging.INFO,
-#     format="%(asctime)s %(levelname)s: %(message)s",
-#     encoding='utf-8'
-# )
-# logger = logging.getLogger("BuyerDetailUpdater")
-
-
-
-# 1️⃣ 建立 Log 資料夾（若不存在）
-log_dir = "Log"
-os.makedirs(log_dir, exist_ok=True)
-from logging.handlers import TimedRotatingFileHandler
-# 2️⃣ 設定主 log 檔路徑
-log_file_path = os.path.join(log_dir, "buyer_detail_update.log")
-
-# 3️⃣ 使用 TimedRotatingFileHandler：每 30 天輪轉一次
-handler = TimedRotatingFileHandler(
-    filename=log_file_path,
-    when='D',              # 按「天」輪轉
-    interval=30,           # 每 30 天切割一次
-    backupCount=12,        # 保留最近 12 個舊檔（約 1 年記錄）
-    encoding='utf-8',
-    utc=False              # 使用本地時間（台灣時間）
-)
-
-# 4️⃣ 設定輪轉後的檔名格式（例：buyer_detail_update.log.2024-01-15）
-handler.suffix = "%Y-%m-%d"
-
-# 5️⃣ 設定輸出格式（與您原本一致）
-formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
-handler.setFormatter(formatter)
-
-# 6️⃣ 設定 logger
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-logger.addHandler(handler)
-
-# ✅ 測試寫入（可選）
-logger.info("🔄 eRT 驗收表單 Log 系統已啟動，輪轉週期：30 天")
+# Log 設定已移至 log_config.py（讀取 config.ini），logger 於檔案開頭統一取得
 
 # 2025/11/03修正
 @app.route('/api/update-buyer-items', methods=['POST'])
@@ -3288,11 +3301,11 @@ def upload_buyer_detail():
     try:
         engine = 'openpyxl' if ext == '.xlsx' else 'xlrd'
         df = pd.read_excel(file, engine=engine)  # 這行最容易報錯
-        df.to_csv("static/data/delivery_receipt.csv", index=False, encoding="utf-8-sig")
+        df.to_csv(DELIVERY_RECEIPT_FILE, index=False, encoding="utf-8-sig")
         logger.info("💾 已儲存為 static/data/delivery_receipt.csv，開始進行對 Buyer detail 該表數據更新")
 
 
-        output_df = pd.read_csv("static/data/delivery_receipt.csv", encoding="utf-8-sig", dtype=str)
+        output_df = pd.read_csv(DELIVERY_RECEIPT_FILE, encoding="utf-8-sig", dtype=str)
         buyer_df = pd.read_csv(BUYER_FILE, encoding="utf-8-sig", dtype=str)
 
         # === 欄位標準化 ===
@@ -3415,7 +3428,7 @@ def upload_buyer_detail():
 
         logger.info(f"總共更新了 {update_count} 筆資料。")
         logger.info(f"檔案已更新。總共更新了 {update_count} 筆資料。")
-        os.remove("static/data/delivery_receipt.csv")
+        os.remove(DELIVERY_RECEIPT_FILE)
 
         return jsonify({"status": "success", "msg": f"檔案已更新。總共更新了 {update_count} 筆資料。"})
     except Exception as e:
@@ -3461,17 +3474,13 @@ from bs4 import BeautifulSoup
 import email
 from email import policy
 from email.parser import BytesParser
-import logging
-# 設定日誌
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+# Log 設定已移至 log_config.py，此處不再重複設定
 
-# Buyer CSV 路徑設定（與 app.py 同層級）
-BUYER_CSV_PATH = 'static/data/Buyer_detail.csv'
+# Buyer CSV 路徑已統一使用檔案開頭的 BUYER_FILE 常數
 
 # 設定
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB 檔案大小限制
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
 app.config['PROCESSED_FOLDER'] = 'processed'
 app.config['ALLOWED_EXTENSIONS'] = {'mhtml'}  
 
@@ -3858,14 +3867,14 @@ def upload_mhtml():
                 logger.info(f"GridView data saved to: {json_filename}")
                 
                 # 自動與 Buyer_detail.csv 比對
-                if os.path.exists(BUYER_CSV_PATH):
+                if os.path.exists(BUYER_FILE):
                     logger.info("開始與 Buyer_detail.csv 比對...")
                     comparison_result = compare_with_buyer_csv(extracted_info['gridview_data']) # type: ignore
                     extracted_info['comparison_result'] = comparison_result # type: ignore
                 else:
-                    logger.warning(f"找不到 {BUYER_CSV_PATH}")
+                    logger.warning(f"找不到 {BUYER_FILE}")
                     extracted_info['comparison_result'] = { # type: ignore
-                        'error': f'找不到 {BUYER_CSV_PATH} 檔案',
+                        'error': f'找不到 {BUYER_FILE} 檔案',
                         'needs_buyer_csv': True
                     }
                     
@@ -3891,12 +3900,12 @@ def compare_with_buyer_csv(gridview_data):
     try:
         # 讀取 Buyer CSV
         try:
-            buyer_df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8-sig')
+            buyer_df = pd.read_csv(BUYER_FILE, encoding='utf-8-sig')
         except:
             try:
-                buyer_df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8')
+                buyer_df = pd.read_csv(BUYER_FILE, encoding='utf-8')
             except:
-                buyer_df = pd.read_csv(BUYER_CSV_PATH, encoding='big5')
+                buyer_df = pd.read_csv(BUYER_FILE, encoding='big5')
         
         print(f"Buyer CSV columns: {list(buyer_df.columns)}")
         print(f"Buyer CSV shape: {buyer_df.shape}")
@@ -4212,12 +4221,12 @@ def update_buyer_csv():
         
         # 讀取 Buyer CSV
         try:
-            buyer_df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8-sig', dtype=str)
+            buyer_df = pd.read_csv(BUYER_FILE, encoding='utf-8-sig', dtype=str)
         except:
             try:
-                buyer_df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8', dtype=str)
+                buyer_df = pd.read_csv(BUYER_FILE, encoding='utf-8', dtype=str)
             except:
-                buyer_df = pd.read_csv(BUYER_CSV_PATH, encoding='big5', dtype=str)
+                buyer_df = pd.read_csv(BUYER_FILE, encoding='big5', dtype=str)
         
         print(f"Buyer CSV 原始欄位: {list(buyer_df.columns)}")
         
@@ -4276,11 +4285,11 @@ def update_buyer_csv():
         # 儲存更新後的 CSV
         if updated_count > 0:
             try:
-                buyer_df.to_csv(BUYER_CSV_PATH, index=False, encoding='utf-8-sig', na_rep='')
+                buyer_df.to_csv(BUYER_FILE, index=False, encoding='utf-8-sig', na_rep='')
                 print(f"成功儲存更新後的 Buyer CSV，共更新 {updated_count} 筆資料")
                 
                 # 驗證更新是否成功
-                verify_df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8-sig', dtype=str)
+                verify_df = pd.read_csv(BUYER_FILE, encoding='utf-8-sig', dtype=str)
                 print(f"驗證: 更新後的 CSV 有 {len(verify_df)} 筆資料")
                 
                 # 檢查特定 PO 的更新結果
@@ -4364,7 +4373,7 @@ def get_unaccounted_amount():
     4. 移除 WBS
     """
     import datetime
-    file_path = BUYER_CSV_PATH
+    file_path = BUYER_FILE
     if not os.path.exists(file_path):
         return {"file": file_path, "unaccounted_amount": 0, "rows": []}
 
@@ -4442,7 +4451,7 @@ def get_accounting_summary():
     import numpy as np
     
     # 讀取CSV檔案
-    df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8-sig', dtype='str')
+    df = pd.read_csv(BUYER_FILE, encoding='utf-8-sig', dtype='str')
 
     # 篩選條件：ePR No、PO No、需求日都不為空值
     filtered_df = df[
@@ -4636,7 +4645,7 @@ def get_accounting_summary():
             "all_year_months": all_year_months_py,
             "original_df_count": int(len(df)),
             "filtered_df_count": int(len(filtered_df)),
-            "csv_path": str(BUYER_CSV_PATH)
+            "csv_path": str(BUYER_FILE)
         }
     })
 
@@ -4646,7 +4655,7 @@ def get_accounting_summary():
 def get_monthly_actual_accounting():
     import datetime
     # 讀取CSV檔案
-    df = pd.read_csv(BUYER_CSV_PATH, encoding='utf-8-sig', dtype='str')
+    df = pd.read_csv(BUYER_FILE, encoding='utf-8-sig', dtype='str')
 
     # 篩選條件：ePR No、PO No、需求日都不為空值
     filtered_df = df[
@@ -5187,7 +5196,7 @@ def get_user_epr_data():
         return jsonify({'error': str(e)}), 500
 
 
-def get_notes_email(user_name, backend_file="Backend_data.json"):
+def get_notes_email(user_name, backend_file=BACKEND_DATA):
     """用姓名查 Notes_ID (完整信箱)"""
     with open(backend_file, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
@@ -5289,6 +5298,11 @@ def save_mail():
 
             # 取得 user prefix for To 字串
             user_names = {item.get('user') for item in mail_data if item.get('user')}
+
+            # ✅ 逐筆列出備註內容，確認自訂備註正確傳入信件
+            for idx, item in enumerate(mail_data, 1):
+                logger.info(f"  [{idx}] PO: {item.get('poNo', '-')} / Item: {item.get('itemNo', '-')} / 備註: {item.get('remarks', '(空)')}")
+                
             to_prefixes = []
             for name in user_names:
                 prefix = get_notes_prefix(name, "Backend_data.json")
@@ -6210,9 +6224,7 @@ def mb_recall_message():
 #  成員管理 API
 # ══════════════════════════════════════════════
 
-CONFIG_FILE  = "config.cfg"
-PHONE_FILE   = "static/data/phone.json"
-# BACKEND_DATA = "Backend_data.json"
+# 路徑常數（CONFIG_FILE / PHONE_FILE / BACKEND_DATA）已統一移至檔案開頭
 
 
 # ── 1. 新增需求者 → config.cfg + phone.json + Backend_data.json ──

@@ -9,6 +9,8 @@
     <link href="../static/css/tailwind.min.css" rel="stylesheet">
     <script src="../static/js/tailwinds.js"></script>
     <script src="../static/js/axios.min.js"></script>
+    <script src="../static/js/chart.min.js"></script>
+    <script src="../static/js/lucide.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -34,12 +36,75 @@
             position: fixed !important;
             z-index: 9999 !important;
         }
+        /* Modern 風格載入動畫 */
+        .modern-loader {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 5%, #6366f1 35%, #8b5cf6 65%, #ec4899 95%);
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #000 calc(100% - 7px));
+            animation: modern-spin 1s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+        }
+        @keyframes modern-spin {
+            100% { transform: rotate(360deg); }
+        }
+        .modern-loader-glow {
+            position: absolute;
+            inset: -14px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.22) 0%, transparent 70%);
+            animation: modern-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes modern-pulse {
+            0%, 100% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        .modern-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            animation: modern-dot-bounce 1.2s ease-in-out infinite;
+        }
+        .modern-dot:nth-child(2) { animation-delay: 0.15s; }
+        .modern-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes modern-dot-bounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+            30% { transform: translateY(-7px); opacity: 1; }
+        }
+        /* 統計卡片彈出動畫 */
+        @keyframes card-pop {
+            0% { transform: scale(0.94) translateY(12px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .card-pop {
+            animation: card-pop 0.28s cubic-bezier(0.34, 1.4, 0.64, 1);
+        }
     </style>
 </head>
 
 <body class="bg-[#EEEEEE] font-sans leading-normal tracking-normal">
 
     <div id="app" class="mx-auto relative">
+
+        <!-- 資料載入動畫（Modern 風格） -->
+        <div v-if="isDataLoading" class="fixed inset-0 z-[300] flex items-center justify-center bg-white/50 backdrop-blur-sm">
+            <div class="flex flex-col items-center gap-4 bg-white/80 rounded-2xl shadow-2xl px-10 py-8 border border-white">
+                <div class="relative">
+                    <div class="modern-loader-glow"></div>
+                    <div class="modern-loader"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-gray-600 tracking-widest">資料載入中</span>
+                    <div class="flex items-end gap-1">
+                        <div class="modern-dot"></div>
+                        <div class="modern-dot"></div>
+                        <div class="modern-dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- 新增資料夾與驗收路徑 z-index 最高 -->
         <!-- <div v-if="showFolderCard" data-folder-card class="inset-0 bg-black bg-opacity-40 flex justify-center items-center">
@@ -113,7 +178,104 @@
                 <span>{{ allUnorderedCountMoney.toLocaleString() }}</span>
                 </div>
             </div>
+
+            <!-- 每月未開單統計 -->
+            <div class="relative">
+                <div 
+                    class="flex flex-col justify-center text-white text-xs bg-amber-500 px-1 h-16 rounded shadow hover:bg-amber-600 transition w-[78px] text-center leading-snug cursor-pointer"
+                    @click="showUnorderedMonthly = !showUnorderedMonthly"
+                >
+                    <span class="whitespace-nowrap">未開單件數</span>
+                </div>
+                <!-- 右上角徽章：本月未開單件數 -->
+                <div 
+                    class="absolute -top-2.5 -right-6 whitespace-nowrap text-[10px] font-bold px-2 py-0.5 rounded shadow border bg-white border-gray-300"
+                >
+                    <span v-if="currentMonthUnorderedCount > 0" class="text-red-600">{{ currentMonthUnorderedCount }} 件</span>
+                    <span v-else class="text-gray-400">本月無</span>
+                </div>
+            </div>
         </div>
+
+        <!-- 每月未開單統計：懸浮卡片（點背景或 ✕ 關閉） -->
+        <transition name="fade">
+            <div v-if="showUnorderedMonthly"
+                class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm"
+                @click="showUnorderedMonthly = false">
+                <div 
+                    class="card-pop bg-slate-50 rounded-2xl shadow-2xl ring-1 ring-black/5 w-[80vw] h-[80vh] flex flex-col overflow-hidden"
+                    @click.stop>
+                    <!-- 卡片標題列 -->
+                    <div class="flex justify-between items-center px-5 py-3 bg-gradient-to-r from-blue-900 via-indigo-800 to-blue-700 shrink-0">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-white/15 rounded-lg p-1.5 flex items-center justify-center">
+                                <i data-lucide="bar-chart-3" class="w-5 h-5 text-white"></i>
+                            </div>
+                            <div class="leading-tight">
+                                <div class="text-sm font-bold text-white tracking-wide">需求月 未開單統計</div>
+                                <div class="text-[11px] text-blue-200">追蹤各月份尚未開單的請購項目</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <label class="flex items-center gap-1.5 text-blue-100 text-xs cursor-pointer select-none bg-white/10 hover:bg-white/20 rounded-full px-3 py-1.5 transition">
+                                <input type="checkbox" v-model="showAllUnorderedMonths" class="rounded" />
+                                顯示全部年份（預設近 2 年）
+                            </label>
+                            <button 
+                                @click="showUnorderedMonthly = false" 
+                                class="text-white/70 hover:text-white hover:bg-white/20 rounded-full w-7 h-7 flex items-center justify-center transition"
+                            >
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- 左圖右表 -->
+                    <div class="p-4 flex flex-1 min-h-0 gap-4">
+                        <!-- 左側：柱狀圖 -->
+                        <div class="flex-1 min-w-0 relative bg-white rounded-xl border border-slate-200 shadow-sm p-3">
+                            <canvas id="unorderedMonthlyChart"></canvas>
+                        </div>
+                        <!-- 右側：統計表格 -->
+                        <div class="w-[30%] shrink-0 flex flex-col min-h-0">
+                            <div class="flex-1 min-h-0 overflow-y-auto bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-100 text-slate-500 text-xs uppercase tracking-wider sticky top-0">
+                                        <tr>
+                                            <th class="px-3 py-2.5 text-left font-semibold">需求月</th>
+                                            <th class="px-3 py-2.5 text-right font-semibold">未開單筆數</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <tr 
+                                            v-for="row in unorderedByNeedMonthDisplay" 
+                                            :key="row.month"
+                                            class="hover:bg-indigo-50/60 cursor-pointer transition"
+                                            @click="applyUnorderedMonthFilter(row.month)"
+                                            title="點擊篩選出該月未開單項目"
+                                        >
+                                            <td class="px-3 py-1.5" :class="row.overdue ? 'text-red-600 font-semibold' : 'text-slate-700'">{{ row.month }}</td>
+                                            <td class="px-3 py-1.5 text-right">
+                                                <span 
+                                                    class="inline-block min-w-[2.5rem] text-center text-xs font-bold rounded-full px-2 py-0.5"
+                                                    :class="row.overdue ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-700'"
+                                                >{{ row.count }} 件</span>
+                                            </td>
+                                        </tr>
+                                        <tr v-if="unorderedByNeedMonthDisplay.length === 0">
+                                            <td colspan="2" class="px-3 py-3 text-center text-slate-400">目前沒有未開單項目 🎉</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="mt-2 flex items-center justify-end gap-1 text-xs text-slate-400 shrink-0">
+                                <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                                紅色＝需求月已過期｜點柱或點列可篩選
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
 
         <!-- 主標題置中 -->
         <div class="absolute left-0 right-0 h-16 flex items-center justify-center z-10">
@@ -725,17 +887,75 @@
 
                                 <transition name="fade">
                                     <div v-if="showNeedDateFilter"
-                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-48 p-2 space-y-2">
+                                        class="absolute top-full left-0 mt-2 bg-white border border-gray-300 rounded-lg shadow-xl z-50 w-56 p-2 space-y-2">
 
                                         <div class="flex justify-between items-center">
                                             <label class="text-sm font-medium text-gray-700">篩選</label>
                                         </div>
                                         <hr class="border-gray-200" />
 
-                                        <div class="max-h-52 overflow-y-auto space-y-1">
+                                        <div class="max-h-64 overflow-y-auto space-y-0.5 text-left">
+                                            <!-- 年 -->
+                                            <div v-for="yearNode in needDateTree" :key="yearNode.year">
+                                                <div 
+                                                    class="flex items-center gap-1 hover:bg-blue-50 px-1 py-1 rounded transition cursor-pointer select-none"
+                                                    @click="toggleNeedYearExpand(yearNode.year)"
+                                                >
+                                                    <span class="w-4 text-center text-xs text-gray-500">{{ expandedNeedYears[yearNode.year] ? '▾' : '▸' }}</span>
+                                                    <input 
+                                                        type="checkbox"
+                                                        :checked="isNeedYearChecked(yearNode.year)"
+                                                        :indeterminate="isNeedYearIndeterminate(yearNode.year)"
+                                                        @click.stop
+                                                        @change="toggleNeedYearCheck(yearNode.year)"
+                                                        class="text-blue-600 focus:ring-blue-500 rounded"
+                                                    />
+                                                    <span class="text-sm text-gray-700 font-medium">{{ yearNode.year }} 年</span>
+                                                </div>
+
+                                                <!-- 月 -->
+                                                <div v-if="expandedNeedYears[yearNode.year]" class="pl-5">
+                                                    <div v-for="monthNode in yearNode.months" :key="monthNode.key">
+                                                        <div 
+                                                            class="flex items-center gap-1 hover:bg-blue-50 px-1 py-1 rounded transition cursor-pointer select-none"
+                                                            @click="toggleNeedMonthExpand(monthNode.key)"
+                                                        >
+                                                            <span class="w-4 text-center text-xs text-gray-500">{{ expandedNeedMonths[monthNode.key] ? '▾' : '▸' }}</span>
+                                                            <input 
+                                                                type="checkbox"
+                                                                :checked="isNeedMonthChecked(monthNode.key)"
+                                                                :indeterminate="isNeedMonthIndeterminate(monthNode.key)"
+                                                                @click.stop
+                                                                @change="toggleNeedMonthCheck(monthNode.key)"
+                                                                class="text-blue-600 focus:ring-blue-500 rounded"
+                                                            />
+                                                            <span class="text-sm text-gray-700">{{ monthNode.month }} 月</span>
+                                                        </div>
+
+                                                        <!-- 日 -->
+                                                        <div v-if="expandedNeedMonths[monthNode.key]" class="pl-9">
+                                                            <label 
+                                                                v-for="date in monthNode.dates" 
+                                                                :key="date"
+                                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-1 py-1 rounded transition"
+                                                            >
+                                                                <input 
+                                                                    type="checkbox" 
+                                                                    :value="date" 
+                                                                    v-model="checkedNeedDates" 
+                                                                    class="text-blue-600 focus:ring-blue-500 rounded"
+                                                                />
+                                                                <span class="text-sm text-gray-700">{{ date.slice(8, 10) }} 日</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- 非標準日期格式（其他） -->
                                             <label 
-                                                v-for="date in uniqueNeedDates" 
-                                                :key="date" 
+                                                v-for="date in needDateOthers" 
+                                                :key="date"
                                                 class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
                                             >
                                                 <input 
@@ -749,7 +969,7 @@
                                         </div>
 
                                         <div class="pt-2 text-right">
-                                            <button @click="checkedNeedDates = []; showNeedDateFilter = false" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
+                                            <button @click="clearNeedDateFilter()" class="text-gray-500 text-xs hover:text-red-500">清除篩選</button>
                                         </div>
                                     </div>
                                 </transition>
@@ -780,20 +1000,42 @@
                                         </div>
                                         <hr class="border-gray-200" />
 
-                                        <div class="max-h-52 overflow-y-auto space-y-1">
-                                            <label 
-                                                v-for="month in uniqueIssuedMonths" 
-                                                :key="month" 
-                                                class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-2 py-1 rounded transition"
-                                            >
-                                                <input 
-                                                    type="checkbox" 
-                                                    :value="month" 
-                                                    v-model="checkedIssuedMonths" 
-                                                    class="text-blue-600 focus:ring-blue-500 rounded"
-                                                />
-                                                <span class="text-sm text-gray-700">{{ month.slice(0, 4) }}/{{ month.slice(4, 6) }}</span>
-                                            </label>
+                                        <div class="max-h-64 overflow-y-auto space-y-0.5 text-left">
+                                            <!-- 年 -->
+                                            <div v-for="yearNode in issuedMonthTree" :key="yearNode.year">
+                                                <div 
+                                                    class="flex items-center gap-1 hover:bg-blue-50 px-1 py-1 rounded transition cursor-pointer select-none"
+                                                    @click="toggleIssuedYearExpand(yearNode.year)"
+                                                >
+                                                    <span class="w-4 text-center text-xs text-gray-500">{{ expandedIssuedYears[yearNode.year] ? '▾' : '▸' }}</span>
+                                                    <input 
+                                                        type="checkbox"
+                                                        :checked="isIssuedYearChecked(yearNode.year)"
+                                                        :indeterminate="isIssuedYearIndeterminate(yearNode.year)"
+                                                        @click.stop
+                                                        @change="toggleIssuedYearCheck(yearNode.year)"
+                                                        class="text-blue-600 focus:ring-blue-500 rounded"
+                                                    />
+                                                    <span class="text-sm text-gray-700 font-medium">{{ yearNode.year }} 年</span>
+                                                </div>
+
+                                                <!-- 月 -->
+                                                <div v-if="expandedIssuedYears[yearNode.year]" class="pl-9">
+                                                    <label 
+                                                        v-for="monthNode in yearNode.months" 
+                                                        :key="monthNode.key"
+                                                        class="flex items-center gap-2 cursor-pointer hover:bg-blue-50 px-1 py-1 rounded transition"
+                                                    >
+                                                        <input 
+                                                            type="checkbox" 
+                                                            :value="monthNode.key" 
+                                                            v-model="checkedIssuedMonths" 
+                                                            class="text-blue-600 focus:ring-blue-500 rounded"
+                                                        />
+                                                        <span class="text-sm text-gray-700">{{ monthNode.month }} 月</span>
+                                                    </label>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div class="pt-2 text-right">
@@ -1447,6 +1689,16 @@
                 <div class="mt-4 border border-gray-300 rounded-lg shadow overflow-x-auto">
                     <table class="min-w-full table-auto text-sm border bg-white rounded shadow">
                         <thead class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 text-sm font-semibold sticky top-0 z-10">
+                            <!-- 紅框提示列：白底無框線，精準對齊 品項 + 規格 欄位左右邊界 -->
+                            <tr>
+                                <th colspan="5" class="p-0 border-0 bg-white"></th>
+                                <th colspan="2" class="px-0 py-1 border-0 bg-white">
+                                    <div class="border-2 border-red-500 bg-red-50 text-red-600 text-xs font-bold rounded px-2 py-1 text-center whitespace-normal break-words">
+                                        機設類：Description超過40字元，接續寫在Supplement Description
+                                    </div>
+                                </th>
+                                <th colspan="10" class="p-0 border-0 bg-white"></th>
+                            </tr>
                             <tr>
                                 <th
                                     v-for="field in detailTableFields"
@@ -1833,6 +2085,16 @@
                 <div class="overflow-x-auto mt-6 rounded-lg shadow border border-gray-300">
                     <table class="min-w-full table-auto text-sm border bg-white rounded shadow">
                         <thead class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 text-sm font-semibold sticky top-0 z-10">
+                            <!-- 紅框提示列：白底無框線，精準對齊 品項 + 規格 欄位左右邊界 -->
+                            <tr>
+                                <th colspan="4" class="p-0 border-0 bg-white"></th>
+                                <th colspan="2" class="px-0 py-1 border-0 bg-white">
+                                    <div class="border-2 border-red-500 bg-red-50 text-red-600 text-xs font-bold rounded px-2 py-1 text-center whitespace-normal break-words">
+                                        機設類：Description超過40字元，接續寫在Supplement Description
+                                    </div>
+                                </th>
+                                <th colspan="6" class="p-0 border-0 bg-white"></th>
+                            </tr>
                             <tr>
                                 <th
                                     v-for="header in tableHeaders"

@@ -39,9 +39,22 @@ createApp({
     onRemarksChange(item) {
       if (item.remarks === '尚未領料： 最後領料日為：') {
         item.showTextarea = true;
+        item.isCustomRemark = false;
         // 設定起始內容，讓使用者補日期
         item.remarks = '尚未領料： 最後領料日為：';
+      } else if (item.remarks === '__custom__') {
+        // ✏️ 自行輸入：切換為空白 textarea 讓使用者自由輸入內文
+        item.showTextarea = true;
+        item.isCustomRemark = true;
+        item.remarks = '';
       }
+    },
+
+    // 從 textarea 返回下拉選單（清空內容重新選擇）
+    backToRemarkSelect(item) {
+      item.showTextarea = false;
+      item.isCustomRemark = false;
+      item.remarks = '';
     },
    async loadSelectedItems() {
      const selectedItemsJson = localStorage.getItem('selectedItems');
@@ -173,6 +186,20 @@ createApp({
    
    async startSending() {
      if (this.isSending) return;
+     
+     // ✅ 發送前檢查：備註不可為空（含「自行輸入」後未填寫的情況）
+     const emptyRemarkRows = this.selectedItems
+       .filter(item => !String(item.remarks || '').trim() || item.remarks === '__custom__')
+       .map(item => `PO: ${item.poNo || '-'} / Item: ${item.itemNo || '-'}`);
+     if (emptyRemarkRows.length > 0) {
+       await Swal.fire({
+         icon: 'warning',
+         title: '備註尚未填寫',
+         html: `以下項目的備註為空，請填寫後再發送：<br><br>${emptyRemarkRows.join('<br>')}`,
+         confirmButtonText: '我知道了'
+       });
+       return;
+     }
      
      // 設定發送狀態
      this.isSending = true;

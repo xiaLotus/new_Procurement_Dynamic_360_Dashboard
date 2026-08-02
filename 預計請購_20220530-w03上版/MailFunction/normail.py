@@ -10,6 +10,9 @@ from email.mime.text import MIMEText
 from email.header import Header
 from datetime import datetime
 from email.utils import formataddr
+from log_config import get_logger
+# 分層 log：寫入 Log/mail_send/mail_send_yyyy_mm_dd.log（設定見 config.ini / log_config.py）
+logger = get_logger('mail_send.normal')
 
 class MailInfo:
     def __init__(self, sendfrom, sendfromname, sendto, sendcc, smtp_ip):
@@ -65,6 +68,18 @@ def send_mail(mailList, name, mail_name, ccList):
     cc_list = [x.strip() for x in mysendinfo.sendcc.split(',') if x.strip()]
 
     em['Subject'] = str(Header(rf"<< ePR單 - {mailList['ePR No.']} >> 等級：{level} {mailList['請購項目']}需求請購申請 To. Jackson Sir & {name} (Security C)", 'utf-8'))
+
+    # 📝 記錄郵件內容
+    logger.info(f"📧 準備發送【{level}】請購通知郵件")
+    logger.info(f"   收件人(To): {mysendinfo.sendto}")
+    logger.info(f"   副本(CC): {mysendinfo.sendcc}")
+    logger.info(f"   主旨: << ePR單 - {mailList['ePR No.']} >> 等級：{level} {mailList['請購項目']}需求請購申請 To. Jackson Sir & {name} (Security C)")
+    logger.info(
+        f"   內容: ePR No.={mailList.get('ePR No.', '')}, 需求者={mailList.get('需求者', '')}, "
+        f"請購項目={mailList.get('請購項目', '')}, 需求原因={mailList.get('需求原因', '')}, "
+        f"總金額={mailList.get('總金額', '')}, 需求日={mailList.get('需求日', '')}, "
+        f"ePR狀態={mailList.get('Status', '')}, 簽核中關卡={mailList.get('簽核中關卡', '')}, 備註={mailList.get('備註', '')}"
+    )
 
 
 
@@ -286,10 +301,10 @@ def send_mail(mailList, name, mail_name, ccList):
                 em.as_string()
             )
             
-        print("✅ 郵件發送成功")
+        logger.info(f"✅ 郵件發送成功 (ePR No.={mailList.get('ePR No.', '')}, 共 {len(all_recipients)} 位收件者)")
 
     except Exception as e:
-        print(f"❌ 郵件發送失敗: {e}")
+        logger.error(f"❌ 郵件發送失敗 (ePR No.={mailList.get('ePR No.', '')}): {e}")
 
 
 # # 測試調用的例子

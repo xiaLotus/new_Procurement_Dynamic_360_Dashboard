@@ -10,6 +10,9 @@ from email.mime.text import MIMEText
 from email.header import Header
 from datetime import datetime
 from email.utils import formataddr
+from log_config import get_logger
+# 分層 log：寫入 Log/acc_mail/acc_mail_yyyy_mm_dd.log（設定見 config.ini / log_config.py）
+logger = get_logger('acc_mail.send')
 
 class MailInfo:
     def __init__(self, sendfrom, sendfromname, sendto, sendcc, smtp_ip):
@@ -113,6 +116,20 @@ def send_mail(mailList, mail_name, ccList, po_str, to_str, greeting="Dear "):
         subject_title = f"<<領料 & 驗收通知>> 煩請開立攜出單至 K7-1F 物流中心領料 & 照片請自行拍照上傳論壇，煩請 ERT 單附報告驗收【PO No. {po_str}】 To: {to_str}"
 
     em['Subject'] = subject_title
+
+    # 📝 記錄郵件內容
+    logger.info(f"📧 準備發送驗收/領料通知郵件")
+    logger.info(f"   收件人(To): {mysendinfo.sendto}")
+    logger.info(f"   副本(CC): {mysendinfo.sendcc}")
+    logger.info(f"   主旨: {subject_title}")
+    logger.info(f"   內容: 共 {len(mailList)} 筆料件，PO No.: {po_str}")
+    for _i, _item in enumerate(mailList, 1):
+        logger.info(
+            f"   [{_i:02d}] PO={_item.get('poNo', '')}, Item={_item.get('itemNo', '')}, "
+            f"品項={_item.get('description', '')}, 數量={_item.get('quantity', '')}, "
+            f"RT No.={_item.get('rtNo', '')}, 需求者={_item.get('user', '')}, "
+            f"ePR No.={_item.get('eprNo', '')}, 領料人={_item.get('pickupPerson', '')}, 備註={_item.get('remarks', '')}"
+        )
 
     # 動態生成表格行
     table_rows = build_table_rows(mailList)
@@ -270,10 +287,10 @@ def send_mail(mailList, mail_name, ccList, po_str, to_str, greeting="Dear "):
                 em.as_string()
             )
             
-        print("✅ 郵件發送成功")
+        logger.info(f"✅ 郵件發送成功 (PO No.={po_str}, 共 {len(mailList)} 筆料件, {len(all_recipients)} 位收件者)")
 
     except Exception as e:
-        print(f"❌ 郵件發送失敗: {e}")
+        logger.error(f"❌ 郵件發送失敗 (PO No.={po_str}): {e}")
 
     # send_mail(sample_data, "測試", "RuiYing_Chan@aseglobal.com,RayBao_Chen@aseglobal.com,JieSyuan_Chiang@aseglobal.com", "", "", "")
 

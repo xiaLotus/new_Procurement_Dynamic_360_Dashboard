@@ -1,9 +1,10 @@
 from bs4 import BeautifulSoup
 import re
 import quopri
-import logging
+from log_config import get_logger
 
-logger = logging.getLogger(__name__)
+# 分層 log：寫入 Log/acc_mail/acc_mail_yyyy_mm_dd.log（設定見 config.ini / log_config.py）
+logger = get_logger('acc_mail.parse')
 
 
 class accMHTMLParser:

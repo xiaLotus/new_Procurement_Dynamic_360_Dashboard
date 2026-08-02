@@ -71,6 +71,13 @@ const app = Vue.createApp({
             checkedWBS: [],
             checkedOrders: [],
             checkedNeedDates: [],
+            expandedNeedYears: {},   // 需求日樹狀篩選：已展開的年份
+            expandedNeedMonths: {},  // 需求日樹狀篩選：已展開的月份（key: 'YYYY/MM'）
+            expandedIssuedYears: {}, // 已開單日期樹狀篩選：已展開的年份
+            showUnorderedMonthly: false, // 每月未開單統計面板顯示狀態
+            showAllUnorderedMonths: false, // 未開單統計：是否顯示全部年份（預設僅近 2 年）
+            isDataLoading: false, // 資料載入中（顯示載入動畫）
+            isTempFilterActive: false, // 統計卡片臨時篩選中（不寫入篩選記憶）
             checkedIssuedMonths: [],
             checkedEPRs: [],
             checkedItems: [],
@@ -158,6 +165,24 @@ const app = Vue.createApp({
     },
 
     watch: {
+        // 每月未開單統計卡片：開啟時繪製柱狀圖與圖示
+        showUnorderedMonthly(val) {
+            if (val) {
+                this.$nextTick(() => {
+                    this.renderUnorderedChart();
+                    if (window.lucide) lucide.createIcons(); // 渲染卡片內的 lucide 圖示
+                });
+            }
+        },
+        // 統計資料變動（例如篩選後開單狀態更新）或切換顯示範圍時重繪
+        unorderedByNeedMonthDisplay: {
+            handler() {
+                if (this.showUnorderedMonthly) {
+                    this.$nextTick(() => this.renderUnorderedChart());
+                }
+            },
+            deep: true
+        },
             // 監聽所有篩選相關的變數
         filterPurchaseStatus() { this.onFilterChange(); },
         checkedPeople: { handler() { this.onFilterChange(); }, deep: true },
@@ -586,6 +611,89 @@ const app = Vue.createApp({
                     })
                     .filter(Boolean)
             )).sort((a, b) => new Date(b) - new Date(a));
+        },
+
+        // 需求日樹狀結構：年 → 月 → 日（資料來源沿用 uniqueNeedDates，自動跟著其他篩選連動）
+        needDateTree() {
+            const tree = [];
+            const yearMap = {};
+            for (const date of this.uniqueNeedDates) {
+                if (typeof date !== 'string' || !/^\d{4}\/\d{2}\/\d{2}$/.test(date)) continue;
+                const year = date.slice(0, 4);
+                const month = date.slice(5, 7);
+                if (!yearMap[year]) {
+                    yearMap[year] = { year, months: [], monthMap: {} };
+                    tree.push(yearMap[year]);
+                }
+                const yNode = yearMap[year];
+                const monthKey = `${year}/${month}`;
+                if (!yNode.monthMap[month]) {
+                    yNode.monthMap[month] = { key: monthKey, month, dates: [] };
+                    yNode.months.push(yNode.monthMap[month]);
+                }
+                yNode.monthMap[month].dates.push(date);
+            }
+            return tree;
+        },
+
+        // 非 YYYY/MM/DD 格式的需求日（維持平面顯示於樹狀下方）
+        needDateOthers() {
+            return this.uniqueNeedDates.filter(
+                d => !(typeof d === 'string' && /^\d{4}\/\d{2}\/\d{2}$/.test(d))
+            );
+        },
+
+        // 每月未開單統計：以需求日的月份分組，統計 開單狀態 ≠ 'V' 的筆數與金額
+        unorderedByNeedMonth() {
+            const map = {};
+            for (const i of this.items) {
+                if (i['開單狀態'] === 'V') continue; // 已開單跳過
+                const raw = String(i['需求日'] || '');
+                if (raw.length !== 8) continue;
+                const month = `${raw.slice(0, 4)}/${raw.slice(4, 6)}`; // YYYY/MM
+                if (!map[month]) map[month] = { month, count: 0, amount: 0 };
+                map[month].count += 1;
+                map[month].amount += parseFloat(String(i['總金額'] || '').replace(/,/g, '').trim()) || 0;
+            }
+            const now = new Date();
+            const currentYM = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+            return Object.values(map)
+                .sort((a, b) => a.month.localeCompare(b.month)) // 由舊到新，逾期的排前面
+                .map(r => ({ ...r, overdue: r.month < currentYM }));
+        },
+
+        // 本月未開單件數（用於按鈕右上角徽章）
+        currentMonthUnorderedCount() {
+            const now = new Date();
+            const currentYM = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const row = this.unorderedByNeedMonth.find(r => r.month === currentYM);
+            return row ? row.count : 0;
+        },
+
+        // 未開單統計顯示用：預設僅顯示近 2 年（24 個月內），可切換顯示全部
+        unorderedByNeedMonthDisplay() {
+            if (this.showAllUnorderedMonths) return this.unorderedByNeedMonth;
+            const now = new Date();
+            const cutoffDate = new Date(now.getFullYear() - 2, now.getMonth() + 1, 1); // 兩年前的次月起算
+            const cutoff = `${cutoffDate.getFullYear()}/${String(cutoffDate.getMonth() + 1).padStart(2, '0')}`;
+            return this.unorderedByNeedMonth.filter(r => r.month >= cutoff);
+        },
+
+        // 已開單日期樹狀結構：年 → 月（資料來源沿用 uniqueIssuedMonths，自動跟著其他篩選連動）
+        issuedMonthTree() {
+            const tree = [];
+            const yearMap = {};
+            for (const ym of this.uniqueIssuedMonths) {
+                if (typeof ym !== 'string' || !/^\d{6}$/.test(ym)) continue;
+                const year = ym.slice(0, 4);
+                const month = ym.slice(4, 6);
+                if (!yearMap[year]) {
+                    yearMap[year] = { year, months: [] };
+                    tree.push(yearMap[year]);
+                }
+                yearMap[year].months.push({ key: ym, month });
+            }
+            return tree;
         },
 
         uniqueIssuedMonths() {
@@ -1206,6 +1314,9 @@ const app = Vue.createApp({
         // 如果正在載入篩選，不觸發儲存
         if (this.isLoadingFilters) return;
 
+        // 統計卡片套用的臨時篩選不寫入記憶檔
+        if (this.isTempFilterActive) return;
+
         // 清除之前的計時器
         if (this.filterSaveTimer) {
             clearTimeout(this.filterSaveTimer);
@@ -1416,14 +1527,18 @@ const app = Vue.createApp({
             }
         },
         async fetchData() {
-            fetch("http://127.0.0.1:5000/data")
-                .then(res => res.json())
-                .then(data => {
-                    console.log("取得資料：", data);
-                    this.items = data
-                    this.sortByAllConditions()
-            });
-            
+            this.isDataLoading = true;
+            try {
+                const res = await fetch("http://127.0.0.1:5000/data");
+                const data = await res.json();
+                console.log("取得資料：", data);
+                this.items = data;
+                this.sortByAllConditions();
+            } catch (err) {
+                console.error("❌ 資料載入失敗", err);
+            } finally {
+                this.isDataLoading = false;
+            }
         },
         sortByAllConditions() {
             const clean = val => String(val || '').trim();
@@ -2652,6 +2767,200 @@ const app = Vue.createApp({
         },
 
 
+        // ===== 需求日樹狀篩選 =====
+        toggleNeedYearExpand(year) {
+            this.expandedNeedYears[year] = !this.expandedNeedYears[year];
+        },
+
+        toggleNeedMonthExpand(monthKey) {
+            this.expandedNeedMonths[monthKey] = !this.expandedNeedMonths[monthKey];
+        },
+
+        getNeedYearDates(year) {
+            const node = this.needDateTree.find(n => n.year === year);
+            return node ? node.months.flatMap(m => m.dates) : [];
+        },
+
+        getNeedMonthDates(monthKey) {
+            for (const yNode of this.needDateTree) {
+                const mNode = yNode.months.find(m => m.key === monthKey);
+                if (mNode) return mNode.dates;
+            }
+            return [];
+        },
+
+        isNeedYearChecked(year) {
+            const dates = this.getNeedYearDates(year);
+            return dates.length > 0 && dates.every(d => this.checkedNeedDates.includes(d));
+        },
+
+        isNeedYearIndeterminate(year) {
+            const dates = this.getNeedYearDates(year);
+            const cnt = dates.filter(d => this.checkedNeedDates.includes(d)).length;
+            return cnt > 0 && cnt < dates.length;
+        },
+
+        toggleNeedYearCheck(year) {
+            const dates = this.getNeedYearDates(year);
+            if (this.isNeedYearChecked(year)) {
+                this.checkedNeedDates = this.checkedNeedDates.filter(d => !dates.includes(d));
+            } else {
+                this.checkedNeedDates = Array.from(new Set([...this.checkedNeedDates, ...dates]));
+            }
+        },
+
+        isNeedMonthChecked(monthKey) {
+            const dates = this.getNeedMonthDates(monthKey);
+            return dates.length > 0 && dates.every(d => this.checkedNeedDates.includes(d));
+        },
+
+        isNeedMonthIndeterminate(monthKey) {
+            const dates = this.getNeedMonthDates(monthKey);
+            const cnt = dates.filter(d => this.checkedNeedDates.includes(d)).length;
+            return cnt > 0 && cnt < dates.length;
+        },
+
+        toggleNeedMonthCheck(monthKey) {
+            const dates = this.getNeedMonthDates(monthKey);
+            if (this.isNeedMonthChecked(monthKey)) {
+                this.checkedNeedDates = this.checkedNeedDates.filter(d => !dates.includes(d));
+            } else {
+                this.checkedNeedDates = Array.from(new Set([...this.checkedNeedDates, ...dates]));
+            }
+        },
+
+        // ===== 每月未開單統計 =====
+        // 繪製每月未開單柱狀圖（依循 Chart.js 慣例：先銷毀再重建，避免殘影）
+        renderUnorderedChart() {
+            const canvas = document.getElementById('unorderedMonthlyChart');
+            if (!canvas || typeof Chart === 'undefined') return;
+
+            if (this._unorderedChart) {
+                this._unorderedChart.destroy();
+                this._unorderedChart = null;
+            }
+
+            const rows = this.unorderedByNeedMonthDisplay;
+            const self = this;
+
+            this._unorderedChart = new Chart(canvas.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: rows.map(r => r.month),
+                    datasets: [{
+                        label: '未開單筆數',
+                        data: rows.map(r => r.count),
+                        backgroundColor: rows.map(r => r.overdue ? 'rgba(239, 68, 68, 0.75)' : 'rgba(245, 158, 11, 0.75)'),
+                        borderColor: rows.map(r => r.overdue ? 'rgb(220, 38, 38)' : 'rgb(217, 119, 6)'),
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` 未開單 ${ctx.parsed.y} 筆（點擊可篩選）`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            title: { display: true, text: '筆數' }
+                        },
+                        x: {
+                            title: { display: true, text: '需求月（紅色＝已過期）' }
+                        }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length > 0) {
+                            const idx = elements[0].index;
+                            self.applyUnorderedMonthFilter(rows[idx].month);
+                        }
+                    },
+                    onHover: (evt, elements) => {
+                        evt.native.target.style.cursor = elements.length > 0 ? 'pointer' : 'default';
+                    }
+                }
+            });
+        },
+
+        // 點擊統計表中的月份 → 篩選出該月需求日的未開單項目（臨時篩選，不寫入記憶）
+        applyUnorderedMonthFilter(month) {
+            // 首次進入臨時模式時，記住原本的篩選狀態以便還原
+            if (!this.isTempFilterActive) {
+                this._preTempFilter = {
+                    status: this.filterPurchaseStatus,
+                    dates: [...this.checkedNeedDates]
+                };
+            }
+            this.isTempFilterActive = true; // 開啟臨時篩選模式，避免被存入篩選記憶
+            const prefix = month.replace('/', ''); // 'YYYY/MM' → 'YYYYMM'
+            const dates = Array.from(new Set(
+                this.items
+                    .map(i => String(i['需求日'] || ''))
+                    .filter(v => v.length === 8 && v.startsWith(prefix))
+                    .map(v => `${v.slice(0, 4)}/${v.slice(4, 6)}/${v.slice(6, 8)}`)
+            ));
+            this.checkedNeedDates = dates;
+            this.filterPurchaseStatus = 'UNORDERED';
+            // 卡片不自動關閉，僅能透過 ✕ 關閉
+        },
+
+        // 離開臨時篩選模式：整組還原成套用前的篩選狀態
+        exitTempFilter() {
+            const prev = this._preTempFilter || { status: 'ALL', dates: [] };
+            this.filterPurchaseStatus = prev.status;
+            this.checkedNeedDates = prev.dates;
+            this._preTempFilter = null;
+            this.isTempFilterActive = false;
+        },
+
+        // 需求日「清除篩選」：臨時模式下整組還原，一般模式僅清空日期
+        clearNeedDateFilter() {
+            if (this.isTempFilterActive) {
+                this.exitTempFilter();
+            } else {
+                this.checkedNeedDates = [];
+            }
+            this.showNeedDateFilter = false;
+        },
+
+        // ===== 已開單日期樹狀篩選 =====
+        toggleIssuedYearExpand(year) {
+            this.expandedIssuedYears[year] = !this.expandedIssuedYears[year];
+        },
+
+        getIssuedYearMonths(year) {
+            const node = this.issuedMonthTree.find(n => n.year === year);
+            return node ? node.months.map(m => m.key) : [];
+        },
+
+        isIssuedYearChecked(year) {
+            const months = this.getIssuedYearMonths(year);
+            return months.length > 0 && months.every(m => this.checkedIssuedMonths.includes(m));
+        },
+
+        isIssuedYearIndeterminate(year) {
+            const months = this.getIssuedYearMonths(year);
+            const cnt = months.filter(m => this.checkedIssuedMonths.includes(m)).length;
+            return cnt > 0 && cnt < months.length;
+        },
+
+        toggleIssuedYearCheck(year) {
+            const months = this.getIssuedYearMonths(year);
+            if (this.isIssuedYearChecked(year)) {
+                this.checkedIssuedMonths = this.checkedIssuedMonths.filter(m => !months.includes(m));
+            } else {
+                this.checkedIssuedMonths = Array.from(new Set([...this.checkedIssuedMonths, ...months]));
+            }
+        },
+
         handlePaste(event, targetObj, key) {
             // 檢查事件是否能夠取消
             event.preventDefault();
@@ -2668,6 +2977,24 @@ const app = Vue.createApp({
             const originalValue = input.value;
             // 貼上文字
             const newValue = originalValue.slice(0, start) + pastedData + originalValue.slice(end);
+
+            // ✅ 品項貼上超過 40 字：前 40 字留在品項，多餘文字自動填入備註
+            if (key === '品項' && newValue.length > 40) {
+                const kept = newValue.slice(0, 40);
+                const overflow = newValue.slice(40);
+
+                input.value = kept;
+                targetObj[key] = kept;
+
+                // 備註已有內容則接在原內容後方，否則直接填入
+                targetObj['備註'] = (targetObj['備註'] || '') + overflow;
+
+                alert(`❗️ 品項超過 40 字，已自動將多餘的 ${overflow.length} 字填入備註欄位`);
+
+                input.dispatchEvent(new Event('input'));
+                return;
+            }
+
             // 重新賦予文字
             input.value = newValue;
             // 放入 target1月4套
@@ -2883,6 +3210,7 @@ const app = Vue.createApp({
 
         // === 修改現有方法: resetAllFilters ===
         async resetAllFilters() {
+            this.isTempFilterActive = false; // 解除統計卡片臨時篩選模式，恢復篩選記憶
             this.filterPurchaseStatus = 'ALL';
             this.checkedPeople = [];
             this.checkedStates = [];
