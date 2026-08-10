@@ -1,0 +1,39 @@
+{
+  "empNo": "4563",
+  "nameZh": "4534",
+  "title": "453",
+  "nameEn": "453",
+  "grade": "453",
+  "gender": "男",
+  "hireDate": "",
+  "blood": "A",
+  "zodiac": "",
+  "emgName": "",
+  "birthDate": "",
+  "emgPhone": "453453",
+  "marriage": "已婚",
+  "phone": "453",
+  "mobile": "0930172219",
+  "address": "",
+  "eduTop": {
+    "school": "453",
+    "major": "453453",
+    "period": "453453"
+  },
+  "eduSecond": {
+    "school": "4",
+    "major": "",
+    "period": ""
+  },
+  "experiences": [
+    {
+      "company": "453453",
+      "position": "453453",
+      "years": ""
+    }
+  ],
+  "interests": "453453",
+  "skills": "453354",
+  "photoUrl": "",
+  "lastModified": "2026-08-10 22:19:26"
+}
