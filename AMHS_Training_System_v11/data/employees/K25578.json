@@ -25,76 +25,6 @@
       "notes": "今天因為x1006防撞檢之異常。有跟著組長學習調整鐵塊鬆緊度，後續調整後已改善完畢",
       "practiceItems": "解除機故，並且跟著組長調整線路",
       "total": ""
-    },
-    {
-      "day": 3,
-      "date": "",
-      "learningItems": "",
-      "practiceItems": "",
-      "mentorScore": "",
-      "mentorAttitude": "",
-      "leaderScore": "",
-      "total": "",
-      "notes": "",
-      "mentorSignerId": "",
-      "leaderSignerId": "",
-      "leaderComment": ""
-    },
-    {
-      "day": 4,
-      "date": "",
-      "learningItems": "",
-      "practiceItems": "",
-      "mentorScore": "",
-      "mentorAttitude": "",
-      "leaderScore": "",
-      "total": "",
-      "notes": "",
-      "mentorSignerId": "",
-      "leaderSignerId": "",
-      "leaderComment": ""
-    },
-    {
-      "day": 5,
-      "date": "",
-      "learningItems": "",
-      "practiceItems": "",
-      "mentorScore": "",
-      "mentorAttitude": "",
-      "leaderScore": "",
-      "total": "",
-      "notes": "",
-      "mentorSignerId": "",
-      "leaderSignerId": "",
-      "leaderComment": ""
-    },
-    {
-      "day": 6,
-      "date": "2026-06-17",
-      "learningItems": "85",
-      "practiceItems": "456",
-      "mentorScore": "",
-      "mentorAttitude": "",
-      "leaderScore": "",
-      "total": "",
-      "notes": "456",
-      "mentorSignerId": "",
-      "leaderSignerId": "",
-      "leaderComment": ""
-    },
-    {
-      "day": 7,
-      "date": "2026-06-15",
-      "learningItems": "4545",
-      "practiceItems": "4545",
-      "mentorScore": "",
-      "mentorAttitude": "",
-      "leaderScore": "",
-      "total": "",
-      "notes": "4545",
-      "mentorSignerId": "C9228",
-      "leaderSignerId": "C9228",
-      "leaderComment": "45455"
     }
   ],
   "empId": "K25578",
@@ -306,6 +236,98 @@
       "score": "",
       "supervisorSignerId": "",
       "targetLevel": "L1"
+    }
+  ],
+  "onboarding": [
+    {
+      "done": true,
+      "id": 1,
+      "name": "個人基本資料（入賴群）",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 2,
+      "name": "開通 AD",
+      "note": "555"
+    },
+    {
+      "done": true,
+      "id": 3,
+      "name": "開通 Notes ID（含設定）",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 4,
+      "name": "MES 相關申請（含設定）",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 5,
+      "name": "PIP 拍照申請",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 6,
+      "name": "NDA 保密義務承諾書",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 7,
+      "name": "門禁開通",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 8,
+      "name": "無塵服申請",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 9,
+      "name": "停車證申請",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 10,
+      "name": "廠區介紹六六",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 11,
+      "name": "資安宣導",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 12,
+      "name": "配件領取（無塵袋〈大、小〉、安全帽）",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 13,
+      "name": "新人課程",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 14,
+      "name": "個人槽使用申請（工程師）",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 15,
+      "name": "外網權限（工程師）",
+      "note": ""
     }
   ],
   "startDate": "2026-01-19",

@@ -53,6 +53,14 @@ const SCORE_LABELS = [
 // ══════════════════════════════════════════════════════
 //  Vue 3 App
 // ══════════════════════════════════════════════════════
+// 【XSS 防護】HTML 跳脫:所有「使用者輸入的文字」插入 innerHTML 前必須經過此函式,
+// 避免備註/姓名/學習內容中的引號破壞版面,或被植入惡意 script(Stored XSS)。
+function esc(s){
+  return String(s ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 const vueApp = Vue.createApp({
 
   data() {
@@ -72,6 +80,7 @@ const vueApp = Vue.createApp({
       searchQuery: '',
       ojtSelectedCat: 'A',
       ojtSelectedEmpId: null,
+      onboardingSelectedEmpId: null, // [新增] 權限項目選中的人員
     };
   },
 
@@ -86,18 +95,46 @@ apiFetch(path, opts){
     if(res.status===401){
       sessionStorage.removeItem('amhs_token');
       sessionStorage.removeItem('amhs_user');
+      sessionStorage.removeItem('amhs_view');  // Token 失效視同登出,一併清除瀏覽位置
       location.href='AMHS_Training_System.html';
       return Promise.reject(new Error('401'));
     }
     return res;
   });
 },
+
+// 【儲存修正】PATCH 共用結果處理:
+// 「成功」才更新快照;失敗時跳出警告並標記為未儲存(isDirty),
+// 讓使用者可按「立即更新」重送。修正前的版本無論成敗都更新快照,
+// 造成失敗的修改被判定為「無變動」而永久遺失且毫無提示。
+_afterPatch(promise, emp){
+  return promise.then(res=>{
+    if(res && res.ok){
+      this['_snap_'+emp.id] = JSON.stringify(emp);
+      return res.json().catch(()=>null);
+    }
+    return res.json().catch(()=>null).then(d=>{
+      this._markPatchFailed(d && d.error);
+      return null;
+    });
+  }).catch(()=>{
+    this._markPatchFailed();
+    return null;
+  });
+},
+_markPatchFailed(msg){
+  this.isDirty = true;
+  this.showSaveWarn(msg || '儲存失敗，請確認伺服器連線後按「立即更新」重試');
+  this.renderSaveBar();
+},
 async doLogout(){
   try{await this.apiFetch('/api/logout', {method:'POST'});}catch(e){}
   sessionStorage.removeItem('amhs_token');
   sessionStorage.removeItem('amhs_user');
+  sessionStorage.removeItem('amhs_view');  // 登出時一併清除瀏覽位置記憶
   location.href = 'AMHS_Training_System.html';
 },
+
 async enterApp(){
   // Load state from Flask
   try{
@@ -106,17 +143,26 @@ async enterApp(){
       const d=await res.json();
       this.state.employees=d.employees||[];
       this.state.signers=d.signers||[];
-      // 修剪尾端全空的天（相容舊版固定 5 天結構）
+      // 【天數同步修正】不再於前端修剪空白天與重新編號。
+      // 修剪只改本地、不同步伺服器,會造成 day 編號與伺服器脫鉤,
+      // 之後的 PATCH day-num / add-day 可能打錯天或產生重複編號。
+      // 舊資料若有尾端空白天,請由主管以「刪除天數」按鈕移除(會同步伺服器)。
       this.state.employees.forEach(emp=>{
-        while(emp.dailyRecords.length>1){
-          const last=emp.dailyRecords[emp.dailyRecords.length-1];
-          const isEmpty=!last.date&&!last.learningItems&&!last.practiceItems&&
-                        !last.notes&&!last.mentorScore&&!last.leaderScore&&
-                        !last.mentorSignerId&&!last.leaderSignerId&&!last.leaderComment;
-          if(isEmpty) emp.dailyRecords.pop();
-          else break;
+        if(!Array.isArray(emp.dailyRecords)) emp.dailyRecords=[];
+
+        // [新增] 補齊 onboarding 欄位 (相容舊資料)
+        if(!emp.onboarding || !Array.isArray(emp.onboarding) || emp.onboarding.length === 0){
+          emp.onboarding = [
+            {id:1, name:"個人基本資料（入賴群）", done:false, note:""}, {id:2, name:"開通 AD", done:false, note:""},
+            {id:3, name:"開通 Notes ID（含設定）", done:false, note:""}, {id:4, name:"MES 相關申請（含設定）", done:false, note:""},
+            {id:5, name:"PIP 拍照申請", done:false, note:""}, {id:6, name:"NDA 保密義務承諾書", done:false, note:""},
+            {id:7, name:"門禁開通", done:false, note:""}, {id:8, name:"無塵服申請", done:false, note:""},
+            {id:9, name:"停車證申請", done:false, note:""}, {id:10, name:"廠區介紹六六", done:false, note:""},
+            {id:11, name:"資安宣導", done:false, note:""}, {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:""},
+            {id:13, name:"新人課程", done:false, note:""}, {id:14, name:"個人槽使用申請（工程師）", done:false, note:""},
+            {id:15, name:"外網權限（工程師）", done:false, note:""}
+          ];
         }
-        emp.dailyRecords.forEach((r,i)=>r.day=i+1);
       });
       // 載入後建立快照，避免第一次 save 誤判全員髒掉
       this.state.employees.forEach(emp=>{ this['_snap_'+emp.id]=JSON.stringify(emp); });
@@ -132,9 +178,67 @@ async enterApp(){
   }
   this.applyRoleUI();
   this.renderSaveBar();
-  this.switchTab('training');
+
+  // 【瀏覽位置記憶】刷新後回到上次的頁籤與選中的人員/天數
+  const restoredTab = this._restoreView();
+  this.switchTab(restoredTab || 'training');
+  if((restoredTab || 'training') === 'training' && this.state.selectedEmpId){
+    // 直接捲動到剛才看的人員詳情,不必重新尋找
+    this.renderEmployeeDetail(true);
+  }
 },
+
 isLeader(){return this.currentUser&&this.currentUser.role==='leader';},
+
+// ─── 【瀏覽位置記憶】────────────────────────────────────────────
+// 將「目前頁籤 / 選中的人員 / 天數 / OJT 與權限項目的選擇 / 搜尋字」
+// 存進 sessionStorage,重新整理(F5)後自動回到原本的位置,
+// 不必重新尋找。關閉分頁或登出即自動清除。
+_saveView(){
+  try{
+    sessionStorage.setItem('amhs_view', JSON.stringify({
+      tab:        this.currentTab,
+      empId:      this.state.selectedEmpId,
+      day:        this.state.selectedDay,
+      ojtEmpId:   this.ojtSelectedEmpId,
+      ojtCat:     this.ojtSelectedCat,
+      obEmpId:    this.onboardingSelectedEmpId,
+      search:     this.searchQuery,
+    }));
+  }catch(e){}
+},
+_restoreView(){
+  let v = null;
+  try{ v = JSON.parse(sessionStorage.getItem('amhs_view') || 'null'); }catch(e){}
+  if(!v) return null;
+
+  // 還原搜尋字(需在 renderEmployeeList 之前設定)
+  if(typeof v.search === 'string'){
+    this.searchQuery = v.search;
+    const si = document.getElementById('searchInput');
+    if(si) si.value = v.search;
+  }
+
+  // 還原訓練紀錄表選中的人員(確認人員仍存在)與天數(限制在合法範圍)
+  const emp = v.empId ? this.state.employees.find(e=>e.id===v.empId) : null;
+  if(emp){
+    this.state.selectedEmpId = emp.id;
+    const maxDay = Math.max(0, (emp.dailyRecords||[]).length - 1);
+    this.state.selectedDay = Math.min(Math.max(0, v.day|0), maxDay);
+  }
+
+  // 還原 OJT 與權限項目的選擇(render 時若已失效會自動退回第一位)
+  if(v.ojtEmpId) this.ojtSelectedEmpId = v.ojtEmpId;
+  if(v.ojtCat && ['A','B','C','D'].includes(v.ojtCat)) this.ojtSelectedCat = v.ojtCat;
+  if(v.obEmpId) this.onboardingSelectedEmpId = v.obEmpId;
+
+  // 還原頁籤:非 Leader 不可回到 leader 專屬頁籤
+  const allowed = this.isLeader()
+    ? ['training','ojt','cert','settings','onboarding']
+    : ['training','cert'];
+  return allowed.includes(v.tab) ? v.tab : 'training';
+},
+
 applyRoleUI(){
   const bar=document.getElementById('userBarContainer');
   const roleLabel=this.isLeader()?'Leader':'User';
@@ -487,6 +591,25 @@ newEmployee(empId, name){
         mentorSignerId:"", supervisorSignerId:""});
     });
   });
+
+  const onboardingItems = [
+    {id:1, name:"個人基本資料（入賴群）", done:false, note:""},
+    {id:2, name:"開通 AD", done:false, note:""},
+    {id:3, name:"開通 Notes ID（含設定）", done:false, note:""},
+    {id:4, name:"MES 相關申請（含設定）", done:false, note:""},
+    {id:5, name:"PIP 拍照申請", done:false, note:""},
+    {id:6, name:"NDA 保密義務承諾書", done:false, note:""},
+    {id:7, name:"門禁開通", done:false, note:""},
+    {id:8, name:"無塵服申請", done:false, note:""},
+    {id:9, name:"停車證申請", done:false, note:""},
+    {id:10, name:"廠區介紹六六", done:false, note:""},
+    {id:11, name:"資安宣導", done:false, note:""},
+    {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:""},
+    {id:13, name:"新人課程", done:false, note:""},
+    {id:14, name:"個人槽使用申請（工程師）", done:false, note:""},
+    {id:15, name:"外網權限（工程師）", done:false, note:""}
+  ];
+
   return {
     id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     empId: empId||"", name: name||"", startDate:"", mentor:"", leader:"", type:"新人訓練",
@@ -495,7 +618,8 @@ newEmployee(empId, name){
       mentorScore:"", mentorAttitude:"", leaderScore:"", total:"", notes:"",
       mentorSignerId:"", leaderSignerId:"", leaderComment:""
     }],
-    ojtRecords: ojtRecs
+    ojtRecords: ojtRecs,
+    onboarding: onboardingItems // [新增]
   };
 },
 
@@ -507,13 +631,13 @@ findSigner(signerId){
 signerDisplay(signerId){
   if(!signerId) return '';
   const s = this.findSigner(signerId);
-  return s ? `${s.name}（${s.position}）` : `⚠ 未知工號 ${signerId}`;
+  return s ? `${esc(s.name)}（${esc(s.position)}）` : `⚠ 未知工號 ${esc(signerId)}`;
 },
 
 signerBadgeHTML(signerId, cls){
   if(!signerId) return `<span class="sign-btn sign-unsigned ${cls}">○ 待簽核</span>`;
   const s = this.findSigner(signerId);
-  if(s) return `<span class="sign-btn sign-signed ${cls}" title="工號: ${s.signerId}">✓ ${s.name}（${s.position}）</span>`;
+  if(s) return `<span class="sign-btn sign-signed ${cls}" title="工號: ${esc(s.signerId)}">✓ ${esc(s.name)}（${esc(s.position)}）</span>`;
   return `<span class="sign-btn sign-unsigned ${cls}" style="border-color:#ef444450;color:#f87171">⚠ ${signerId}</span>`;
 },
 
@@ -537,20 +661,22 @@ switchTab(tab){
   document.querySelectorAll('.tab').forEach(t=>{
     t.classList.toggle('active', t.dataset.tab===tab);
   });
-  ['training','ojt','cert','settings'].forEach(t=>{
-    document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
+  ['training','ojt','cert','onboarding','settings'].forEach(t=>{ // [修改] 加入 onboarding
+    const el = document.getElementById('tab-'+t);
+    if(el) el.classList.toggle('hidden', t!==tab);
   });
   if(tab==='training'){
     this.renderEmployeeList();
-    // keep an open detail (and its radar) in sync with edits made elsewhere
     if(this.state.selectedEmpId && this.state.employees.find(e=>e.id===this.state.selectedEmpId)){
       this.renderEmployeeDetail();
     }
   }
   if(tab==='ojt') this.renderOJT();
   if(tab==='cert') this.renderCert();
+  if(tab==='onboarding') this.renderOnboarding(); // [新增]
   if(tab==='settings') this.renderSettings();
   this.renderSaveBar();
+  this._saveView();  // 記錄目前頁籤,供刷新後還原
 },
 
 // ─── EMPLOYEE LIST ───
@@ -582,7 +708,7 @@ renderEmployeeList(){
     return;
   }
   if(!emps.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div>找不到符合「${this.searchQuery}」的人員</div></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div>找不到符合「${esc(this.searchQuery)}」的人員</div></div>`;
     return;
   }
 
@@ -599,8 +725,8 @@ renderEmployeeList(){
   </tr></thead><tbody>`;
   emps.forEach(emp=>{
     html+=`<tr style="cursor:pointer" onclick="selectEmployee('${emp.id}')">
-      <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${emp.empId||'—'}</span></td>
-      <td style="font-weight:600">${emp.name||'—'}</td>
+      <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${esc(emp.empId)||'—'}</span></td>
+      <td style="font-weight:600">${esc(emp.name)||'—'}</td>
       ${this.isLeader()?`
       <td style="text-align:center">${this.catSummaryCell(emp, 'A', '#0ea5e9')}</td>
       <td style="text-align:center">${this.catSummaryCell(emp, 'B', '#f59e0b')}</td>
@@ -608,7 +734,7 @@ renderEmployeeList(){
       <td style="text-align:center">${this.catSummaryCell(emp, 'D', '#ef4444')}</td>
       <td style="text-align:center;background:var(--surface2)">${(()=>{ const ojtAvg=this.getEmpOjtAvgScore(emp); const ojtSi=this.getScoreInfo(ojtAvg); return ojtAvg!==null && ojtSi ? '<div><span class="level-badge" style="background:'+ojtSi.color+'25;color:'+ojtSi.color+';border:2px solid '+ojtSi.color+'60;font-size:16px;width:48px;height:30px">'+ojtSi.grade+'</span><div style="font-size:11px;color:var(--text2);margin-top:3px;font-family:var(--mono);font-weight:600">'+ojtAvg+'分</div></div>' : '<span style="color:var(--text4)">—</span>'; })()}</td>
       `:''}
-      <td style="color:var(--text2);font-size:12px">${emp.startDate||'—'}</td>
+      <td style="color:var(--text2);font-size:12px">${esc(emp.startDate)||'—'}</td>
       <td>
         <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();selectEmployee('${emp.id}')">查看</button>
         ${this.isLeader()?'<button class="btn btn-danger btn-xs" onclick="event.stopPropagation();deleteEmployee(\''+emp.id+'\')">刪除</button>':''}
@@ -618,6 +744,7 @@ renderEmployeeList(){
   html+='</tbody></table></div>';
   html+=`<div style="margin-top:8px;font-size:11px;color:var(--text4)">共 ${emps.length} 位人員${this.searchQuery?' (篩選結果)':''}</div>`;
   el.innerHTML=html;
+  this._saveView();  // 記錄搜尋字,供刷新後還原
 },
 
 // ─── ADD EMPLOYEE MODAL ───
@@ -650,7 +777,7 @@ previewSigner(input, targetId){
   if(!input.value.trim()){el.innerHTML='';return;}
   const s = this.findSigner(input.value.trim());
   el.innerHTML = s
-    ? `<div class="signer-result signer-found">✓ ${s.name}（${s.position}）</div>`
+    ? `<div class="signer-result signer-found">✓ ${esc(s.name)}（${esc(s.position)}）</div>`
     : `<div class="signer-result signer-notfound">⚠ 此工號不在簽核人員清單中</div>`;
 },
 
@@ -673,12 +800,21 @@ confirmAddEmployee(){
 async deleteEmployee(id){
   if(!confirm('確定刪除此人員？所有紀錄將無法復原。'))return;
   const emp = this.state.employees.find(e=>e.id===id);
-  if(emp){
-    try{
-      await this.apiFetch('/api/employee/'+emp.empId, {method:'DELETE'});
-      // 清除本地快照，避免下次 _persist 誤判為新增
-      delete this['_snap_'+emp.id];
-    }catch(e){ console.error('Delete failed:',e); }
+  if(!emp) return;
+  // 【儲存修正】伺服器刪除「成功」後才移除本地資料;
+  // 失敗時保留人員並警告,避免重新整理後人員又出現的錯亂。
+  try{
+    const res = await this.apiFetch('/api/employee/'+emp.empId, {method:'DELETE'});
+    if(!res || !res.ok){
+      this._markPatchFailed('刪除失敗，人員資料未變動');
+      return;
+    }
+    // 清除本地快照，避免下次 _persist 誤判為新增
+    delete this['_snap_'+emp.id];
+  }catch(e){
+    console.error('Delete failed:',e);
+    this._markPatchFailed('刪除失敗，人員資料未變動');
+    return;
   }
   this.state.employees = this.state.employees.filter(e=>e.id!==id);
   if(this.state.selectedEmpId===id){this.state.selectedEmpId=null;document.getElementById('employeeDetail').classList.add('hidden');}
@@ -731,7 +867,7 @@ renderEmployeeDetail(doScroll){
         <div class="emp-signer-empty" style="color:#f87171">⚠ 工號 ${value} 不在簽核清單</div>` : `
         <div class="emp-signer-empty">尚未指定 ${role}</div>`)
       }
-      <input class="field field-sm" value="${value||''}" placeholder="輸入工號"
+      <input class="field field-sm" value="${esc(value)}" placeholder="輸入工號"
              onchange="updateEmpField('${emp.id}','${fieldKey}',this.value);renderEmployeeDetail()"
              oninput="showInlineSigner(this,'${inputId}')">
       <div id="${inputId}"></div>
@@ -750,13 +886,13 @@ renderEmployeeDetail(doScroll){
 
       <!-- HERO STRIP -->
       <div class="emp-hero">
-        <div class="emp-avatar" style="background:linear-gradient(135deg,${avatarBg},${avatarBg}aa)">${this.firstChar(emp.name||emp.empId)}</div>
+        <div class="emp-avatar" style="background:linear-gradient(135deg,${avatarBg},${avatarBg}aa)">${esc(this.firstChar(emp.name||emp.empId))}</div>
         <div class="emp-hero-main">
-          <div class="emp-hero-name">${emp.name||'—'}</div>
-          <div class="emp-hero-id">${emp.empId||'—'}</div>
+          <div class="emp-hero-name">${esc(emp.name)||'—'}</div>
+          <div class="emp-hero-id">${esc(emp.empId)||'—'}</div>
         </div>
         <div class="emp-hero-tags">
-          <span class="emp-type-chip">🎓 ${emp.type||'—'}</span>
+          <span class="emp-type-chip">🎓 ${esc(emp.type)||'—'}</span>
           <div class="emp-hero-stat"><span class="v">${trainDays!==null?trainDays:'—'}</span><span class="l">訓練天數</span></div>
           <div class="emp-hero-stat"><span class="v" style="font-size:14px">${this.fmtDateZh(emp.startDate)||'—'}</span><span class="l">開始日期</span></div>
         </div>
@@ -769,7 +905,7 @@ renderEmployeeDetail(doScroll){
           <div class="emp-field-row">
             <div>
               <label>開始日期</label>
-              <input type="date" class="field field-sm" value="${emp.startDate||''}" onchange="updateEmpField('${emp.id}','startDate',this.value);renderEmployeeDetail()">
+              <input type="date" class="field field-sm" value="${esc(emp.startDate)}" onchange="updateEmpField('${emp.id}','startDate',this.value);renderEmployeeDetail()">
             </div>
             <div>
               <label>訓練類型</label>
@@ -824,7 +960,7 @@ renderEmployeeDetail(doScroll){
   const recSi = this.getScoreInfo(rec.total);
 
   // Add day button
-  const maxVisible = 5;
+  const maxVisible = 10;
   const totalDays = emp.dailyRecords.length;
   let dotStart = 0;
   if(totalDays > maxVisible){
@@ -860,20 +996,20 @@ renderEmployeeDetail(doScroll){
   html+=`<div class="card fade-up" style="animation-delay:.08s">
     <div class="card-head">
       <span style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--blue)">DAY ${String(rec.day).padStart(2,'0')}</span>
-      <input type="date" class="field field-sm" style="width:160px" value="${rec.date}" onchange="updateDay('${emp.id}',${dayIdx},'date',this.value)">
+      <input type="date" class="field field-sm" style="width:160px" value="${esc(rec.date)}" onchange="updateDay('${emp.id}',${dayIdx},'date',this.value)">
       ${emp.dailyRecords.length>1?`<button class="btn btn-danger btn-xs ml-auto" onclick="removeDay('${emp.id}',${dayIdx})">刪除此天</button>`:''}
     </div>
     <div class="card-body">
       <div class="grid g2 mb-16">
-        <div><label class="label">學習項目</label><textarea class="field" placeholder="今日學習課程..." onchange="updateDay('${emp.id}',${dayIdx},'learningItems',this.value)">${rec.learningItems}</textarea></div>
-        <div><label class="label">實做項目</label><textarea class="field" placeholder="今日實做內容..." onchange="updateDay('${emp.id}',${dayIdx},'practiceItems',this.value)">${rec.practiceItems}</textarea></div>
+        <div><label class="label">學習項目</label><textarea class="field" placeholder="今日學習課程..." onchange="updateDay('${emp.id}',${dayIdx},'learningItems',this.value)">${esc(rec.learningItems)}</textarea></div>
+        <div><label class="label">實做項目</label><textarea class="field" placeholder="今日實做內容..." onchange="updateDay('${emp.id}',${dayIdx},'practiceItems',this.value)">${esc(rec.practiceItems)}</textarea></div>
       </div>
-      <div class="mb-16"><label class="label">今日學習心得</label><textarea class="field" placeholder="具體說明今日學習重點..." onchange="updateDay('${emp.id}',${dayIdx},'notes',this.value)">${rec.notes}</textarea></div>
+      <div class="mb-16"><label class="label">今日學習心得</label><textarea class="field" placeholder="具體說明今日學習重點..." onchange="updateDay('${emp.id}',${dayIdx},'notes',this.value)">${esc(rec.notes)}</textarea></div>
       <div class="flex gap-10 fw-wrap">
         <div>
           <label class="label">指導學長簽核（輸入工號）</label>
           <div class="flex items-center gap-8 mt-4">
-            <input class="field field-sm" style="width:120px" placeholder="簽核人工號" value="${rec.mentorSignerId||''}" onchange="updateDay('${emp.id}',${dayIdx},'mentorSignerId',this.value);renderEmployeeDetail()" oninput="showInlineSigner(this,'dayMentor-${dayIdx}')">
+            <input class="field field-sm" style="width:120px" placeholder="簽核人工號" value="${esc(rec.mentorSignerId)}" onchange="updateDay('${emp.id}',${dayIdx},'mentorSignerId',this.value);renderEmployeeDetail()" oninput="showInlineSigner(this,'dayMentor-${dayIdx}')">
             ${this.signerBadgeHTML(rec.mentorSignerId,'')}
           </div>
           <div id="dayMentor-${dayIdx}"></div>
@@ -881,18 +1017,19 @@ renderEmployeeDetail(doScroll){
         <div>
           <label class="label">組長 / 主管簽核（輸入工號）</label>
           <div class="flex items-center gap-8 mt-4">
-            <input class="field field-sm" style="width:120px" placeholder="簽核人工號" value="${rec.leaderSignerId||''}" onchange="updateDay('${emp.id}',${dayIdx},'leaderSignerId',this.value);renderEmployeeDetail()" oninput="showInlineSigner(this,'dayLeader-${dayIdx}')">
+            <input class="field field-sm" style="width:120px" placeholder="簽核人工號" value="${esc(rec.leaderSignerId)}" onchange="updateDay('${emp.id}',${dayIdx},'leaderSignerId',this.value);renderEmployeeDetail()" oninput="showInlineSigner(this,'dayLeader-${dayIdx}')">
             ${this.signerBadgeHTML(rec.leaderSignerId,'')}
           </div>
           <div id="dayLeader-${dayIdx}"></div>
         </div>
       </div>
-      <div class="mt-16"><label class="label">長官評語</label><textarea class="field" placeholder="長官評語..." onchange="updateDay('${emp.id}',${dayIdx},'leaderComment',this.value)">${rec.leaderComment||''}</textarea></div>
+      <div class="mt-16"><label class="label">長官評語</label><textarea class="field" placeholder="長官評語..." onchange="updateDay('${emp.id}',${dayIdx},'leaderComment',this.value)">${esc(rec.leaderComment)}</textarea></div>
     </div>
   </div>`;
 
   el.innerHTML = html;
   if(doScroll) el.scrollIntoView({behavior:'smooth', block:'start'});
+  this._saveView();  // 記錄選中的人員與天數,供刷新後還原
 },
 
 showInlineSigner(input, targetId){
@@ -901,14 +1038,23 @@ showInlineSigner(input, targetId){
   if(!input.value.trim()){el.innerHTML='';return;}
   const s = this.findSigner(input.value.trim());
   el.innerHTML = s
-    ? `<div class="signer-result signer-found">✓ ${s.name}（${s.position}）</div>`
+    ? `<div class="signer-result signer-found">✓ ${esc(s.name)}（${esc(s.position)}）</div>`
     : `<div class="signer-result signer-notfound">⚠ 此工號不在簽核人員清單中</div>`;
 },
 
+
+
 updateEmpField(id, field, value){
   const emp = this.state.employees.find(e=>e.id===id);
-  if(emp) emp[field]=value;
-  this.save();
+  if(emp) {
+    emp[field]=value;
+    // 改為 PATCH 局部更新，不觸發全量 save;成功才更新快照
+    this._afterPatch(
+      this.apiFetch('/api/employee/'+emp.empId+'/info', {
+        method: 'PATCH',
+        body: JSON.stringify({[field]: value})
+      }), emp);
+  }
 },
 
 updateDay(empId, dayIdx, field, value){
@@ -916,10 +1062,9 @@ updateDay(empId, dayIdx, field, value){
   if(!emp) return;
   emp.dailyRecords[dayIdx][field]=value;
   const rec = emp.dailyRecords[dayIdx];
-  this.apiFetch('/api/employee/'+emp.empId+'/day-num/'+rec.day,
-    {method:'PATCH', body:JSON.stringify({[field]:value})})
-    .then(r=>r&&r.ok?r.json():null).catch(()=>null);
-  this['_snap_'+emp.id]=JSON.stringify(emp);
+  this._afterPatch(
+    this.apiFetch('/api/employee/'+emp.empId+'/day-num/'+rec.day,
+      {method:'PATCH', body:JSON.stringify({[field]:value})}), emp);
 },
 
 updateDayScore(empId, dayIdx, field, value){
@@ -931,12 +1076,17 @@ updateDayScore(empId, dayIdx, field, value){
   const ma = Number(r.mentorAttitude)||0;
   const ls = Number(r.leaderScore)||0;
   r.total = (ms||ma||ls) ? Math.min(100, ms+ma+ls) : '';
-  this.apiFetch('/api/employee/'+emp.empId+'/day-num/'+r.day,
-    {method:'PATCH', body:JSON.stringify({[field]:value})})
-    .then(res=>res&&res.ok?res.json():null)
-    .then(d=>{ if(d&&d.total!==undefined) r.total=d.total; })
-    .catch(()=>null);
-  this['_snap_'+emp.id]=JSON.stringify(emp);
+  this._afterPatch(
+    this.apiFetch('/api/employee/'+emp.empId+'/day-num/'+r.day,
+      {method:'PATCH', body:JSON.stringify({[field]:value})}), emp)
+    .then(d=>{
+      if(d&&d.total!==undefined){
+        r.total=d.total;
+        this['_snap_'+emp.id]=JSON.stringify(emp);
+        this.renderEmployeeDetail();
+        this.renderEmployeeList();
+      }
+    });
   this.renderEmployeeDetail();
   this.renderEmployeeList();
 },
@@ -945,9 +1095,34 @@ addDay(empId){
   const emp = this.state.employees.find(e=>e.id===empId);
   if(!emp)return;
   const nextDay = emp.dailyRecords.length+1;
-  emp.dailyRecords.push({day:nextDay,date:"",learningItems:"",practiceItems:"",mentorScore:"",mentorAttitude:"",leaderScore:"",total:"",notes:"",mentorSignerId:"",leaderSignerId:"",leaderComment:""});
+  const newRec = {day:nextDay,date:"",learningItems:"",practiceItems:"",mentorScore:"",mentorAttitude:"",leaderScore:"",total:"",notes:"",mentorSignerId:"",leaderSignerId:"",leaderComment:""};
+
+  emp.dailyRecords.push(newRec);
   this.state.selectedDay = emp.dailyRecords.length-1;
-  this.save({force:true});
+
+  // 【天數同步修正】day 編號以「伺服器回傳」為準,
+  // 避免前端與伺服器天數不同步時產生重複編號。
+  this._afterPatch(
+    this.apiFetch('/api/employee/'+emp.empId+'/add-day', {
+      method: 'PATCH',
+      body: JSON.stringify(newRec)
+    }), emp)
+    .then(d=>{
+      if(d && d.day !== undefined && d.day !== newRec.day){
+        newRec.day = d.day;
+        this['_snap_'+emp.id] = JSON.stringify(emp);
+        this.renderEmployeeDetail();
+      }
+      if(d === null){
+        // 新增失敗,回復本地狀態避免畫面與伺服器不一致
+        const idx = emp.dailyRecords.indexOf(newRec);
+        if(idx >= 0) emp.dailyRecords.splice(idx, 1);
+        if(this.state.selectedDay >= emp.dailyRecords.length)
+          this.state.selectedDay = emp.dailyRecords.length - 1;
+        this.renderEmployeeDetail();
+      }
+    });
+
   this.renderEmployeeDetail();
 },
 
@@ -964,17 +1139,32 @@ searchDayByDate(empId, dateVal){
   }
 },
 
+
 removeDay(empId, dayIdx){
   const emp = this.state.employees.find(e=>e.id===empId);
   if(!emp||emp.dailyRecords.length<=1)return;
   if(!confirm('確定刪除第 '+emp.dailyRecords[dayIdx].day+' 天紀錄？'))return;
-  emp.dailyRecords.splice(dayIdx,1);
-  emp.dailyRecords.forEach((r,i)=>r.day=i+1);
-  if(this.state.selectedDay>=emp.dailyRecords.length) this.state.selectedDay=emp.dailyRecords.length-1;
-  this.save({force:true});
-  this.renderEmployeeDetail();
-  this.renderEmployeeList();
+
+  const removedDay = emp.dailyRecords[dayIdx].day;
+
+  // 【儲存修正】改為「伺服器刪除成功後」才更新本地資料;
+  // 失敗時保留原資料並警告,避免畫面與伺服器不一致。
+  this.apiFetch('/api/employee/'+emp.empId+'/remove-day/'+removedDay, {
+    method: 'PATCH'
+  }).then(res=>{
+    if(res && res.ok){
+      emp.dailyRecords.splice(dayIdx,1);
+      emp.dailyRecords.forEach((r,i)=>r.day=i+1);
+      if(this.state.selectedDay>=emp.dailyRecords.length) this.state.selectedDay=emp.dailyRecords.length-1;
+      this['_snap_'+emp.id] = JSON.stringify(emp);
+      this.renderEmployeeDetail();
+      this.renderEmployeeList();
+    } else {
+      this._markPatchFailed('刪除失敗，資料未變動');
+    }
+  }).catch(()=>{ this._markPatchFailed('刪除失敗，資料未變動'); });
 },
+
 
 // ─── OJT TAB ───
 
@@ -1006,7 +1196,7 @@ renderOJT(){
     <div class="flex items-center gap-12 mb-16 fw-wrap">
       <label class="label" style="margin:0">選擇人員</label>
       <select class="field field-sm" style="width:220px" onchange="_vm.ojtSelectedEmpId=this.value;renderOJT()">
-        ${ojtEmps.map(e=>`<option value="${e.id}" ${e.id===this.ojtSelectedEmpId?'selected':''}>${e.empId} — ${e.name}</option>`).join('')}
+        ${ojtEmps.map(e=>`<option value="${e.id}" ${e.id===this.ojtSelectedEmpId?'selected':''}>${esc(e.empId)} — ${esc(e.name)}</option>`).join('')}
       </select>
       ${(()=>{
         const sA=this.getEmpCatLevel(emp,'A'),sB=this.getEmpCatLevel(emp,'B'),sC=this.getEmpCatLevel(emp,'C'),sD=this.getEmpCatLevel(emp,'D');
@@ -1051,19 +1241,19 @@ renderOJT(){
       <td style="font-weight:600;white-space:nowrap">${rec.name}</td>
       <td style="font-size:12px;color:var(--text2)">${rec.desc}</td>
       <td><div class="flex items-center gap-8">
-        <input type="number" min="0" max="100" class="field field-sm" style="width:62px;text-align:center${this.isLeader()?'':';opacity:.6'}" value="${rec.score}" placeholder="分" onchange="updateOjtField('${emp.id}',${gIdx},'score',this.value);renderOJT()" ${this.isLeader()?'':'disabled'}>
+        <input type="number" min="0" max="100" class="field field-sm" style="width:62px;text-align:center${this.isLeader()?'':';opacity:.6'}" value="${esc(rec.score)}" placeholder="分" onchange="updateOjtField('${emp.id}',${gIdx},'score',this.value);renderOJT()" ${this.isLeader()?'':'disabled'}>
       </div></td>
       <td style="text-align:center">${rsi?`<span class="level-badge" style="background:${rsi.color}20;color:${rsi.color};border:1px solid ${rsi.color}40">${rsi.grade}</span>`:'<span style="color:var(--text4)">—</span>'}</td>
-      <td><input class="field field-sm" style="min-width:110px${this.isLeader()?'':';opacity:.6'}" placeholder="備註..." value="${rec.mentorNote||''}" onchange="updateOjtField('${emp.id}',${gIdx},'mentorNote',this.value)" ${this.isLeader()?'':'disabled'}></td>
+      <td><input class="field field-sm" style="min-width:110px${this.isLeader()?'':';opacity:.6'}" placeholder="備註..." value="${esc(rec.mentorNote)}" onchange="updateOjtField('${emp.id}',${gIdx},'mentorNote',this.value)" ${this.isLeader()?'':'disabled'}></td>
       <td>
-        <input class="field field-sm" style="width:90px" placeholder="工號" value="${rec.mentorSignerId||''}"
+        <input class="field field-sm" style="width:90px" placeholder="工號" value="${esc(rec.mentorSignerId)}"
           onchange="updateOjtField('${emp.id}',${gIdx},'mentorSignerId',this.value);renderOJT()"
           oninput="showInlineSigner(this,'ojtM-${rec.id}')">
         <div id="ojtM-${rec.id}"></div>
         ${rec.mentorSignerId?`<div style="margin-top:3px">${this.signerBadgeHTML(rec.mentorSignerId,'')}</div>`:''}
       </td>
       <td>
-        <input class="field field-sm" style="width:90px" placeholder="工號" value="${rec.supervisorSignerId||''}"
+        <input class="field field-sm" style="width:90px" placeholder="工號" value="${esc(rec.supervisorSignerId)}"
           onchange="updateOjtField('${emp.id}',${gIdx},'supervisorSignerId',this.value);renderOJT()"
           oninput="showInlineSigner(this,'ojtS-${rec.id}')">
         <div id="ojtS-${rec.id}"></div>
@@ -1085,17 +1275,28 @@ renderOJT(){
     </div>
   </div>`;
   el.innerHTML = html;
+  this._saveView();  // 記錄 OJT 選中的人員與類別,供刷新後還原
 },
 
 updateOjtField(empId, idx, field, value){
   const emp = this.state.employees.find(e=>e.id===empId);
   if(emp && emp.ojtRecords[idx]) {
-    emp.ojtRecords[idx][field]=value;
+    const rec = emp.ojtRecords[idx];
+    rec[field] = value;
+    
+    // 自動計算等級
     if(field==='score'){
       const si = this.getScoreInfo(value);
-      emp.ojtRecords[idx].currentLevel = si ? si.grade : '';
+      rec.currentLevel = si ? si.grade : '';
     }
-    this.save();
+    
+    // 【關鍵修改】改為呼叫 PATCH API，不再觸發全量 save()
+    // 成功才更新快照;失敗警告並標記未儲存
+    this._afterPatch(
+      this.apiFetch('/api/employee/'+emp.empId+'/ojt/'+rec.id, {
+        method: 'PATCH',
+        body: JSON.stringify({[field]: value, currentLevel: rec.currentLevel})
+      }), emp);
   }
 },
 
@@ -1166,8 +1367,8 @@ renderSettings(){
               const isCurrentUser = this.currentUser && a.empId===this.currentUser.empId;
               const rc = a.role==='leader' ? '#16a34a' : '#0ea5e9';
               return `<tr>
-                <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${a.empId}</span></td>
-                <td style="font-weight:500">${a.name||'—'}</td>
+                <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${esc(a.empId)}</span></td>
+                <td style="font-weight:500">${esc(a.name)||'—'}</td>
                 <td>
                   <select class="field field-sm" style="width:100px;color:${rc};font-weight:600" onchange="changeAccountRole(${i},this.value)" ${isCurrentUser?'disabled title="無法變更自己的角色"':''}>
                     <option value="leader" ${a.role==='leader'?'selected':''} style="color:#16a34a">Leader</option>
@@ -1206,9 +1407,9 @@ renderSettings(){
           <thead><tr><th>工號</th><th>姓名</th><th>職位</th><th>操作</th></tr></thead>
           <tbody>
             ${this.state.signers.map((s,i)=>`<tr>
-              <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${s.signerId}</span></td>
-              <td style="font-weight:600">${s.name}</td>
-              <td><span class="badge" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text2)">${s.position}</span></td>
+              <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${esc(s.signerId)}</span></td>
+              <td style="font-weight:600">${esc(s.name)}</td>
+              <td><span class="badge" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text2)">${esc(s.position)}</span></td>
               <td><button class="btn btn-danger btn-xs" onclick="removeSigner(${i})">移除</button></td>
             </tr>`).join('')}
           </tbody>
@@ -1237,23 +1438,107 @@ renderSettings(){
   el.innerHTML=html;
 },
 
-// addAccount(){
-//   const empId=document.getElementById('newAcctId').value.trim();
-//   const pwd=document.getElementById('newAcctPwd').value.trim();
-//   const name=document.getElementById('newAcctName').value.trim();
-//   const role=document.getElementById('newAcctRole').value;
-//   if(!empId||!pwd){alert('請填寫工號與密碼');return;}
-//   if(this.ACCOUNTS.find(a=>a.empId===empId)){
-//       alert('此工號已存在');
-//       return;
-//   }
-//   this.ACCOUNTS.push({empId, password:pwd, role, name: name||(role==='leader'?'Leader-':'User-')+empId});
-//   this.save({force:true});
-//   document.getElementById('newAcctId').value='';
-//   document.getElementById('newAcctPwd').value='';
-//   document.getElementById('newAcctName').value='';
-//   this.renderSettings();
-// },
+renderOnboarding(){
+  const el = document.getElementById('tab-onboarding');
+  // 撈取 accounts.json 中 role 為 user 的帳號
+  const users = this.ACCOUNTS.filter(a => a.role === 'user');
+  
+  if(!users.length){
+    el.innerHTML = `<div class="empty fade-up"><div class="empty-icon">👤</div><div>目前尚無 role 為 User 的帳號</div><div style="font-size:12px;margin-top:8px;color:var(--text4)">請至「系統設定」新增一般使用者帳號</div></div>`;
+    return;
+  }
+
+  if(!this.onboardingSelectedEmpId || !users.find(u => u.empId === this.onboardingSelectedEmpId)){
+    this.onboardingSelectedEmpId = users[0].empId;
+  }
+
+  const selectedUser = users.find(u => u.empId === this.onboardingSelectedEmpId);
+  let emp = this.state.employees.find(e => e.empId === this.onboardingSelectedEmpId);
+  
+  // 如果該 User 還沒建立員工資料，自動幫他建立一筆
+  if(!emp){
+    emp = this.newEmployee(selectedUser.empId, selectedUser.name);
+    this.state.employees.push(emp);
+    this.save({force:true, silent:true});
+  }
+
+  const doneCount = emp.onboarding.filter(i => i.done).length;
+  const totalCount = emp.onboarding.length;
+  const progressPct = Math.round((doneCount / totalCount) * 100);
+
+  let html = `<div class="fade-up">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:14px">📋 新人權限與報到項目追蹤</h2>
+    
+    <div class="flex items-center gap-12 mb-16 fw-wrap">
+      <label class="label" style="margin:0">選擇人員 (User)</label>
+      <select class="field field-sm" style="width:220px" onchange="_vm.onboardingSelectedEmpId=this.value;renderOnboarding()">
+        ${users.map(u => `<option value="${u.empId}" ${u.empId===this.onboardingSelectedEmpId?'selected':''}>${esc(u.empId)} — ${esc(u.name)||'未命名'}</option>`).join('')}
+      </select>
+      <div class="ml-auto flex items-center gap-10" style="font-size:13px;color:var(--text2)">
+        <span>完成進度：</span>
+        <div style="width:150px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">
+          <div style="width:${progressPct}%;height:100%;background:var(--green2);transition:width .3s"></div>
+        </div>
+        <span style="font-weight:700;color:var(--green2)">${doneCount} / ${totalCount}</span>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:var(--blue)30">
+      <div class="card-head" style="background:var(--blue)08">
+        <span style="font-size:14px;font-weight:700">權限與報到清單</span>
+        <span class="badge ml-auto" style="background:var(--surface2);color:var(--text3)">${esc(selectedUser.empId)}</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl" style="min-width:700px">
+          <thead><tr>
+            <th style="width:60px;text-align:center">完成</th>
+            <th style="width:60px;text-align:center">項目</th>
+            <th>名稱</th>
+            <th style="min-width:200px">備註</th>
+          </tr></thead>
+          <tbody>`;
+
+  emp.onboarding.forEach((item, idx) => {
+    html += `<tr>
+      <td style="text-align:center">
+        <input type="checkbox" style="width:20px;height:20px;cursor:pointer;accent-color:var(--green2)" 
+          ${item.done?'checked':''} 
+          onchange="updateOnboardingField('${emp.id}', ${idx}, 'done', this.checked)">
+      </td>
+      <td style="text-align:center;font-family:var(--mono);font-weight:700;color:var(--blue2)">${item.id}</td>
+      <td style="font-weight:500;${item.done?'text-decoration:line-through;color:var(--text4)':''}">${esc(item.name)}</td>
+      <td>
+        <input class="field field-sm" placeholder="填寫備註..." value="${esc(item.note)}" 
+          onchange="updateOnboardingField('${emp.id}', ${idx}, 'note', this.value)">
+      </td>
+    </tr>`;
+  });
+
+  html += `</tbody></table></div></div></div>`;
+  el.innerHTML = html;
+  this._saveView();  // 記錄權限項目選中的人員,供刷新後還原
+},
+
+
+
+updateOnboardingField(empId, idx, field, value){
+  const emp = this.state.employees.find(e => e.id === empId);
+  if(emp && emp.onboarding[idx]){
+    const item = emp.onboarding[idx];
+    item[field] = value;
+    
+    // 改為 PATCH 局部更新;成功才更新快照
+    this._afterPatch(
+      this.apiFetch('/api/employee/'+emp.empId+'/onboarding/'+item.id, {
+        method: 'PATCH',
+        body: JSON.stringify({[field]: value})
+      }), emp);
+
+    if(field === 'done') this.renderOnboarding(); // 更新進度條與刪除線樣式
+  }
+},
+
+
 
 addAccount(){
   const empId = document.getElementById('newAcctId').value.trim();
@@ -1272,10 +1557,9 @@ addAccount(){
     return;
   }
 
-  // 密碼允許空白，沒輸入就是 ""
+  // 【安全性修正】密碼已改由 AD 驗證,帳號清單不再儲存 password 欄位
   this.ACCOUNTS.push({
     empId,
-    password: "",
     role,
     name: name || (role === 'leader' ? 'Leader-' : 'User-') + empId
   });
@@ -1331,7 +1615,7 @@ exportData(){
   URL.revokeObjectURL(url);
 },
 
-importData(e){
+  importData(e){
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
@@ -1369,6 +1653,20 @@ importData(e){
           emp.ojtRecords.forEach(r=>{
             if(!('mentorSignerId' in r)){r.mentorSignerId='';r.supervisorSignerId='';}
           });
+          
+          // [新增] 補齊 onboarding 欄位 (相容舊資料)
+          if(!emp.onboarding || !Array.isArray(emp.onboarding) || emp.onboarding.length === 0){
+            emp.onboarding = [
+              {id:1, name:"個人基本資料（入賴群）", done:false, note:""}, {id:2, name:"開通 AD", done:false, note:""},
+              {id:3, name:"開通 Notes ID（含設定）", done:false, note:""}, {id:4, name:"MES 相關申請（含設定）", done:false, note:""},
+              {id:5, name:"PIP 拍照申請", done:false, note:""}, {id:6, name:"NDA 保密義務承諾書", done:false, note:""},
+              {id:7, name:"門禁開通", done:false, note:""}, {id:8, name:"無塵服申請", done:false, note:""},
+              {id:9, name:"停車證申請", done:false, note:""}, {id:10, name:"廠區介紹六六", done:false, note:""},
+              {id:11, name:"資安宣導", done:false, note:""}, {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:""},
+              {id:13, name:"新人課程", done:false, note:""}, {id:14, name:"個人槽使用申請（工程師）", done:false, note:""},
+              {id:15, name:"外網權限（工程師）", done:false, note:""}
+            ];
+          }
         });
         this.state.employees = data.employees;
         this.state.signers = data.signers;
@@ -1387,7 +1685,7 @@ importData(e){
   };
   reader.readAsText(file);
   e.target.value='';
-}
+},
 
 // ─── INIT ───
   },
@@ -1405,7 +1703,9 @@ importData(e){
 });
 
 const _vm = vueApp.mount('#app');
-const _exposed = ['apiFetch', 'isLeader', 'applyRoleUI', 'doLogout', 'enterApp', 'getScoreInfo', 'getEmpCatSummary', 'getEmpCatLevel', 'catSummaryCell', 'getEmpOjtAvgScore', 'getEmpCatAvgScore', 'getEmpOverallGrade', 'daysSince', 'colorFromId', 'firstChar', 'fmtDateZh', 'getEmpProgress', 'scoreGradeBarHTML', 'levelToNum', 'statIcon', 'renderStatsBar', 'statCard', 'scoreToLevelVal', 'renderRadar', '_persist', 'save', 'saveNow', 'toggleAutoSave', 'showSaveWarn', 'showSaveToast', 'fmtTime', 'renderSaveBar', 'newEmployee', 'findSigner', 'signerDisplay', 'signerBadgeHTML', 'getEmpAvgScore', 'getEmpOjtLevel', 'switchTab', 'filterEmployees', 'renderEmployeeList', 'openAddEmployee', 'previewSigner', 'confirmAddEmployee', 'deleteEmployee', 'closeModal', 'selectEmployee', 'renderEmployeeDetail', 'showInlineSigner', 'updateEmpField', 'updateDay', 'updateDayScore', 'addDay', 'searchDayByDate', 'removeDay', 'renderOJT', 'updateOjtField', 'renderCert', 'renderSettings', 'addAccount', 'changeAccountRole', 'removeAccount', 'addSigner', 'removeSigner', 'exportData', 'importData'];
+
+const _exposed = ['apiFetch', 'isLeader', 'applyRoleUI', 'doLogout', 'enterApp', 'getScoreInfo', 'getEmpCatSummary', 'getEmpCatLevel', 'catSummaryCell', 'getEmpOjtAvgScore', 'getEmpCatAvgScore', 'getEmpOverallGrade', 'daysSince', 'colorFromId', 'firstChar', 'fmtDateZh', 'getEmpProgress', 'scoreGradeBarHTML', 'levelToNum', 'statIcon', 'renderStatsBar', 'statCard', 'scoreToLevelVal', 'renderRadar', '_persist', 'save', 'saveNow', 'toggleAutoSave', 'showSaveWarn', 'showSaveToast', 'fmtTime', 'renderSaveBar', 'newEmployee', 'findSigner', 'signerDisplay', 'signerBadgeHTML', 'getEmpAvgScore', 'getEmpOjtLevel', 'switchTab', 'filterEmployees', 'renderEmployeeList', 'openAddEmployee', 'previewSigner', 'confirmAddEmployee', 'deleteEmployee', 'closeModal', 'selectEmployee', 'renderEmployeeDetail', 'showInlineSigner', 'updateEmpField', 'updateDay', 'updateDayScore', 'addDay', 'searchDayByDate', 'removeDay', 'renderOJT', 'updateOjtField', 'renderCert', 'renderSettings', 'addAccount', 'changeAccountRole', 'removeAccount', 'addSigner', 'removeSigner', 'exportData', 'importData', 'renderOnboarding', 'updateOnboardingField'];
+
 _exposed.forEach(m => { 
     if (typeof _vm[m] === 'function') 
         window[m] = (...a) => _vm[m](...a); 

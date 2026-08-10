@@ -254,3 +254,36 @@ textarea.field{resize:vertical;min-height:50px}
 .emp-radar-title .ic{font-size:18px}
 .emp-radar-title .t{font-size:14px;font-weight:700;color:var(--text)}
 .emp-radar-title .s{font-size:11px;color:var(--text3);margin-left:6px}
+
+/* ===== 日期輸入框:日曆圖示白色 + 深色彈出日曆 ===== */
+
+/* 原理說明:
+   color-scheme: dark 會讓瀏覽器以「深色模式」渲染日期控制項,
+   此時日曆圖示「本來就會被畫成白色」,彈出的日曆視窗也是深色,與整體介面一致。
+   ⚠ 千萬不要再加 filter: invert(1) — 那會把已經是白色的圖示反轉回黑色,
+   造成圖示在深色背景上看不見(先前的問題根源就在這裡)。 */
+
+/* 1. 日期輸入框與彈出日曆採深色配色,圖示由瀏覽器渲染為白色 */
+input[type="date"] {
+  color-scheme: dark;
+}
+
+/* 2. Chrome / Edge / Safari:確保圖示不被反轉、清晰可見 */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  -webkit-filter: none;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* 3. Firefox:原生支援 color-scheme,上方規則即生效(此處為雙保險) */
+@-moz-document url-prefix() {
+  input[type="date"] {
+    color-scheme: dark;
+  }
+}

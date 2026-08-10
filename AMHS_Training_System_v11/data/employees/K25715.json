@@ -3,6 +3,7 @@
     {
       "date": "2026-06-08",
       "day": 1,
+      "leaderComment": "555",
       "leaderScore": "7",
       "leaderSignerId": "F2568",
       "learningItems": "K18-11F 3380 串聯3390串聯3400\n",
@@ -11,8 +12,7 @@
       "mentorSignerId": "F9473",
       "notes": "從儲格投貨用OHT派至3380作業完3380後在上OHT派至3390結果發生蠻多異常MoveIn失敗或者下層VCR讀取逾時 還有派貨卡帳問題有學會怎麼銷帳,以及異常發生時如何看是為甚麼不能續流程",
       "practiceItems": "01.概述3380、3390自動化派貨流程",
-      "total": 90.0,
-      "leaderComment": "555"
+      "total": 90
     },
     {
       "date": "2026-06-09",
@@ -39,6 +39,104 @@
       "notes": "今天遇到的機故比較多,但也學習到很多怎麼處理的方式,學長在帶非常清楚,學習很多",
       "practiceItems": "5F 3390 401 手臂插入清洗盒異常，只要將紅色清洗盒橋正就能夠續流程\n5F 3410 WIP B Move IN 停止 把碼頭的貨清掉 然後搬運刪除，就可以續流程了\n6F Ballmount 有帳料異常 是在第7區直接第7區按停止,表示第7區上有卡MAG,就直接清下來就可以啟動續流程",
       "total": ""
+    },
+    {
+      "date": "2026-08-14",
+      "day": 4,
+      "leaderComment": "",
+      "leaderScore": "",
+      "leaderSignerId": "F2568",
+      "learningItems": "4454",
+      "mentorAttitude": "",
+      "mentorScore": "",
+      "mentorSignerId": "C9228",
+      "notes": "4545454544",
+      "practiceItems": "45454",
+      "total": ""
+    },
+    {
+      "day": 5,
+      "date": "",
+      "learningItems": "",
+      "practiceItems": "",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": ""
+    },
+    {
+      "day": 6,
+      "date": "",
+      "learningItems": "",
+      "practiceItems": "",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": ""
+    },
+    {
+      "day": 7,
+      "date": "",
+      "learningItems": "",
+      "practiceItems": "",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": ""
+    },
+    {
+      "day": 8,
+      "date": "",
+      "learningItems": "",
+      "practiceItems": "",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": ""
+    },
+    {
+      "day": 9,
+      "date": "",
+      "learningItems": "",
+      "practiceItems": "",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": ""
+    },
+    {
+      "day": 10,
+      "date": "2026-08-10",
+      "learningItems": "56+",
+      "practiceItems": "56+",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": ""
     }
   ],
   "empId": "K25715",
@@ -250,6 +348,98 @@
       "score": "",
       "supervisorSignerId": "",
       "targetLevel": "L1"
+    }
+  ],
+  "onboarding": [
+    {
+      "done": false,
+      "id": 1,
+      "name": "個人基本資料（入賴群）",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 2,
+      "name": "開通 AD",
+      "note": ""
+    },
+    {
+      "done": true,
+      "id": 3,
+      "name": "開通 Notes ID（含設定）",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 4,
+      "name": "MES 相關申請（含設定）",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 5,
+      "name": "PIP 拍照申請",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 6,
+      "name": "NDA 保密義務承諾書",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 7,
+      "name": "門禁開通",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 8,
+      "name": "無塵服申請",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 9,
+      "name": "停車證申請",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 10,
+      "name": "廠區介紹六六",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 11,
+      "name": "資安宣導",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 12,
+      "name": "配件領取（無塵袋〈大、小〉、安全帽）",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 13,
+      "name": "新人課程",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 14,
+      "name": "個人槽使用申請（工程師）",
+      "note": ""
+    },
+    {
+      "done": false,
+      "id": 15,
+      "name": "外網權限（工程師）",
+      "note": ""
     }
   ],
   "startDate": "2026-02-02",

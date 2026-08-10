@@ -1,17 +1,32 @@
 {
   "dailyRecords": [
     {
-      "date": "",
+      "date": "2026-06-22",
       "day": 1,
       "leaderScore": "",
       "leaderSignerId": "",
-      "learningItems": "",
+      "learningItems": "86",
       "mentorAttitude": "",
       "mentorScore": "",
       "mentorSignerId": "",
-      "notes": "",
-      "practiceItems": "",
-      "total": ""
+      "notes": "56",
+      "practiceItems": "56",
+      "total": "",
+      "leaderComment": "56"
+    },
+    {
+      "day": 2,
+      "date": "2026-06-18",
+      "learningItems": "5656",
+      "practiceItems": "6556",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "656",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": "5665"
     }
   ],
   "empId": "K26881",

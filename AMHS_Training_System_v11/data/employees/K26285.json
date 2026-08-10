@@ -226,5 +226,97 @@
     }
   ],
   "startDate": "2026-03-16",
-  "type": "新人訓練"
+  "type": "新人訓練",
+  "onboarding": [
+    {
+      "id": 1,
+      "name": "個人基本資料（入賴群）",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 2,
+      "name": "開通 AD",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 3,
+      "name": "開通 Notes ID（含設定）",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 4,
+      "name": "MES 相關申請（含設定）",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 5,
+      "name": "PIP 拍照申請",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 6,
+      "name": "NDA 保密義務承諾書",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 7,
+      "name": "門禁開通",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 8,
+      "name": "無塵服申請",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 9,
+      "name": "停車證申請",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 10,
+      "name": "廠區介紹六六",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 11,
+      "name": "資安宣導",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 12,
+      "name": "配件領取（無塵袋〈大、小〉、安全帽）",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 13,
+      "name": "新人課程",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 14,
+      "name": "個人槽使用申請（工程師）",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 15,
+      "name": "外網權限（工程師）",
+      "done": false,
+      "note": ""
+    }
+  ]
 }

@@ -5,13 +5,28 @@
       "day": 1,
       "leaderScore": "",
       "leaderSignerId": "",
-      "learningItems": "",
+      "learningItems": "*/-+8",
       "mentorAttitude": "",
       "mentorScore": "",
       "mentorSignerId": "",
-      "notes": "",
-      "practiceItems": "",
-      "total": ""
+      "notes": "8+",
+      "practiceItems": "+8+",
+      "total": "",
+      "leaderComment": "89+8+9"
+    },
+    {
+      "day": 2,
+      "date": "2026-07-30",
+      "learningItems": "89+",
+      "practiceItems": "89+89",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "+89+",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": "89+89+89+"
     }
   ],
   "empId": "K26880",

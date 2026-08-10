@@ -1,190 +1,95 @@
-# 3000 AMHS 訓練系統 — 測試報告
+# AMHS 訓練系統 — 寫入功能與多人並發測試報告
 
-**日期：** 2026-06-15  
-**版本：** app.py + app.js（含長官評語、PATCH 單天、token 持久化、安全修補）  
-**測試環境：** Flask dev server（mock AD 驗證）、Python 3.12、本機 localhost:5001  
-**測試結果：** ✅ 28 PASS / ❌ 0 FAIL
+測試日期:2026-08-10
+測試方式:**啟動真實 Flask 伺服器(多執行緒模式,與正式部署行為一致),以多執行緒發送真實 HTTP 請求**,模擬多人同時操作。每筆測試除了檢查 API 回應,**都會直接讀取硬碟上的 JSON 檔案核對實際寫入的值**。
 
----
+## 測試結果總覽
 
-## 一、測試項目總覽
+**共 31 筆測試,全數通過(31/31)✅**;另迴歸執行原本的 50 項後端整合測試,亦全數通過。
 
-| # | 分類 | 測試名稱 | 結果 | 細節 |
-|---|------|----------|------|------|
-| T01 | 認證 | 未登入 GET /api/state 回 401 | ✅ PASS | status=401 |
-| T02 | 認證 | 空工號登入回 400 | ✅ PASS | status=400 |
-| T03 | 認證 | 空密碼登入回 400 | ✅ PASS | status=400 |
-| T04 | 認證 | 不存在帳號回 403 | ✅ PASS | status=403 |
-| T05 | 認證 | Leader 登入成功 | ✅ PASS | status=200 |
-| T06 | 認證 | User K27124 登入成功 | ✅ PASS | status=200 |
-| T07 | 持久化 | tokens.json 已建立 | ✅ PASS | 檔案存在 |
-| T07b | 持久化 | token 已寫入 tokens.json | ✅ PASS | count=2 |
-| T08 | 資料存取 | GET /api/state 有效 token 回 200 | ✅ PASS | status=200 |
-| T08b | 資料存取 | state 包含 employees/signers | ✅ PASS | keys 正確 |
-| T09 | 權限 | User GET /api/accounts 被拒 403 | ✅ PASS | status=403 |
-| T10 | 權限 | Leader GET /api/accounts 成功 | ✅ PASS | status=200 |
-| T11 | 安全 | User PATCH 別人資料被拒 403 | ✅ PASS | status=403 |
-| T11b | 安全 | 磁碟資料未被竄改 | ✅ PASS | leaderComment="" |
-| T12 | 功能 | User PATCH 自己 day 成功 | ✅ PASS | status=200 |
-| T12b | 功能 | leaderComment 正確寫入磁碟 | ✅ PASS | got=今日表現優秀 |
-| T13 | 功能 | Leader PATCH 任意 day 成功 | ✅ PASS | status=200 |
-| T13b | 功能 | Leader leaderComment 寫入磁碟 | ✅ PASS | got=Leader 總評 |
-| T14 | 安全 | 注入欄位請求回 200（白名單過濾） | ✅ PASS | status=200 |
-| T14b | 安全 | empId 未被注入 | ✅ PASS | empId=K27124 |
-| T14c | 安全 | id 未被注入 | ✅ PASS | id 原值未變 |
-| T15 | 邊界 | PATCH 不存在日期回 404 | ✅ PASS | status=404 |
-| T16 | 邊界 | PATCH 不存在員工回 404 | ✅ PASS | status=404 |
-| T17 | 安全 | empId mismatch 整包儲存回 400 | ✅ PASS | status=400 |
-| T18 | 功能 | POST /api/employee 整包儲存成功 | ✅ PASS | status=200 |
-| T19 | 認證 | 登出回 200 | ✅ PASS | status=200 |
-| T20 | 認證 | 登出後舊 token 失效 401 | ✅ PASS | status=401 |
-| T21 | 持久化 | tokens.json 已清除登出 token | ✅ PASS | remaining=1 |
+測試中發現並順手修正一個小瑕疵:整數總分原本以浮點數寫入檔案(`85.0`),畫面上可能顯示成「85.0」——已改為整數儲存並復測確認。
 
 ---
 
-## 二、本次修正內容與驗證對應
+## 第一部分:基本寫入回歸(逐端點確認寫入狀態正常)— 11 筆
 
-### 1. 長官評語功能（leaderComment）
-- **app.js** 新增 `leaderComment` 欄位於 UI（每日訓練紀錄下方 textarea）
-- 所有初始化位置（`newEmployee`、`addDay`、`importData`、`isEmpty` 修剪）均已補上
-- **驗證：** T12、T12b — User PATCH 自己當天，`leaderComment` 正確寫入磁碟 ✅
+| # | 測試項目 | 結果 | 說明 |
+|:-:|---------|:---:|------|
+| 1 | 使用者寫入自己的每日心得(PATCH day-num) | ✅ | 檔案中值與送出一致 |
+| 2 | 主管寫入每日評語與分數(PATCH day-num) | ✅ | 評語與分數皆正確落地 |
+| 3 | 總分自動計算並寫入檔案(40+20+25=85) | ✅ | 檔案中 total=85(已修正原 85.0 的浮點顯示問題) |
+| 4 | 主管寫入基本資料(PATCH info) | ✅ | 訓練類型正確更新 |
+| 5 | 主管寫入 OJT 評分與備註(PATCH ojt) | ✅ | 分數 90、備註皆正確 |
+| 6 | 主管寫入權限項目勾選與備註(PATCH onboarding) | ✅ | done=true、備註正確 |
+| 7 | 主管新增天數(PATCH add-day) | ✅ | 前端故意送 day=999,伺服器正確指派編號 5 |
+| 8 | 主管刪除天數並重新編號(PATCH remove-day) | ✅ | 刪除後 1..N 連續 |
+| 9 | 主管整包新增員工(POST)後刪除(DELETE) | ✅ | 檔案正確建立與移除 |
+| 10 | 主管寫入簽核人員清單(POST state) | ✅ | signers.json 正確更新 |
+| 11 | 主管寫入帳號清單(POST accounts) | ✅ | accounts.json 正確更新 |
 
-### 2. PATCH 單天 API（只寫入指定工號 + 日期）
-- **後端：** `PATCH /api/employee/<emp_id>/day/<date>`，以 `date` 為 key 定位單筆紀錄
-- **前端：** `updateDay` / `updateDayScore` 改為直接呼叫 PATCH，不再觸發全員掃描
-- **驗證：** T12、T13 — 單天寫入成功；T15、T16 — 不存在的 date/emp_id 回 404 ✅
+## 第二部分:主管與使用者「同時」寫同一員工每日訓練 — 覆蓋測試 — 10 筆
 
-### 3. Token 持久化
-- **app.py** `_tokens` 從 `data/tokens.json` 啟動讀入；登入/登出後同步寫回
-- 解決 Flask 重啟後 sessionStorage token 失效導致的 401 循環
-- **驗證：** T07、T07b、T21 — token 正確持久化與清除 ✅
+情境模擬:使用者 K26491 在填自己的「心得、學習項目」的同一時間,主管在填同一天的「評語、分數」——雙方各 20 次、共 40 筆請求由 8 個執行緒同時發出。
 
-### 4. 前端快照初始化（防全員誤觸發）
-- `enterApp()` 載入完員工後立即建立 `_snap_` 快照
-- 解決重新整理後第一次 save 誤判全員都髒、觸發大量 POST 的問題
-- **驗證：** 功能面已驗證 T08 state 載入正確；行為面需觀察實際操作日誌
+| # | 測試項目 | 結果 | 說明 |
+|:-:|---------|:---:|------|
+| 12 | 雙方各 20 次同時寫入全部回應成功 | ✅ | 40/40 成功,無逾時、無 500 |
+| 13 | 使用者的「心得」欄位保留、未被主管寫入蓋掉 | ✅ | 最終值仍為使用者寫入的內容 |
+| 14 | 使用者的「學習項目」欄位保留 | ✅ | 同上 |
+| 15 | 主管的「評語」欄位保留、未被使用者寫入蓋掉 | ✅ | 最終值仍為主管寫入的內容 |
+| 16 | 主管的「分數」欄位保留 | ✅ | 分數為主管寫入的其中一筆(同欄位多筆時最後一筆生效,屬正確行為) |
+| 17 | 高頻並發寫入後員工檔案 JSON 完整無損毀 | ✅ | 檔案可正常解析 |
+| 18 | 跨路由同時寫入(主管改 OJT + 使用者改每日)全部成功 | ✅ | 30/30 成功 |
+| 19 | OJT 分數保留、未被每日紀錄的寫入蓋掉 | ✅ | 驗證「鎖統一」修正:不同路由的寫入正確互斥 |
+| 20 | 每日實做項目保留、未被 OJT 的寫入蓋掉 | ✅ | 同上 |
+| 21 | 先前寫入的舊資料未被並發操作波及 | ✅ | 第一部分寫入的評語仍完整存在 |
 
-### 5. 安全修補（5 項）
-| 漏洞 | 修補方式 | 驗證 |
-|------|----------|------|
-| `save().then(function(){})` 的 `this` 斷鏈 | 改為 arrow function | 程式碼審查 |
-| `importData` 的 `reader.onload = function()` `this` 斷鏈 | 改為 arrow function | 程式碼審查 |
-| `_TOKENS_FILE` 路徑使用 `abspath` 與 `DATA_DIR` 不一致 | 統一改用 `DATA_DIR` | 程式碼審查 |
-| PATCH route 無欄位白名單（可注入 empId/ojtRecords） | 加入 `_ALLOWED_DAY_FIELDS` 白名單 | T14、T14b、T14c ✅ |
-| PATCH route 只有 `require_login`，User 可改他人資料 | 加入身份比對，User 只能改自己 | T11、T11b ✅ |
+> **結論:主管與使用者同時編輯同一員工、同一天的「不同欄位」,雙方的內容都會保留,不會互相覆蓋。** 這正是先前修正的兩個問題(PATCH 局部更新 + 全域鎖統一)共同保障的:每次寫入只更新送出的欄位,且所有寫入在伺服器端排隊互斥,read-modify-write 不會交錯。
 
----
+## 第三部分:多人同時寫「不同員工」— 2 筆
 
-## 三、已知限制與建議
+| # | 測試項目 | 結果 | 說明 |
+|:-:|---------|:---:|------|
+| 22 | 5 位員工 × 各 6 次同時寫入全部成功(共 30 筆) | ✅ | 30/30 成功 |
+| 23 | 各員工資料各自正確、無交叉污染 | ✅ | 每位員工檔案內容都是自己的,沒有寫進別人的檔案 |
 
-| 項目 | 說明 |
-|------|------|
-| `this` 修正為靜態審查 | `save().then` 與 `importData` 的 arrow function 修正無法透過 HTTP 測試驗證，以程式碼審查確認 |
-| `_snap_` 快照初始化 | 為前端行為，無法透過後端 API 測試，需實際瀏覽器操作驗證（觀察第一次 save 是否觸發全員 POST）|
-| tokens.json 無過期機制 | 目前 token 不會自動失效，建議後續加入有效期（如 8 小時）|
-| PATCH route User 只能改自己 | 目前 User 連自己的 `mentorSignerId`、`leaderSignerId` 也能改；若簽核欄位應限 Leader，可再收緊白名單 |
+## 第四部分:並發新增天數(add-day 競態)— 4 筆
 
----
+情境模擬:10 個「新增天數」請求同時抵達(例如多位主管同時按「+」)。
 
-*測試執行時間：2026-06-15 | 測試工具：Python requests | 全自動化執行*
----
+| # | 測試項目 | 結果 | 說明 |
+|:-:|---------|:---:|------|
+| 24 | 10 個同時的新增請求全部成功 | ✅ | |
+| 25 | 伺服器指派的 10 個編號互不重複且連續 | ✅ | 指派編號 5,6,7,...,14,驗證「編號由伺服器決定」的修正在並發下依然正確 |
+| 26 | 檔案中天數編號無重複 | ✅ | |
+| 27 | 測試後還原:天數恢復並連續編號 | ✅ | 逐一刪除後 1..4 連續 |
 
-# 3000 AMHS 訓練系統 — 測試報告（第二版）
+## 第五部分:兩位主管同時操作 + 混合壓力 — 2 筆
 
-**日期：** 2026-06-21  
-**版本：** app.py + app.js（day-num 架構，修正日期輸入導致欄位遺失 Bug）  
-**測試環境：** Flask dev server（mock AD 驗證）、Python 3.12、本機 localhost:15982  
-**測試結果：** ✅ 24 PASS / ❌ 0 FAIL
+情境模擬:主管 A(K18251)寫評語、主管 B(C8849)同時寫分數,同時混入權限項目、基本資料寫入與使用者的讀取,共 60 筆請求由 12 個執行緒同時發出。
 
----
+| # | 測試項目 | 結果 | 說明 |
+|:-:|---------|:---:|------|
+| 28 | 混合 60 筆並發請求全部成功 | ✅ | 60/60 |
+| 29 | 主管 A 的評語與主管 B 的分數同時保留、互不覆蓋 | ✅ | 兩位主管各自的欄位都完整落地 |
 
-## 一、測試項目總覽
+## 第六部分:壓力測試後全資料庫完整性掃描 — 2 筆
 
-| # | 分類 | 測試名稱 | 結果 | 細節 |
-|---|------|----------|------|------|
-| T01 | 認證 | K11001 登入成功 | ✅ PASS | status=200 |
-| T02 | 認證 | K11002 登入成功 | ✅ PASS | status=200 |
-| T03 | 認證 | K11003 登入成功 | ✅ PASS | status=200 |
-| T04 | 認證 | F99001 Leader 登入成功 | ✅ PASS | status=200 |
-| T05 | 基本寫入 | K11001 day1 learningItems 寫入 | ✅ PASS | HTTP 200 |
-| T06 | 基本寫入 | K11001 day1 practiceItems 寫入 | ✅ PASS | HTTP 200 |
-| T07 | 基本寫入 | K11001 day1 notes 寫入 | ✅ PASS | HTTP 200 |
-| T08 | 基本寫入 | K11001 day1 date 寫入 | ✅ PASS | HTTP 200 |
-| T09 | 核心 Bug 修復 | K11002 day1 先填 learningItems | ✅ PASS | HTTP 200 |
-| T10 | 核心 Bug 修復 | K11002 day1 再填 notes | ✅ PASS | HTTP 200 |
-| T11 | 核心 Bug 修復 | K11002 day1 最後填 date | ✅ PASS | HTTP 200 |
-| T11a | 核心 Bug 修復 | learningItems 填完後仍存在 | ✅ PASS | 期望=實際=`機台巡檢流程` |
-| T11b | 核心 Bug 修復 | notes 填完後仍存在 | ✅ PASS | 期望=實際=`收穫良多` |
-| T11c | 核心 Bug 修復 | date 正確儲存 | ✅ PASS | 期望=實際=`2026-06-19` |
-| T12 | 多人並發 | 三人同時 PATCH 無錯誤（Barrier） | ✅ PASS | 0 errors |
-| T13 | 多人並發 | K11001 day2 資料正確 | ✅ PASS | `K11001-Day2學習` |
-| T14 | 多人並發 | K11002 day2 資料正確 | ✅ PASS | `K11002-Day2學習` |
-| T15 | 多人並發 | K11003 day1 資料正確 | ✅ PASS | `K11003-Day1學習` |
-| T16 | 檔案隔離 | K11003 day2 notes 寫入 | ✅ PASS | HTTP 200 |
-| T17 | 檔案隔離 | PATCH K11003 未觸動 K11001.json（mtime 未變） | ✅ PASS | mtime 未變 |
-| T18 | 權限 | K11001 嘗試 PATCH K11002 → 403 | ✅ PASS | status=403 |
-| T19 | Leader | F99001 修改 K11001 leaderComment | ✅ PASS | HTTP 200 |
-| T19b | Leader | K11001 leaderComment 確認儲存正確 | ✅ PASS | `Leader評語` |
-| T20 | 高並發壓力 | 6 thread 並發（3 員工 × 2 天）無錯誤 | ✅ PASS | 0 errors |
-| T20a | 高並發壓力 | K11001 day1 notes 並發後正確 | ✅ PASS | `並發測試-K11001-D1` |
-| T20b | 高並發壓力 | K11002 day2 notes 並發後正確 | ✅ PASS | `並發測試-K11002-D2` |
-| T20c | 高並發壓力 | K11003 day1 notes 並發後正確 | ✅ PASS | `並發測試-K11003-D1` |
-| T21 | 錯誤處理 | PATCH day_num=99（不存在）→ 404 | ✅ PASS | status=404 |
+| # | 測試項目 | 結果 | 說明 |
+|:-:|---------|:---:|------|
+| 30 | 全部 18 個員工檔案 JSON 可正常解析且天數無重複 | ✅ | 約 170 筆寫入請求轟炸後全庫健康 |
+| 31 | 無 Atomic Write 暫存檔(.tmp)殘留 | ✅ | 原子寫入機制運作正常 |
 
 ---
 
-## 二、本次修正內容與驗證對應
+## 綜合結論
 
-### 1. 根本原因（K26647 回報，2026-06-18 / 06-19）
+1. **寫入狀態全部正常**:11 個寫入端點逐一驗證,API 回應與硬碟檔案內容一致。
+2. **主管與使用者同時寫同一員工的每日訓練「不會互相覆蓋」**:各自欄位的內容都完整保留。同一個欄位被多人同時改時,最後送達的一筆生效(標準的 last-write-wins),檔案不會壞。
+3. **並發安全**:約 170 筆並發請求(含跨路由、跨角色、競態新增天數)後,全部員工檔案完整、天數編號無重複、無暫存檔殘留。
 
-原系統以 `date` 作為每日紀錄的定位 key：
+## 附註
 
-```
-使用者先填 learningItems / practiceItems / notes
-  → rec.date 為空 → 前端走 this.save()（全員存檔，有防抖延遲，不保證即時）
-使用者最後填 date
-  → 前端只 PATCH {date: '2026-06-18'}
-  → 後端用新日期找記錄，其他欄位未送出
-  → learningItems / practiceItems / notes 全部遺失
-```
-
-**解決方案：** 改用 `day`（序號 1、2、3…）作為穩定定位 key，`date` 降為普通欄位。
-
-### 2. 架構變更
-
-| 項目 | 修改前 | 修改後 |
-|------|--------|--------|
-| 後端路由 | `PATCH /api/employee/<emp_id>/day/<date>` | `PATCH /api/employee/<emp_id>/day-num/<int:day_num>` |
-| 後端定位邏輯 | `r.get('date') == date` | `r.get('day') == day_num` |
-| 前端 updateDay | `if(rec.date)` 分支判斷 | 無條件直接 PATCH |
-| 前端 updateDayScore | `if(r.date)` 分支判斷 | 無條件直接 PATCH |
-| API 路徑組成 | `/day/` + `rec.date` | `/day-num/` + `rec.day` |
-
-- **驗證：** T09～T11c — 先填欄位再填日期，三欄位全部保留 ✅
-
-### 3. 多人同時寫入（不同工號）
-
-- `threading.Barrier` 確保多 thread 同時出發，模擬真實並發場景
-- per-employee 檔案隔離架構（每人一個 JSON）確保各寫各的，無交叉覆蓋
-- **驗證：** T12～T15（3 人並發）、T20～T20c（6 thread 壓力測試）✅
-
-### 4. 檔案隔離驗證
-
-- PATCH 單一員工後，以 `mtime` 確認其他員工 JSON 檔案未被觸動
-- **驗證：** T17 ✅
-
----
-
-## 三、已知限制與建議（累計）
-
-| 項目 | 說明 |
-|------|------|
-| `this` 修正為靜態審查 | `save().then` 與 `importData` 的 arrow function 修正無法透過 HTTP 測試驗證，以程式碼審查確認 |
-| `_snap_` 快照初始化 | 前端行為，無法透過後端 API 測試，需實際瀏覽器操作驗證 |
-| tokens.json 無過期機制 | token 不會自動失效，建議後續加入有效期（如 8 小時）|
-| 同一員工同時並發 | 不同 client 同時修改同一員工同一天 → last-write-wins，為已知接受限制 |
-| 舊路由相容性 | `day/<date>` 路由已移除，若有舊快取或書籤仍使用舊 URL 需清除 |
-
----
-
-*測試執行時間：2026-06-21 | 測試工具：Python requests + threading.Barrier | 全自動化執行*
+- 測試腳本 `test_concurrent.py` 已一併交付,日後改版可用 `AUTH_MOCK=1 python test_concurrent.py` 重跑(會實際啟動伺服器於 5001 埠並讀寫 data 目錄,請勿對正式資料執行)。
+- 本次順手修正:`app.py` 總分整數化(85.0 → 85),已同步更新交付檔案並通過原 50 項迴歸測試。
+- 提醒:正式部署若未來改用多「行程」(多 worker)架構,檔案鎖(FileLock)跨行程仍有效,但記憶體中的 token 需改為每次讀檔(先前報告第 10 項已述),目前單行程多執行緒部署無此問題。

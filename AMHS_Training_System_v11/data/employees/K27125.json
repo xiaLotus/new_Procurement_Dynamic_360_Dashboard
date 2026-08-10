@@ -51,6 +51,48 @@
       "notes": "實際獨立排除機故，便隨時注意突發狀況。",
       "practiceItems": "1.2945\\3190天車下完空盒MAG至旋轉平台1，但手臂不會執行夾取，及機台也沒跳ALARM，已通知廠商去了解機故原因，則回報值班學長與導入組學長狀況(待釐清)\n2.J08手臂夾取MAG ULD->B3異常\n 停機->開門取下ULD貨批->放至B3->RESET手臂->啟動",
       "total": ""
+    },
+    {
+      "day": 5,
+      "date": "2026-07-28",
+      "learningItems": "7",
+      "practiceItems": "",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "7878",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": "7878"
+    },
+    {
+      "day": 6,
+      "date": "",
+      "learningItems": "",
+      "practiceItems": "",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": ""
+    },
+    {
+      "day": 7,
+      "date": "2026-07-29",
+      "learningItems": "89",
+      "practiceItems": "",
+      "mentorScore": "",
+      "mentorAttitude": "",
+      "leaderScore": "",
+      "total": "",
+      "notes": "456",
+      "mentorSignerId": "",
+      "leaderSignerId": "",
+      "leaderComment": "4564564"
     }
   ],
   "empId": "K27125",
@@ -248,5 +290,97 @@
     }
   ],
   "startDate": "2026-04-27",
-  "type": "新人訓練"
+  "type": "新人訓練",
+  "onboarding": [
+    {
+      "id": 1,
+      "name": "個人基本資料（入賴群）",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 2,
+      "name": "開通 AD",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 3,
+      "name": "開通 Notes ID（含設定）",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 4,
+      "name": "MES 相關申請（含設定）",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 5,
+      "name": "PIP 拍照申請",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 6,
+      "name": "NDA 保密義務承諾書",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 7,
+      "name": "門禁開通",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 8,
+      "name": "無塵服申請",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 9,
+      "name": "停車證申請",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 10,
+      "name": "廠區介紹六六",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 11,
+      "name": "資安宣導",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 12,
+      "name": "配件領取（無塵袋〈大、小〉、安全帽）",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 13,
+      "name": "新人課程",
+      "done": true,
+      "note": ""
+    },
+    {
+      "id": 14,
+      "name": "個人槽使用申請（工程師）",
+      "done": false,
+      "note": ""
+    },
+    {
+      "id": 15,
+      "name": "外網權限（工程師）",
+      "done": false,
+      "note": ""
+    }
+  ]
 }
