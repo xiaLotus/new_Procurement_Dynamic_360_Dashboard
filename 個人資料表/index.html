@@ -3,556 +3,879 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flip Chip CIM 人員介紹</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+<title>部門通訊錄</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          steel: { DEFAULT:'#2C5C8F', dark:'#1E4266' },
-          copper: '#B4652A',
-          desk: '#3A4450',
-        },
-        fontFamily: {
-          sans: ['"Noto Sans TC"', 'sans-serif'],
-          mono: ['"IBM Plex Mono"', 'monospace'],
-        },
-      }
-    }
-  }
-</script>
-
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  /* Tailwind 無法處理的部分:紙張列印尺寸與 @page,其餘一律用 Tailwind class */
-  @page { size: A3 landscape; margin: 0; }
-  @media print {
-    .sheet { width: 420mm !important; height: 297mm !important; padding: 12mm 14mm !important; box-shadow:none !important; }
-    .sheet-gap { gap: 5mm !important; }
+  :root{
+    --bg:#F3F6F6;
+    --surface:#FFFFFF;
+    --ink:#17262E;
+    --muted:#61737C;
+    --line:#E1E8E8;
+    --accent:#0B6E6E;
+    --accent-soft:#E2F0EE;
+    --card-h:120px;   /* 卡片高度，需與 JS 內 CARD_H 一致 */
   }
-  input[type="date"]::-webkit-calendar-picker-indicator{ opacity:.6 }
+  [v-cloak]{display:none}
+  html,body{height:100%}
+  body{
+    font-family:"Noto Sans TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink);
+    background-color:var(--bg);
+    background-image:radial-gradient(#DDE6E6 1px, transparent 1px);
+    background-size:22px 22px;
+  }
+  .mono{font-family:"IBM Plex Mono","Consolas",monospace}
+
+  /* ---------- 名牌卡片 ---------- */
+  .badge-card{
+    position:relative;overflow:hidden;text-align:left;width:100%;
+    height:var(--card-h);
+    background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;
+    display:flex;flex-direction:column;justify-content:space-between;
+    box-shadow:0 1px 2px rgba(23,38,46,.05);
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    cursor:pointer;
+  }
+  .badge-card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+    background:var(--accent);opacity:0;transition:opacity .15s ease;
+  }
+  .badge-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(11,110,110,.14);border-color:#BFD8D6}
+  .badge-card:hover::before{opacity:1}
+  .badge-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .field-label{font-size:10px;letter-spacing:.14em;color:var(--muted)}
+
+  /* ---------- 表單 ---------- */
+  .sec-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+  .sec-title{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin-bottom:14px}
+  .sec-title::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--accent)}
+  .lbl{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .ipt{
+    width:100%;border:1px solid var(--line);border-radius:10px;
+    padding:8px 12px;font-size:14px;background:#FBFDFD;
+    transition:border-color .15s, box-shadow .15s, background .15s;
+  }
+  .ipt:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(11,110,110,.12);background:#fff}
+
+  .btn-accent{
+    background:var(--accent);color:#fff;border-radius:10px;
+    padding:8px 20px;font-size:14px;font-weight:500;
+    transition:opacity .15s, transform .1s;
+  }
+  .btn-accent:hover{opacity:.9}
+  .btn-accent:active{transform:scale(.98)}
+  .btn-accent:disabled{opacity:.5;cursor:not-allowed}
+  .btn-ghost{
+    border:1px solid var(--line);border-radius:10px;background:#fff;
+    padding:8px 16px;font-size:14px;color:var(--ink);
+    transition:background .15s, border-color .15s;
+  }
+  .btn-ghost:hover{background:var(--accent-soft);border-color:#BFD8D6}
+  .btn-ghost:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ---------- 自動儲存狀態 ---------- */
+  .save-dot{width:7px;height:7px;border-radius:9999px;display:inline-block}
+  @keyframes pulse-dot{0%,100%{opacity:.35}50%{opacity:1}}
+  .save-dot.busy{background:var(--muted);animation:pulse-dot 1s infinite}
+  .save-dot.ok{background:var(--accent)}
+  .save-dot.err{background:#EF4444}
+
+  /* ---------- 分頁 ---------- */
+  .page-btn{
+    min-width:32px;height:32px;padding:0 8px;border-radius:8px;
+    font-size:13px;border:1px solid transparent;color:var(--muted);
+    transition:background .15s, color .15s;
+  }
+  .page-btn:hover:not(:disabled){background:var(--accent-soft);color:var(--accent)}
+  .page-btn.active{background:var(--accent);color:#fff;font-weight:600}
+  .page-btn:disabled{opacity:.35;cursor:not-allowed}
+
+  /* ---------- 照片裁切視窗 ---------- */
+  .crop-viewport{
+    position:relative;overflow:hidden;border-radius:14px;
+    background:#0F1B20;
+    touch-action:none;              /* 觸控拖曳時不捲動頁面 */
+    user-select:none;
+  }
+  .crop-viewport img{
+    position:absolute;max-width:none;
+    -webkit-user-drag:none;user-select:none;pointer-events:none;
+  }
+  .crop-mask{
+    position:absolute;border-radius:9999px;pointer-events:none;
+    box-shadow:0 0 0 9999px rgba(15,27,32,.62);  /* 圓圈外壓暗，模擬頭像顯示範圍 */
+    outline:2px solid rgba(255,255,255,.85);
+    outline-offset:-1px;
+  }
+  input[type=range]{accent-color:var(--accent)}
+
+  /* ---------- Toast ---------- */
+  .toast-pill{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;font-size:13px;
+    padding:9px 20px;border-radius:999px;box-shadow:0 8px 24px rgba(23,38,46,.25);
+    z-index:60;
+  }
+  .toast-enter-active,.toast-leave-active{transition:opacity .25s, transform .25s}
+  .toast-enter-from,.toast-leave-to{opacity:0;transform:translate(-50%,10px)}
+
+  /* ---------- 頁面切換 / 彈窗 ---------- */
+  .view-enter-active,.view-leave-active{transition:opacity .16s ease, transform .16s ease}
+  .view-enter-from{opacity:0;transform:translateY(6px)}
+  .view-leave-to{opacity:0;transform:translateY(-4px)}
+
+  .modal-enter-active,.modal-leave-active{transition:opacity .18s ease}
+  .modal-enter-from,.modal-leave-to{opacity:0}
+  .modal-enter-active .modal-panel,.modal-leave-active .modal-panel{transition:transform .18s ease}
+  .modal-enter-from .modal-panel,.modal-leave-to .modal-panel{transform:scale(.96)}
+
+  /* ---------- 捲軸 ---------- */
+  .scroll-area::-webkit-scrollbar{width:8px}
+  .scroll-area::-webkit-scrollbar-thumb{background:#C8D6D6;border-radius:8px}
+  .scroll-area::-webkit-scrollbar-track{background:transparent}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none!important;animation:none!important}
+  }
 </style>
 </head>
+<body>
+<div id="app" v-cloak class="h-screen flex flex-col overflow-hidden">
+  <transition name="view" mode="out-in">
 
-<body class="bg-desk font-sans text-slate-800">
-<div id="app"></div>
+    <!-- ==================== 清單頁 ==================== -->
+    <div v-if="view === 'list'" key="list" class="flex-1 min-h-0 flex flex-col">
 
-<script type="text/x-template" id="tpl-app">
-  <div>
-    <!-- 浮動提示 -->
-    <transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 -translate-y-2" leave-active-class="transition duration-200 ease-in" leave-to-class="opacity-0 -translate-y-2">
-      <div v-if="message"
-           class="fixed top-4 left-1/2 -translate-x-1/2 z-50 rounded-full px-6 py-2 text-sm font-bold text-white shadow-lg print:hidden"
-           :class="isError ? 'bg-red-800' : 'bg-steel-dark'">
-        {{ message }}
-      </div>
-    </transition>
-
-    <!-- ============ 首頁:通訊錄 ============ -->
-    <div v-if="view === 'home'" class="w-full px-8 py-8 pb-6 h-screen flex flex-col">
-      <div class="w-4/5 mx-auto flex-1 min-h-0 flex flex-col">
-
-        <div class="flex flex-wrap items-center gap-4 mb-5 flex-none">
-          <div>
-            <h1 class="text-white text-xl font-black tracking-[.3em]">通訊錄</h1>
-            <p class="text-copper font-mono text-xs tracking-widest mt-1">TOTAL {{ filteredList.length }} / {{ list.length }}</p>
+      <header class="shrink-0 px-8 pt-6 pb-4 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div class="mono text-[11px] tracking-[0.22em] text-[var(--accent)] font-medium">STAFF DIRECTORY</div>
+          <h1 class="text-2xl font-bold">部門通訊錄</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-[var(--muted)]">共 {{ list.length }} 位人員</span>
+          <button class="btn-accent flex items-center gap-1.5 !py-2" @click="openCreate">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
+            </svg>新增人員
+          </button>
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/>
+            </svg>
+            <input v-model="keyword" type="text" placeholder="搜尋工號、姓名、手機…"
+                   class="ipt !pl-9 !rounded-full w-64 md:w-72 !bg-white">
           </div>
-          <input v-model.trim="keyword" placeholder="搜尋工號 / 姓名 / 電話…"
-                 class="ml-auto w-64 rounded-lg border-0 px-4 py-2.5 text-sm bg-white/95 shadow focus:ring-2 focus:ring-copper outline-none">
-          <button @click="newPerson"
-                  class="rounded-lg bg-copper hover:brightness-110 text-white text-sm font-bold px-5 py-2.5 shadow transition">
-            + 新增人員
+        </div>
+      </header>
+
+      <!-- 卡片區：依此區塊實際大小自動計算每頁筆數，永不超出畫面 -->
+      <main ref="gridArea" class="flex-1 min-h-0 px-8 pb-3">
+        <div v-if="pagedList.length"
+             class="grid"
+             :style="{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: gap + 'px' }">
+          <button v-for="p in pagedList" :key="p.empNo" class="badge-card" @click="openEdit(p)">
+            <!-- 只顯示：姓名（含照片頭像）、工號、手機 -->
+            <div class="flex items-center gap-3 min-w-0">
+              <img v-if="p.photoUrl" :src="photoSrc(p)" alt=""
+                   class="w-11 h-11 rounded-full object-cover border border-[var(--line)] shrink-0">
+              <div v-else class="w-11 h-11 rounded-full bg-[var(--accent-soft)] text-[var(--accent)]
+                                 flex items-center justify-center font-bold text-lg shrink-0">
+                {{ initialOf(p) }}
+              </div>
+              <div class="font-semibold text-[15px] truncate">{{ p.nameZh || '（未填姓名）' }}</div>
+            </div>
+            <div class="flex items-end justify-between gap-3">
+              <div class="min-w-0">
+                <div class="field-label">工號</div>
+                <div class="mono text-[13px] font-medium truncate">{{ p.empNo }}</div>
+              </div>
+              <div class="text-right min-w-0">
+                <div class="field-label">手機</div>
+                <a v-if="p.mobile" :href="'tel:' + p.mobile" @click.stop
+                   class="mono text-[13px] font-medium text-[var(--accent)] hover:underline truncate block">
+                  {{ p.mobile }}
+                </a>
+                <div v-else class="mono text-[13px] text-[var(--muted)]">—</div>
+              </div>
+            </div>
           </button>
         </div>
 
-        <!-- 欄數依畫面寬度自動調整(1~3 欄),超出的資料交給下方分頁 -->
-        <div ref="colArea" class="grid gap-5 flex-1 min-h-0" :style="{ gridTemplateColumns: 'repeat(' + numColumns + ', minmax(0,1fr))' }">
-          <div v-for="ci in numColumns" :key="ci"
-               class="bg-white rounded-xl shadow-lg overflow-hidden ring-1 ring-slate-200 flex flex-col">
-            <div class="grid grid-cols-[64px_72px_1fr] gap-3 bg-gradient-to-r from-steel-dark to-steel text-white text-[11px] font-bold tracking-[.18em] flex-none">
-              <div class="px-3 py-3 flex items-center gap-1.5 whitespace-nowrap">
-                <span class="opacity-60">#</span>工號
-              </div>
-              <div class="px-1 py-3 whitespace-nowrap">姓名</div>
-              <div class="px-3 py-3 flex items-center gap-1.5 whitespace-nowrap">
-                <svg class="w-3 h-3 opacity-70 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                行動電話
-              </div>
-            </div>
-            <div class="divide-y divide-slate-100 overflow-hidden">
-              <div v-for="p in pagedColumns[ci-1]" :key="p.empNo" @click="openPerson(p.empNo)"
-                   class="grid grid-cols-[64px_72px_1fr] gap-3 items-center px-3 py-2.5 cursor-pointer hover:bg-sky-50 transition">
-                <div class="font-mono text-[11px] text-slate-400 truncate">{{ p.empNo }}</div>
-                <div class="min-w-0 font-bold text-steel-dark text-sm truncate">{{ p.nameZh || '(未填姓名)' }}</div>
-                <div class="font-mono text-sm font-semibold text-steel-dark truncate">{{ p.mobile || '—' }}</div>
-              </div>
-              <div v-if="!pagedColumns[ci-1].length" class="px-3 py-6 text-center text-slate-300 text-xs">—</div>
-            </div>
-          </div>
+        <div v-else class="h-full flex flex-col items-center justify-center text-[var(--muted)] gap-3">
+          <svg class="w-10 h-10 opacity-40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/>
+          </svg>
+          <p class="text-sm">{{ list.length ? '找不到符合的人員' : '尚無資料，點「新增人員」建立第一筆' }}</p>
         </div>
+      </main>
 
-        <div v-if="!filteredList.length" class="flex-1 min-h-0 flex items-center justify-center bg-white/10 border border-dashed border-white/30 rounded-xl text-center text-white/70 leading-loose -mt-[calc(1rem+34px)]">
-          {{ list.length ? '找不到符合「' + keyword + '」的人員' : '目前尚無資料,點右上「+ 新增人員」建立第一筆個人介紹表' }}
-        </div>
-
-        <!-- 分頁列:高度固定預留,無論是否有多頁都佔住底部空間 -->
-        <div class="flex-none h-12 flex items-center justify-center gap-4">
-          <template v-if="totalPages > 1">
-            <button @click="prevPage" :disabled="page===0"
-                    class="px-4 py-1.5 rounded-md bg-white/10 text-white text-xs font-bold hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition">
-              ‹ 上一頁
-            </button>
-            <span class="font-mono text-xs tracking-widest text-copper">第 {{ page + 1 }} / {{ totalPages }} 頁 · 每頁 {{ perPage }} 筆</span>
-            <button @click="nextPage" :disabled="page >= totalPages - 1"
-                    class="px-4 py-1.5 rounded-md bg-white/10 text-white text-xs font-bold hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition">
-              下一頁 ›
-            </button>
+      <footer class="shrink-0 px-8 py-3 flex flex-wrap items-center justify-between gap-3
+                     border-t border-[var(--line)] bg-white/70 backdrop-blur">
+        <span class="text-xs text-[var(--muted)]">{{ rangeText }}</span>
+        <div class="flex items-center gap-1">
+          <button class="page-btn" :disabled="page <= 1" @click="page--">‹ 上一頁</button>
+          <template v-for="(n, i) in pageItems" :key="i">
+            <span v-if="n === '…'" class="px-1 text-[var(--muted)] text-sm">…</span>
+            <button v-else class="page-btn" :class="{ active: n === page }" @click="page = n">{{ n }}</button>
           </template>
+          <button class="page-btn" :disabled="page >= totalPages" @click="page++">下一頁 ›</button>
         </div>
-
-      </div>
+      </footer>
     </div>
 
-    <!-- ============ 詳細頁:A3 個人介紹表 ============ -->
-    <div v-else class="flex justify-center px-4 py-6">
-      <div class="sheet w-full max-w-[1500px] bg-white shadow-2xl px-6 py-4 flex flex-col gap-2 sheet-gap">
+    <!-- ==================== 編輯／新增頁 ==================== -->
+    <div v-else key="edit" class="flex-1 min-h-0 flex flex-col">
 
-        <!-- 紙內操作列 -->
-        <div class="flex items-center gap-3 pb-2 border-b border-slate-200 print:hidden">
-          <button @click="goHome"
-                  class="rounded-md border border-slate-300 text-steel-dark text-xs font-bold px-4 py-1.5 hover:bg-slate-50 transition mr-auto">
-            ← 返回名單
-          </button>
-          <button v-if="!editing" @click="editing = true"
-                  class="rounded-md bg-steel text-white text-xs font-bold px-5 py-1.5 hover:brightness-110 transition">
-            編輯
-          </button>
-          <button v-else @click="finishEdit"
-                  class="rounded-md bg-copper text-white text-xs font-bold px-5 py-1.5 hover:brightness-110 transition">
-            完成
-          </button>
-        </div>
-
-        <!-- 表頭 -->
-        <header class="flex items-center gap-5 pb-2 border-b-[3px] border-steel">
-          <div class="grid grid-cols-4 gap-1" aria-hidden="true">
-            <i v-for="n in 16" :key="n" class="w-[5px] h-[5px] rounded-full"
-               :class="n % 2 ? 'bg-steel' : 'bg-copper'"></i>
-          </div>
-          <div class="flex-1">
-            <h1 class="text-[19px] font-black tracking-wider text-steel-dark">Flip Chip CIM 個人介紹表</h1>
-            <div class="font-mono text-[9px] tracking-[.2em] text-copper uppercase mt-0.5">
-              Flip Chip CIM · Personal Introduction Sheet · A3 Landscape
-            </div>
-          </div>
-          <div class="text-right font-mono text-[9px] text-slate-500 leading-relaxed border-l border-slate-300 pl-4">
-            DOC NO. <b class="text-steel-dark">FC-CIM-HR-001</b><br>
-            REV. <b class="text-steel-dark">A</b> &nbsp; PAGE <b class="text-steel-dark">1 / 1</b><br>
-            FORMAT <b class="text-steel-dark">A3 橫式(上橫排)</b>
-          </div>
-          <div class="flex-none text-center">
-            <div class="relative w-[78px] h-[98px] border border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden">
-              <img v-if="photoSrc" :src="photoSrc" class="w-full h-full object-cover">
-              <span v-else class="text-[9px] text-slate-400 px-1 leading-relaxed">
-                {{ editing ? '點擊上傳照片' : '尚無照片' }}<br>(2 吋,jpg/png)
-              </span>
-              <input v-if="editing" type="file" accept="image/*" @change="onPhotoChange"
-                     class="absolute inset-0 opacity-0 cursor-pointer print:hidden">
-            </div>
-            <div class="text-[8px] text-slate-400 tracking-[.2em] mt-0.5">PHOTO</div>
-          </div>
-        </header>
-
-        <!-- SEC.01 基本資料 -->
-        <section>
-          <div class="flex items-center gap-2">
-            <span class="font-mono text-[9px] text-copper tracking-wide">SEC.01</span>
-            <h2 class="text-[13px] font-black tracking-[.25em] text-steel-dark">基本資料</h2>
-            <div class="flex-1 h-px bg-gradient-to-r from-steel via-slate-200 to-transparent"></div>
-          </div>
-
-          <div class="mt-1.5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-l border-slate-300">
-            <template v-for="f in basicFields" :key="f.key">
-              <div class="flex border-r border-b border-slate-300 min-h-[30px]">
-                <label class="flex-none w-[92px] flex items-center justify-center text-center bg-slate-50 text-steel-dark text-[11px] font-bold px-2">{{ f.label }}</label>
-                <div class="flex-1 flex">
-                  <select v-if="f.type==='select'" v-model="form[f.key]" :disabled="!editing"
-                          class="flex-1 bg-transparent px-2 text-[12.5px] outline-none disabled:pointer-events-none">
-                    <option value=""></option>
-                    <option v-for="o in f.options" :key="o">{{ o }}</option>
-                  </select>
-                  <input v-else :type="f.type || 'text'" v-model.trim="form[f.key]" :readonly="!editing || (f.key==='empNo' && !isNew)"
-                         :placeholder="f.placeholder || ''"
-                         class="flex-1 min-w-0 bg-transparent px-2 text-[12.5px] outline-none"
-                         :class="f.mono ? 'font-mono' : ''">
-                </div>
-              </div>
+      <header class="shrink-0 px-8 py-4 flex items-center gap-4 border-b border-[var(--line)] bg-white/85 backdrop-blur">
+        <button class="btn-ghost flex items-center gap-1.5" @click="backToList">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>返回
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="text-lg font-bold truncate">
+            <template v-if="mode === 'create'">新增人員</template>
+            <template v-else>
+              {{ form.nameZh || '（未填姓名）' }}
+              <span class="mono text-sm font-medium text-[var(--muted)] ml-1">#{{ form.empNo }}</span>
             </template>
           </div>
-          <div class="grid grid-cols-1 border-t-0 border-l border-slate-300">
-            <div class="flex border-r border-b border-slate-300 min-h-[30px]">
-              <label class="flex-none w-[92px] flex items-center justify-center bg-slate-50 text-steel-dark text-[11px] font-bold px-2">個人聯絡地址</label>
-              <input v-model.trim="form.address" :readonly="!editing"
-                     class="flex-1 min-w-0 bg-transparent px-2 text-[12.5px] outline-none">
+          <div class="text-xs text-[var(--muted)]">
+            {{ mode === 'create' ? '填寫完成後按「建立」，之後所有修改會自動儲存' : '最後更新：' + (form.lastModified || '—') }}
+          </div>
+        </div>
+
+        <!-- 編輯模式：自動儲存狀態；新增模式：建立按鈕 -->
+        <div v-if="mode === 'edit'" class="flex items-center gap-2 text-sm shrink-0">
+          <template v-if="saveState === 'pending' || saveState === 'saving'">
+            <span class="save-dot busy"></span><span class="text-[var(--muted)]">儲存中…</span>
+          </template>
+          <template v-else-if="saveState === 'error'">
+            <span class="save-dot err"></span><span class="text-red-500">儲存失敗，自動重試中</span>
+          </template>
+          <template v-else>
+            <span class="save-dot ok"></span><span class="text-[var(--accent)]">已自動儲存</span>
+          </template>
+        </div>
+        <button v-else class="btn-accent" :disabled="saving" @click="createPerson">
+          {{ saving ? '建立中…' : '建立' }}
+        </button>
+      </header>
+
+      <main class="flex-1 min-h-0 overflow-y-auto scroll-area px-8 py-6">
+        <div class="max-w-5xl mx-auto grid gap-5 md:grid-cols-2">
+
+          <!-- 基本資料（含個人照片上傳） -->
+          <section class="sec-card">
+            <h2 class="sec-title">基本資料</h2>
+
+            <!-- 個人照片 -->
+            <div class="flex items-center gap-4 mb-4 pb-4 border-b border-dashed border-[var(--line)]">
+              <img v-if="form.photoUrl" :src="photoSrc(form)" alt="個人照片"
+                   class="w-20 h-20 rounded-full object-cover border border-[var(--line)] shrink-0">
+              <div v-else class="w-20 h-20 rounded-full bg-[var(--accent-soft)] text-[var(--accent)]
+                                 flex items-center justify-center font-bold text-2xl shrink-0">
+                {{ initialOf(form) }}
+              </div>
+              <div class="space-y-2">
+                <template v-if="mode === 'edit'">
+                  <div class="flex gap-2">
+                    <button class="btn-ghost !py-1.5 text-sm" :disabled="uploadingPhoto"
+                            @click="$refs.photoInput.click()">
+                      {{ uploadingPhoto ? '上傳中…' : (form.photoUrl ? '更換照片' : '上傳照片') }}
+                    </button>
+                    <button v-if="form.photoUrl" class="btn-ghost !py-1.5 text-sm !text-red-500"
+                            @click="removePhoto">移除</button>
+                  </div>
+                  <p class="text-xs text-[var(--muted)]">選取後可調整位置與大小，圓圈內為顯示範圍</p>
+                </template>
+                <p v-else class="text-xs text-[var(--muted)]">先按「建立」後，即可上傳個人照片</p>
+              </div>
+              <input ref="photoInput" type="file" accept="image/png,image/jpeg,image/gif,image/webp"
+                     class="hidden" @change="onPhotoPicked">
             </div>
-          </div>
-        </section>
 
-        <!-- SEC.02 學歷 -->
-        <section>
-          <div class="flex items-center gap-2">
-            <span class="font-mono text-[9px] text-copper tracking-wide">SEC.02</span>
-            <h2 class="text-[13px] font-black tracking-[.25em] text-steel-dark">學歷</h2>
-            <div class="flex-1 h-px bg-gradient-to-r from-steel via-slate-200 to-transparent"></div>
-          </div>
-          <table class="mt-1.5 w-full border-collapse">
-            <colgroup><col class="w-20"><col><col class="w-[32%]"><col class="w-[26%]"></colgroup>
-            <thead>
-              <tr class="bg-slate-50 text-steel-dark text-[12px] font-bold tracking-wider">
-                <th class="border border-slate-300 h-7 px-2">學歷</th>
-                <th class="border border-slate-300 h-7 px-2">學校名稱</th>
-                <th class="border border-slate-300 h-7 px-2">研讀科系</th>
-                <th class="border border-slate-300 h-7 px-2">畢業期間</th>
-              </tr>
-            </thead>
-            <tbody class="text-[12.5px]">
-              <tr>
-                <td class="border border-slate-300 bg-slate-50 text-center font-bold text-steel-dark tracking-[.2em]">最高</td>
-                <td class="border border-slate-300"><input v-model.trim="form.eduTop.school" :readonly="!editing" class="w-full bg-transparent px-2 py-1.5 outline-none"></td>
-                <td class="border border-slate-300"><input v-model.trim="form.eduTop.major" :readonly="!editing" class="w-full bg-transparent px-2 py-1.5 outline-none"></td>
-                <td class="border border-slate-300"><input v-model.trim="form.eduTop.period" :readonly="!editing" placeholder="2015/09 - 2019/06" class="w-full bg-transparent px-2 py-1.5 outline-none font-mono"></td>
-              </tr>
-              <tr>
-                <td class="border border-slate-300 bg-slate-50 text-center font-bold text-steel-dark tracking-[.2em]">次高</td>
-                <td class="border border-slate-300"><input v-model.trim="form.eduSecond.school" :readonly="!editing" class="w-full bg-transparent px-2 py-1.5 outline-none"></td>
-                <td class="border border-slate-300"><input v-model.trim="form.eduSecond.major" :readonly="!editing" class="w-full bg-transparent px-2 py-1.5 outline-none"></td>
-                <td class="border border-slate-300"><input v-model.trim="form.eduSecond.period" :readonly="!editing" class="w-full bg-transparent px-2 py-1.5 outline-none font-mono"></td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
+            <div class="grid grid-cols-2 gap-3">
+              <label v-if="mode === 'create'" class="block col-span-2">
+                <span class="lbl">工號 <span class="text-red-500">*</span>（建立後不可修改）</span>
+                <input class="ipt mono" v-model="form.empNo" placeholder="例：4563">
+              </label>
+              <label class="block"><span class="lbl">中文姓名</span><input class="ipt" v-model="form.nameZh"></label>
+              <label class="block"><span class="lbl">英文姓名</span><input class="ipt" v-model="form.nameEn"></label>
+              <label class="block"><span class="lbl">職稱</span><input class="ipt" v-model="form.title"></label>
+              <label class="block"><span class="lbl">職等</span><input class="ipt" v-model="form.grade"></label>
+              <label class="block"><span class="lbl">性別</span>
+                <select class="ipt" v-model="form.gender">
+                  <option value="">未填寫</option><option>男</option><option>女</option>
+                </select>
+              </label>
+              <label class="block"><span class="lbl">婚姻</span>
+                <select class="ipt" v-model="form.marriage">
+                  <option value="">未填寫</option><option>未婚</option><option>已婚</option>
+                </select>
+              </label>
+              <!-- 到職日／生日：日期選擇器，固定 yyyy-mm-dd 格式 -->
+              <label class="block"><span class="lbl">到職日</span><input type="date" class="ipt mono" v-model="form.hireDate"></label>
+              <label class="block"><span class="lbl">生日</span><input type="date" class="ipt mono" v-model="form.birthDate"></label>
+              <label class="block"><span class="lbl">血型</span>
+                <select class="ipt" v-model="form.blood">
+                  <option value="">未填寫</option><option>A</option><option>B</option><option>O</option><option>AB</option>
+                </select>
+              </label>
+              <label class="block"><span class="lbl">生肖</span><input class="ipt" v-model="form.zodiac"></label>
+            </div>
+          </section>
 
-        <!-- SEC.03 經歷 -->
-        <section>
-          <div class="flex items-center gap-2">
-            <span class="font-mono text-[9px] text-copper tracking-wide">SEC.03</span>
-            <h2 class="text-[13px] font-black tracking-[.25em] text-steel-dark">經歷</h2>
-            <div class="flex-1 h-px bg-gradient-to-r from-steel via-slate-200 to-transparent"></div>
-          </div>
-          <table class="mt-1.5 w-full border-collapse">
-            <colgroup><col><col class="w-[34%]"><col class="w-[22%]"><col v-if="editing" class="w-9"></colgroup>
-            <thead>
-              <tr class="bg-slate-50 text-steel-dark text-[12px] font-bold tracking-wider">
-                <th class="border border-slate-300 h-7 px-2">公司名稱</th>
-                <th class="border border-slate-300 h-7 px-2">擔任職務名稱</th>
-                <th class="border border-slate-300 h-7 px-2">資歷</th>
-                <th v-if="editing" class="border border-slate-300 h-7 px-2 print:hidden">刪</th>
-              </tr>
-            </thead>
-            <tbody class="text-[12.5px]">
-              <tr v-for="(exp, i) in form.experiences" :key="i">
-                <td class="border border-slate-300"><input v-model.trim="exp.company" :readonly="!editing" class="w-full bg-transparent px-2 py-1.5 outline-none"></td>
-                <td class="border border-slate-300"><input v-model.trim="exp.position" :readonly="!editing" class="w-full bg-transparent px-2 py-1.5 outline-none"></td>
-                <td class="border border-slate-300"><input v-model.trim="exp.years" :readonly="!editing" placeholder="如 3 年 2 個月" class="w-full bg-transparent px-2 py-1.5 outline-none"></td>
-                <td v-if="editing" class="border border-slate-300 text-center bg-slate-50 print:hidden">
-                  <button @click="removeExp(i)" class="text-red-500 font-bold text-sm">✕</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <button v-if="editing" @click="addExp"
-                  class="mt-1.5 rounded border border-dashed border-slate-300 text-steel text-[11px] px-4 py-1 hover:bg-slate-50 transition print:hidden">
-            + 新增一筆經歷
+          <!-- 聯絡資訊 -->
+          <section class="sec-card">
+            <h2 class="sec-title">聯絡資訊</h2>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block"><span class="lbl">手機</span><input class="ipt mono" v-model="form.mobile"></label>
+              <label class="block"><span class="lbl">分機 / 電話</span><input class="ipt mono" v-model="form.phone"></label>
+              <label class="block col-span-2"><span class="lbl">地址</span><input class="ipt" v-model="form.address"></label>
+              <label class="block"><span class="lbl">緊急聯絡人</span><input class="ipt" v-model="form.emgName"></label>
+              <label class="block"><span class="lbl">緊急聯絡電話</span><input class="ipt mono" v-model="form.emgPhone"></label>
+            </div>
+          </section>
+
+          <!-- 學歷 -->
+          <section class="sec-card">
+            <h2 class="sec-title">學歷</h2>
+            <div class="space-y-4">
+              <div>
+                <div class="text-xs font-medium text-[var(--muted)] mb-2">最高學歷</div>
+                <div class="grid grid-cols-3 gap-2">
+                  <label class="block"><span class="lbl">學校</span><input class="ipt" v-model="form.eduTop.school"></label>
+                  <label class="block"><span class="lbl">科系</span><input class="ipt" v-model="form.eduTop.major"></label>
+                  <label class="block"><span class="lbl">期間</span><input class="ipt" v-model="form.eduTop.period"></label>
+                </div>
+              </div>
+              <div>
+                <div class="text-xs font-medium text-[var(--muted)] mb-2">次高學歷</div>
+                <div class="grid grid-cols-3 gap-2">
+                  <label class="block"><span class="lbl">學校</span><input class="ipt" v-model="form.eduSecond.school"></label>
+                  <label class="block"><span class="lbl">科系</span><input class="ipt" v-model="form.eduSecond.major"></label>
+                  <label class="block"><span class="lbl">期間</span><input class="ipt" v-model="form.eduSecond.period"></label>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 經歷 -->
+          <section class="sec-card">
+            <h2 class="sec-title">經歷</h2>
+            <div class="space-y-2">
+              <div v-for="(exp, i) in form.experiences" :key="i"
+                   class="grid grid-cols-[1fr_1fr_80px_34px] gap-2 items-end">
+                <label class="block"><span class="lbl" v-if="i === 0">公司</span><input class="ipt" v-model="exp.company"></label>
+                <label class="block"><span class="lbl" v-if="i === 0">職務</span><input class="ipt" v-model="exp.position"></label>
+                <label class="block"><span class="lbl" v-if="i === 0">年資</span><input class="ipt mono" v-model="exp.years"></label>
+                <button class="h-[38px] rounded-[10px] border border-[var(--line)] text-[var(--muted)]
+                               hover:text-red-500 hover:border-red-300 hover:bg-red-50 transition-colors"
+                        title="刪除此筆經歷" @click="form.experiences.splice(i, 1)">✕</button>
+              </div>
+              <button class="w-full py-2 rounded-[10px] border border-dashed border-[var(--line)]
+                             text-sm text-[var(--muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]
+                             hover:bg-[var(--accent-soft)] transition-colors"
+                      @click="form.experiences.push({ company: '', position: '', years: '' })">
+                ＋ 新增經歷
+              </button>
+            </div>
+          </section>
+
+          <!-- 專長與興趣 -->
+          <section class="sec-card md:col-span-2">
+            <h2 class="sec-title">專長與興趣</h2>
+            <div class="grid md:grid-cols-2 gap-3">
+              <label class="block"><span class="lbl">專長</span><textarea class="ipt" rows="3" v-model="form.skills"></textarea></label>
+              <label class="block"><span class="lbl">興趣</span><textarea class="ipt" rows="3" v-model="form.interests"></textarea></label>
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+  </transition>
+
+  <!-- ==================== 照片裁切視窗 ==================== -->
+  <transition name="modal">
+    <div v-if="cropper.show" class="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
+      <div class="modal-panel bg-white rounded-2xl shadow-2xl p-6 w-full max-w-[400px]">
+        <h3 class="font-bold text-[15px] mb-1">調整個人照片</h3>
+        <p class="text-xs text-[var(--muted)] mb-4">拖曳移動位置、滑桿或滾輪縮放，圓圈內為實際顯示範圍</p>
+
+        <!-- 裁切區：固定 320x320，圓圈遮罩模擬頭像 -->
+        <div class="crop-viewport mx-auto"
+             :style="{ width: CROP_VIEW + 'px', height: CROP_VIEW + 'px', cursor: cropper.dragging ? 'grabbing' : 'grab' }"
+             @pointerdown="onCropPointerDown"
+             @pointermove="onCropPointerMove"
+             @pointerup="onCropPointerUp"
+             @pointercancel="onCropPointerUp"
+             @wheel.prevent="onCropWheel">
+          <img :src="cropper.src" :style="cropImgStyle" alt="">
+          <div class="crop-mask"
+               :style="{ width: CROP_VIEW + 'px', height: CROP_VIEW + 'px', left: 0, top: 0 }"></div>
+        </div>
+
+        <!-- 縮放滑桿 -->
+        <div class="flex items-center gap-3 mt-4">
+          <svg class="w-4 h-4 text-[var(--muted)] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6" stroke-linecap="round"/>
+          </svg>
+          <input type="range" class="flex-1" :min="1" :max="ZOOM_MAX" step="0.01"
+                 :value="cropper.zoom" @input="applyZoom(+$event.target.value)">
+          <svg class="w-4 h-4 text-[var(--muted)] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6M11 8v6" stroke-linecap="round"/>
+          </svg>
+        </div>
+
+        <div class="flex justify-end gap-2 mt-5">
+          <button class="btn-ghost" :disabled="uploadingPhoto" @click="closeCropper">取消</button>
+          <button class="btn-accent" :disabled="uploadingPhoto" @click="confirmCrop">
+            {{ uploadingPhoto ? '上傳中…' : '套用並上傳' }}
           </button>
-        </section>
-
-        <!-- SEC.04 興趣・專長 -->
-        <section>
-          <div class="flex items-center gap-2">
-            <span class="font-mono text-[9px] text-copper tracking-wide">SEC.04</span>
-            <h2 class="text-[13px] font-black tracking-[.25em] text-steel-dark">興趣・專長</h2>
-            <div class="flex-1 h-px bg-gradient-to-r from-steel via-slate-200 to-transparent"></div>
-          </div>
-          <div class="mt-1.5 grid grid-cols-1 sm:grid-cols-2 border-t border-l border-slate-300">
-            <div class="flex border-r border-b border-slate-300 min-h-[52px]">
-              <label class="flex-none w-[92px] flex items-center justify-center bg-slate-50 text-steel-dark text-[11px] font-bold px-2">興趣</label>
-              <textarea v-model.trim="form.interests" :readonly="!editing" rows="2"
-                        class="flex-1 min-w-0 bg-transparent px-2 py-1.5 text-[12.5px] outline-none resize-none leading-relaxed"></textarea>
-            </div>
-            <div class="flex border-r border-b border-slate-300 min-h-[52px]">
-              <label class="flex-none w-[92px] flex items-center justify-center bg-slate-50 text-steel-dark text-[11px] font-bold px-2">專長</label>
-              <textarea v-model.trim="form.skills" :readonly="!editing" rows="2"
-                        class="flex-1 min-w-0 bg-transparent px-2 py-1.5 text-[12.5px] outline-none resize-none leading-relaxed"></textarea>
-            </div>
-          </div>
-        </section>
-
-        <!-- 頁尾 -->
-        <footer class="mt-auto flex justify-between items-center border-t border-slate-300 pt-1.5 font-mono text-[9px] text-slate-500 tracking-wide">
-          <span>FLIP CHIP CIM · PERSONNEL PROFILE · CONFIDENTIAL</span>
-          <span>最後修改日 LAST MODIFIED:<b class="text-steel-dark">{{ form.lastModified || '—' }}</b></span>
-        </footer>
-
+        </div>
       </div>
     </div>
-  </div>
-</script>
+  </transition>
+
+  <!-- Toast -->
+  <transition name="toast">
+    <div v-if="toast.show" class="toast-pill">{{ toast.msg }}</div>
+  </transition>
+</div>
 
 <script>
-function emptyForm(){
-  return {
-    empNo:"", nameZh:"", title:"", nameEn:"",
-    grade:"", gender:"", hireDate:"", blood:"",
-    zodiac:"", emgName:"", birthDate:"", emgPhone:"",
-    marriage:"", phone:"", mobile:"", address:"",
-    eduTop:{school:"",major:"",period:""},
-    eduSecond:{school:"",major:"",period:""},
-    experiences:[{company:"",position:"",years:""}],
-    interests:"", skills:"",
-    photoUrl:"", lastModified:""
-  };
-}
+// 若由 Flask 提供頁面則走相對路徑；若直接用 file:// 開啟則指向本機 5000 port
+const API_BASE = location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:5000';
 
-/* 與 Flask 同源時打相對路徑;前端另外開時自動改連 localhost:5000 */
-const API_BASE = location.port === "5000" ? "" : "http://localhost:5000";
+const { createApp } = Vue;
 
-const app = Vue.createApp({
-  template: "#tpl-app",
-
-  data(){
+createApp({
+  data() {
     return {
-      view: "home",         // home | detail
-      editing: false,
-      isNew: false,
+      view: 'list',        // 'list' 清單頁 | 'edit' 編輯／新增頁
+      mode: 'edit',        // 'edit' 編輯既有資料（自動儲存） | 'create' 新增人員（按「建立」）
       list: [],
-      keyword: "",
-      page: 0,
-      numColumns: 3,         // 目前顯示幾欄,依畫面寬度動態調整(1~3)
-      rowsPerColumn: 8,      // 每欄可容納幾筆,依畫面高度動態計算
-      form: emptyForm(),
-      localPhoto: "",
-      message: "",
-      isError: false,
-      apiBase: API_BASE,
-      zodiacs: ["牡羊座","金牛座","雙子座","巨蟹座","獅子座","處女座","天秤座","天蠍座","射手座","魔羯座","水瓶座","雙魚座"],
-      basicFields: [
-        { key:"empNo",  label:"工號",       mono:true, placeholder:"必填,如 FC12345" },
-        { key:"nameZh", label:"中文姓名" },
-        { key:"title",  label:"職稱" },
-        { key:"nameEn", label:"英文姓名" },
-        { key:"grade",  label:"職等" },
-        { key:"gender", label:"性別", type:"select", options:["男","女","其他"] },
-        { key:"hireDate", label:"到職日", type:"date", mono:true },
-        { key:"blood",  label:"血型", type:"select", options:["A","B","O","AB"] },
-        { key:"zodiac", label:"星座", type:"select" }, // options 由 mounted 填入 zodiacs
-        { key:"emgName", label:"緊急聯絡人" },
-        { key:"birthDate", label:"出生日期", type:"date", mono:true },
-        { key:"emgPhone", label:"緊急連絡人電話", mono:true },
-        { key:"marriage", label:"婚姻", type:"select", options:["未婚","已婚","其他"] },
-        { key:"phone",  label:"個人連絡電話", mono:true },
-        { key:"mobile", label:"個人行動電話", mono:true },
-      ],
+      keyword: '',
+      page: 1,
+      pageSize: 8,         // 由 recalcLayout() 依視窗大小自動計算
+      cols: 3,
+      gap: 14,             // 卡片間距(px)，需與 recalcLayout 內 GAP 一致
+      form: {},            // 編輯中的資料副本
+      saving: false,       // 新增模式「建立」進行中
+      saveState: 'saved',  // 自動儲存狀態：saved | pending | saving | error
+      uploadingPhoto: false,
+      toast: { show: false, msg: '', timer: null },
+
+      // ---------- 照片裁切 ----------
+      CROP_VIEW: 320,      // 裁切視窗大小(px)
+      ZOOM_MAX: 3,
+      cropper: {
+        show: false,
+        src: '',           // 選取圖片的 dataURL
+        iw: 0, ih: 0,      // 圖片原始尺寸
+        zoom: 1,
+        offsetX: 0, offsetY: 0,   // 圖片左上角相對裁切區的位移
+        dragging: false,
+        startX: 0, startY: 0, startOffX: 0, startOffY: 0,
+      },
     };
   },
-
   computed: {
-    photoSrc(){
-      return this.localPhoto || (this.form.photoUrl ? this.apiBase + this.form.photoUrl : "");
+    filtered() {
+      const k = this.keyword.trim().toLowerCase();
+      if (!k) return this.list;
+      const fields = ['empNo', 'nameZh', 'nameEn', 'mobile', 'phone', 'title'];
+      return this.list.filter(p => fields.some(f => String(p[f] || '').toLowerCase().includes(k)));
     },
-    filteredList(){
-      const k = this.keyword.toLowerCase();
-      if(!k) return this.list;
-      return this.list.filter(p =>
-        (p.empNo||"").toLowerCase().includes(k) ||
-        (p.nameZh||"").includes(this.keyword) ||
-        (p.nameEn||"").toLowerCase().includes(k) ||
-        (p.title||"").includes(this.keyword) ||
-        (p.mobile||"").includes(this.keyword) ||
-        (p.phone||"").includes(this.keyword)
-      );
+    totalPages() {
+      return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
     },
-    perPage(){
-      return Math.max(this.rowsPerColumn * this.numColumns, this.numColumns);
+    pagedList() {
+      const start = (this.page - 1) * this.pageSize;
+      return this.filtered.slice(start, start + this.pageSize);
     },
-    totalPages(){
-      return Math.max(1, Math.ceil(this.filteredList.length / this.perPage));
+    rangeText() {
+      if (!this.filtered.length) return '共 0 筆';
+      const start = (this.page - 1) * this.pageSize + 1;
+      const end = Math.min(this.page * this.pageSize, this.filtered.length);
+      return `第 ${start}–${end} 筆，共 ${this.filtered.length} 筆`;
     },
-    currentPageItems(){
-      const start = this.page * this.perPage;
-      return this.filteredList.slice(start, start + this.perPage);
-    },
-    pagedColumns(){
-      const items = this.currentPageItems;
-      const per = this.rowsPerColumn;
-      const cols = [];
-      for(let i = 0; i < this.numColumns; i++){
-        cols.push(items.slice(i * per, (i + 1) * per));
+    pageItems() {
+      const t = this.totalPages, c = this.page;
+      if (t <= 7) return Array.from({ length: t }, (_, i) => i + 1);
+      const keep = [...new Set([1, 2, c - 1, c, c + 1, t - 1, t])]
+        .filter(n => n >= 1 && n <= t)
+        .sort((a, b) => a - b);
+      const out = [];
+      let prev = 0;
+      for (const n of keep) {
+        if (n - prev > 1) out.push('…');
+        out.push(n);
+        prev = n;
       }
-      return cols;
+      return out;
+    },
+    // 目前縮放比例 = 覆蓋裁切區的基礎比例 × 使用者縮放倍率
+    cropScale() {
+      const c = this.cropper;
+      if (!c.iw || !c.ih) return 1;
+      return Math.max(this.CROP_VIEW / c.iw, this.CROP_VIEW / c.ih) * c.zoom;
+    },
+    cropImgStyle() {
+      const c = this.cropper, s = this.cropScale;
+      return {
+        width: c.iw * s + 'px',
+        height: c.ih * s + 'px',
+        left: c.offsetX + 'px',
+        top: c.offsetY + 'px',
+      };
     },
   },
-
+  watch: {
+    keyword() { this.page = 1; },
+    totalPages(v) { if (this.page > v) this.page = v; },
+    // 編輯模式下任何欄位變動 → 去抖動後自動儲存
+    form: {
+      deep: true,
+      handler() {
+        if (this.mode !== 'edit' || this._suppressAutoSave) return;
+        this.queueAutoSave();
+      },
+    },
+  },
   methods: {
-    notify(text, err){
-      this.message = text;
-      this.isError = !!err;
-      setTimeout(() => { if(this.message === text) this.message = ""; }, 4000);
+    initialOf(p) {
+      return (p.nameZh || p.nameEn || '?').trim().charAt(0).toUpperCase() || '?';
     },
-
-    async fetchList(){
-      try{
-        const res = await fetch(this.apiBase + "/api/profiles");
-        const j = await res.json();
-        if(j.ok) this.list = j.items;
-      }catch{
-        this.notify("無法連線後端 (請先啟動 app.py)", true);
-      }
-      this.$nextTick(this.measureCapacity);
+    // 照片路徑：後端回傳的相對路徑（/photos/xxx）需加上 API_BASE 才能在 file:// 模式下顯示
+    photoSrc(p) {
+      if (!p.photoUrl) return '';
+      return /^https?:\/\//.test(p.photoUrl) ? p.photoUrl : API_BASE + p.photoUrl;
     },
-
-    /* 依「三欄容器」實際可用寬度動態算出能放幾欄,再依可視高度算出每欄能放幾筆;超過的資料一律交給分頁 */
-    measureCapacity(){
-      const el = this.$refs.colArea;
-      if(!el) return;
-
-      const gap = 20;              // 對應 gap-5
-      const minColWidth = 320;     // 每欄最小可接受寬度,低於此寬度就減少欄數
-      const width = el.clientWidth;
-      let cols = Math.floor((width + gap) / (minColWidth + gap));
-      if(!Number.isFinite(cols) || cols < 1) cols = 1;
-      if(cols > 3) cols = 3;
-      this.numColumns = cols;
-
-      const available = el.clientHeight;    // 分頁列高度已由 flex 版面固定預留,這裡拿到的就是實際可用高度
-      const headerRowH = 38;                // 欄位標題列高度
-      const rowH = 42;                      // 每筆資料列高度
-      let rows = Math.floor((available - headerRowH) / rowH);
-      if(!Number.isFinite(rows) || rows < 3) rows = 3;
-      this.rowsPerColumn = rows;
-      if(this.page > this.totalPages - 1) this.page = Math.max(0, this.totalPages - 1);
+    // 空白表單範本（新增人員用）
+    emptyForm() {
+      return {
+        empNo: '', nameZh: '', title: '', nameEn: '', grade: '', gender: '',
+        hireDate: '', blood: '', zodiac: '', emgName: '', birthDate: '',
+        emgPhone: '', marriage: '', phone: '', mobile: '', address: '',
+        eduTop: { school: '', major: '', period: '' },
+        eduSecond: { school: '', major: '', period: '' },
+        experiences: [], interests: '', skills: '', photoUrl: '', lastModified: '',
+      };
     },
-
-    prevPage(){
-      if(this.page > 0) this.page--;
+    // 舊資料日期轉為 yyyy-mm-dd（date input 才吃得下）；非日期字串一律清空
+    fixDate(v) {
+      const m = String(v || '').match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+      return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : '';
     },
-    nextPage(){
-      if(this.page < this.totalPages - 1) this.page++;
+    normalize(rec) {
+      rec.eduTop = Object.assign({ school: '', major: '', period: '' }, rec.eduTop || {});
+      rec.eduSecond = Object.assign({ school: '', major: '', period: '' }, rec.eduSecond || {});
+      rec.experiences = Array.isArray(rec.experiences) ? rec.experiences : [];
+      rec.hireDate = this.fixDate(rec.hireDate);
+      rec.birthDate = this.fixDate(rec.birthDate);
+      return rec;
     },
-
-    goHome(){
-      this.view = "home";
-      this.editing = false;
-      this.isNew = false;
-      this.localPhoto = "";
-      this.fetchList();
+    // 更動 form 但不觸發自動儲存（載入資料、寫回伺服器回應時使用）
+    withSuppressedAutoSave(fn) {
+      this._suppressAutoSave = true;
+      fn();
+      this.$nextTick(() => { this._suppressAutoSave = false; });
     },
-
-    async openPerson(empNo){
-      try{
-        const res = await fetch(this.apiBase + "/api/profile/" + encodeURIComponent(empNo));
-        const j = await res.json();
-        if(!j.ok){ this.notify(j.error || "讀取失敗", true); return; }
-        const d = { ...emptyForm(), ...j.data };
-        d.eduTop = { ...emptyForm().eduTop, ...(j.data.eduTop||{}) };
-        d.eduSecond = { ...emptyForm().eduSecond, ...(j.data.eduSecond||{}) };
-        if(!Array.isArray(d.experiences) || !d.experiences.length){
-          d.experiences = [{company:"",position:"",years:""}];
-        }
-        this.form = d;
-        this.localPhoto = "";
-        this.isNew = false;
-        this.editing = false;
-        this.view = "detail";
-        window.scrollTo(0,0);
-      }catch{
-        this.notify("無法連線後端", true);
+    // 依卡片區實際寬高計算欄數與每頁筆數，確保清單永不超出一個畫面
+    recalcLayout() {
+      const el = this.$refs.gridArea;
+      if (!el) return;
+      const CARD_H = 120;   // 與 CSS 變數 --card-h 一致
+      const GAP = this.gap;
+      const MIN_CARD_W = 250;
+      this.cols = Math.max(1, Math.floor((el.clientWidth + GAP) / (MIN_CARD_W + GAP)));
+      const rows = Math.max(1, Math.floor((el.clientHeight + GAP) / (CARD_H + GAP)));
+      this.pageSize = this.cols * rows;
+    },
+    async fetchList() {
+      try {
+        const res = await fetch(`${API_BASE}/api/contacts`);
+        if (!res.ok) throw new Error();
+        this.list = await res.json();
+      } catch (e) {
+        this.showToast('無法連線後端 API，請確認 app.py 已啟動');
       }
     },
-
-    newPerson(){
-      this.form = emptyForm();
-      this.localPhoto = "";
-      this.isNew = true;
-      this.editing = true;
-      this.view = "detail";
-      window.scrollTo(0,0);
+    openCreate() {
+      this.withSuppressedAutoSave(() => { this.form = this.emptyForm(); });
+      this.mode = 'create';
+      this.view = 'edit';
+    },
+    async openEdit(p) {
+      try {
+        const res = await fetch(`${API_BASE}/api/contacts/${encodeURIComponent(p.empNo)}`);
+        if (!res.ok) throw new Error();
+        const rec = this.normalize(await res.json());
+        this.withSuppressedAutoSave(() => { this.form = rec; });
+        this.mode = 'edit';
+        this.saveState = 'saved';
+        this.view = 'edit';
+      } catch (e) {
+        this.showToast('讀取資料失敗');
+      }
+    },
+    backToList() {
+      this.flushAutoSave();   // 有未送出的變更就立即送出
+      this.view = 'list';
+      this.$nextTick(() => this.recalcLayout());
     },
 
-    async finishEdit(){
-      if(!this.form.empNo){ this.notify("請先填寫工號", true); return; }
-      try{
-        const res = await fetch(this.apiBase + "/api/profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+    // ---------- 自動儲存（編輯模式） ----------
+    queueAutoSave() {
+      this.saveState = 'pending';
+      clearTimeout(this._saveTimer);
+      this._saveTimer = setTimeout(() => this.autoSave(), 800);   // 停止輸入 0.8 秒後儲存
+    },
+    flushAutoSave() {
+      if (this._saveTimer) {
+        clearTimeout(this._saveTimer);
+        this._saveTimer = null;
+        this.autoSave();
+      }
+    },
+    async autoSave() {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+      if (this.mode !== 'edit' || !this.form.empNo) return;
+
+      this.saveState = 'saving';
+      try {
+        const res = await fetch(`${API_BASE}/api/contacts/${encodeURIComponent(this.form.empNo)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.form),
         });
-        const j = await res.json();
-        if(j.ok){
-          this.form.lastModified = j.lastModified;
-          this.editing = false;
-          this.isNew = false;
-          this.notify("已儲存 ✓");
-        }else{
-          this.notify(j.error || "儲存失敗", true);
+        if (!res.ok) throw new Error();
+        const updated = await res.json();
+
+        this.withSuppressedAutoSave(() => { this.form.lastModified = updated.lastModified; });
+        const i = this.list.findIndex(x => String(x.empNo) === String(updated.empNo));
+        if (i > -1) this.list.splice(i, 1, updated);
+
+        // 儲存期間若又有新輸入（已排入新 timer），維持「儲存中」顯示
+        if (!this._saveTimer) this.saveState = 'saved';
+      } catch (e) {
+        this.saveState = 'error';
+        // 3 秒後自動重試
+        clearTimeout(this._retryTimer);
+        this._retryTimer = setTimeout(() => {
+          if (this.view === 'edit' && this.mode === 'edit') this.autoSave();
+        }, 3000);
+      }
+    },
+
+    // ---------- 新增人員（按「建立」） ----------
+    async createPerson() {
+      if (!String(this.form.empNo || '').trim()) {
+        this.showToast('請先輸入工號');
+        return;
+      }
+      this.saving = true;
+      try {
+        const res = await fetch(`${API_BASE}/api/contacts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.form),
+        });
+        if (!res.ok) {
+          let msg = '新增失敗';
+          try {
+            const err = await res.json();
+            if (err && err.error) msg = err.error;   // 例如「工號 4563 已存在」
+          } catch (_) {}
+          this.showToast(msg);
+          return;
         }
-      }catch{
-        this.notify("無法連線後端 (請先啟動 app.py)", true);
+        const updated = await res.json();
+        this.withSuppressedAutoSave(() => { this.form = this.normalize(updated); });
+        this.list.push(updated);
+        this.mode = 'edit';       // 建立完成後轉為編輯模式：之後的修改自動儲存、可上傳照片
+        this.saveState = 'saved';
+        this.showToast('已新增人員，之後的修改會自動儲存');
+      } catch (e) {
+        this.showToast('新增失敗');
+      } finally {
+        this.saving = false;
       }
     },
 
-    async onPhotoChange(e){
-      const file = e.target.files[0];
-      if(!file) return;
-      this.localPhoto = URL.createObjectURL(file);
+    // ---------- 個人照片：選取 → 裁切視窗 → 上傳 ----------
+    onPhotoPicked(e) {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = '';   // 清空，讓同一檔案可重複選取
+      if (!file) return;
+      if (!/^image\//.test(file.type)) {
+        this.showToast('請選擇圖片檔');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => this.openCropper(reader.result);
+      reader.onerror = () => this.showToast('無法讀取圖片');
+      reader.readAsDataURL(file);
+    },
+    openCropper(src) {
+      const img = new Image();
+      img.onload = () => {
+        this._cropImg = img;   // 保留原圖供 canvas 裁切（不放進 reactive data）
+        const c = this.cropper;
+        c.iw = img.naturalWidth;
+        c.ih = img.naturalHeight;
+        c.zoom = 1;
+        c.src = src;
+        // 置中
+        const s = Math.max(this.CROP_VIEW / c.iw, this.CROP_VIEW / c.ih);
+        c.offsetX = (this.CROP_VIEW - c.iw * s) / 2;
+        c.offsetY = (this.CROP_VIEW - c.ih * s) / 2;
+        c.show = true;
+      };
+      img.onerror = () => this.showToast('無法讀取圖片');
+      img.src = src;
+    },
+    closeCropper() {
+      this.cropper.show = false;
+      this.cropper.src = '';
+      this._cropImg = null;
+    },
+    // 位移不得讓圖片邊緣露出裁切區
+    clampOffsets() {
+      const c = this.cropper, s = this.cropScale;
+      const minX = this.CROP_VIEW - c.iw * s;
+      const minY = this.CROP_VIEW - c.ih * s;
+      c.offsetX = Math.min(0, Math.max(minX, c.offsetX));
+      c.offsetY = Math.min(0, Math.max(minY, c.offsetY));
+    },
+    // 縮放時以裁切區中心為基準點，避免畫面跳動
+    applyZoom(newZoom) {
+      const c = this.cropper;
+      newZoom = Math.min(this.ZOOM_MAX, Math.max(1, newZoom));
+      const base = Math.max(this.CROP_VIEW / c.iw, this.CROP_VIEW / c.ih);
+      const s1 = base * c.zoom;
+      const s2 = base * newZoom;
+      const cx = (this.CROP_VIEW / 2 - c.offsetX) / s1;
+      const cy = (this.CROP_VIEW / 2 - c.offsetY) / s1;
+      c.zoom = newZoom;
+      c.offsetX = this.CROP_VIEW / 2 - cx * s2;
+      c.offsetY = this.CROP_VIEW / 2 - cy * s2;
+      this.clampOffsets();
+    },
+    onCropWheel(e) {
+      this.applyZoom(this.cropper.zoom - Math.sign(e.deltaY) * 0.12);
+    },
+    onCropPointerDown(e) {
+      const c = this.cropper;
+      c.dragging = true;
+      c.startX = e.clientX;
+      c.startY = e.clientY;
+      c.startOffX = c.offsetX;
+      c.startOffY = c.offsetY;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    onCropPointerMove(e) {
+      const c = this.cropper;
+      if (!c.dragging) return;
+      c.offsetX = c.startOffX + (e.clientX - c.startX);
+      c.offsetY = c.startOffY + (e.clientY - c.startY);
+      this.clampOffsets();
+    },
+    onCropPointerUp() {
+      this.cropper.dragging = false;
+    },
+    // 依目前位置與縮放，用 canvas 裁出正方形（512x512）後上傳
+    async confirmCrop() {
+      const c = this.cropper, img = this._cropImg;
+      if (!img) return;
+      const OUTPUT = 512;
+      const s = this.cropScale;
+      const sx = -c.offsetX / s;
+      const sy = -c.offsetY / s;
+      const sw = this.CROP_VIEW / s;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = OUTPUT;
+      canvas.height = OUTPUT;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, sx, sy, sw, sw, 0, 0, OUTPUT, OUTPUT);
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+      if (!blob) {
+        this.showToast('照片處理失敗');
+        return;
+      }
+      await this.uploadPhotoBlob(blob);
+    },
+    async uploadPhotoBlob(blob) {
       const fd = new FormData();
-      fd.append("photo", file);
-      try{
-        const res = await fetch(this.apiBase + "/api/upload", { method: "POST", body: fd });
-        const j = await res.json();
-        if(j.ok){ this.form.photoUrl = j.url; this.notify("照片已上傳"); }
-        else this.notify(j.error || "照片上傳失敗", true);
-      }catch{
-        this.notify("無法連線後端,照片僅本機預覽", true);
+      fd.append('photo', blob, 'avatar.jpg');
+      this.uploadingPhoto = true;
+      try {
+        const res = await fetch(`${API_BASE}/api/contacts/${encodeURIComponent(this.form.empNo)}/photo`, {
+          method: 'POST',
+          body: fd,
+        });
+        if (!res.ok) throw new Error();
+        const updated = await res.json();
+        // 後端已存檔，寫回 form 時不需再觸發一次自動儲存
+        this.withSuppressedAutoSave(() => {
+          this.form.photoUrl = updated.photoUrl;
+          this.form.lastModified = updated.lastModified;
+        });
+        const i = this.list.findIndex(x => String(x.empNo) === String(updated.empNo));
+        if (i > -1) {
+          this.list.splice(i, 1, Object.assign({}, this.list[i], {
+            photoUrl: updated.photoUrl,
+            lastModified: updated.lastModified,
+          }));
+        }
+        this.closeCropper();
+        this.showToast('照片已更新');
+      } catch (err) {
+        this.showToast('照片上傳失敗');
+      } finally {
+        this.uploadingPhoto = false;
       }
     },
-
-    addExp(){
-      this.form.experiences.push({company:"",position:"",years:""});
+    removePhoto() {
+      this.form.photoUrl = '';   // 交由自動儲存寫回後端
+      this.showToast('已移除照片');
     },
-    removeExp(i){
-      if(this.form.experiences.length > 1) this.form.experiences.splice(i,1);
-      else this.form.experiences[0] = {company:"",position:"",years:""};
+    showToast(msg) {
+      clearTimeout(this.toast.timer);
+      this.toast.msg = msg;
+      this.toast.show = true;
+      this.toast.timer = setTimeout(() => (this.toast.show = false), 2200);
     },
   },
-
-  watch: {
-    keyword(){ this.page = 0; },
-  },
-
-  mounted(){
-    // 星座欄位使用共用選項清單
-    this.basicFields.find(f => f.key === "zodiac").options = this.zodiacs;
+  mounted() {
+    this._suppressAutoSave = false;
+    this._saveTimer = null;
+    this._retryTimer = null;
     this.fetchList();
-
-    let resizeTimer = null;
-    this._onResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => this.measureCapacity(), 150);
-    };
-    window.addEventListener("resize", this._onResize);
+    this._onResize = () => this.recalcLayout();
+    window.addEventListener('resize', this._onResize);
+    this.$nextTick(() => this.recalcLayout());
   },
-
-  unmounted(){
-    window.removeEventListener("resize", this._onResize);
+  beforeUnmount() {
+    window.removeEventListener('resize', this._onResize);
+    clearTimeout(this._saveTimer);
+    clearTimeout(this._retryTimer);
   },
-});
-
-app.mount("#app");
+}).mount('#app');
 </script>
 </body>
 </html>

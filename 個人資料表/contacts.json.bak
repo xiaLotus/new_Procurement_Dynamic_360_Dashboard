@@ -1,0 +1,41 @@
+[
+  {
+    "address": "555",
+    "birthDate": "",
+    "blood": "A",
+    "eduSecond": {
+      "school": "4",
+      "major": "",
+      "period": ""
+    },
+    "eduTop": {
+      "school": "453",
+      "major": "453453",
+      "period": "453453"
+    },
+    "emgName": "",
+    "emgPhone": "453453",
+    "empNo": "4563",
+    "experiences": [
+      {
+        "company": "453453",
+        "position": "453453",
+        "years": ""
+      }
+    ],
+    "gender": "男",
+    "grade": "453",
+    "hireDate": "",
+    "interests": "453453",
+    "lastModified": "2026-08-11 19:43:08",
+    "marriage": "已婚",
+    "mobile": "0930172219",
+    "nameEn": "453",
+    "nameZh": "4534",
+    "phone": "453",
+    "photoUrl": "/photos/4563_1786448579.jpg",
+    "skills": "453354",
+    "title": "453",
+    "zodiac": ""
+  }
+]
