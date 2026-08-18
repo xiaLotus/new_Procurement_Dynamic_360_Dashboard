@@ -14,8 +14,10 @@ CORS(app, origins='*', allow_headers=['Content-Type', 'X-Auth-Token'])
 
 BASE_DIR  = os.path.dirname(__file__)
 DATA_DIR  = os.path.join(BASE_DIR, 'data')
+# DATA_DIR = rf"D:\Data\ChiChen_AMHS_值班訓練表單\data"
 EMP_DIR   = os.path.join(DATA_DIR, 'employees')
 LOG_DIR   = os.path.join(BASE_DIR, 'logs')
+# LOG_DIR = rf"D:\Data\ChiChen_AMHS_值班訓練表單\logs"
 
 os.makedirs(EMP_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
@@ -245,23 +247,34 @@ _FIELD_LABEL = {
     'total':           '總分',     'mentorNote':      '學長備註', 'leaderComment':   '長官評語',
 }
 
+# ─── 組別設定 ─────────────────────────────────────────────────────────────────
+# 各組別可看到的權限項目「格子數」(直接取 1~N 項):
+#   RR = 15 格(全部)、值班 = 14 格、保養組 = 13 格
+GROUPS = ['RR', '值班', '保養組']
+GROUP_ITEM_LIMITS = {'RR': 15, '值班': 14, '保養組': 13}
+
+def group_item_limit(emp):
+    """回傳該員工組別可使用的權限項目數;未設定組別時「預設視為值班」(14 項)"""
+    return GROUP_ITEM_LIMITS.get(emp.get('group') or '值班', GROUP_ITEM_LIMITS['值班'])
+
 # [新增] Onboarding 預設模板 (用於舊資料自動補齊)
+# selfConfirmed = 本人確認(由員工本人勾選);done = 完成(由主管勾選)
 _DEFAULT_ONBOARDING = [
-    {"id": 1, "name": "個人基本資料（入賴群）", "done": False, "note": ""},
-    {"id": 2, "name": "開通 AD", "done": False, "note": ""},
-    {"id": 3, "name": "開通 Notes ID（含設定）", "done": False, "note": ""},
-    {"id": 4, "name": "MES 相關申請（含設定）", "done": False, "note": ""},
-    {"id": 5, "name": "PIP 拍照申請", "done": False, "note": ""},
-    {"id": 6, "name": "NDA 保密義務承諾書", "done": False, "note": ""},
-    {"id": 7, "name": "門禁開通", "done": False, "note": ""},
-    {"id": 8, "name": "無塵服申請", "done": False, "note": ""},
-    {"id": 9, "name": "停車證申請", "done": False, "note": ""},
-    {"id": 10, "name": "廠區介紹六六", "done": False, "note": ""},
-    {"id": 11, "name": "資安宣導", "done": False, "note": ""},
-    {"id": 12, "name": "配件領取（無塵袋〈大、小〉、安全帽）", "done": False, "note": ""},
-    {"id": 13, "name": "新人課程", "done": False, "note": ""},
-    {"id": 14, "name": "個人槽使用申請（工程師）", "done": False, "note": ""},
-    {"id": 15, "name": "外網權限（工程師）", "done": False, "note": ""}
+    {"id": 1, "name": "個人基本資料（入賴群）", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 2, "name": "開通 AD", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 3, "name": "開通 Notes ID（含設定）", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 4, "name": "MES 相關申請（含設定）", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 5, "name": "PIP 拍照申請", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 6, "name": "NDA 保密義務承諾書", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 7, "name": "門禁開通", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 8, "name": "無塵服申請", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 9, "name": "停車證申請", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 10, "name": "廠區介紹六六", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 11, "name": "資安宣導", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 12, "name": "配件領取（無塵袋〈大、小〉、安全帽）", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 13, "name": "新人課程", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 14, "name": "個人槽使用申請（工程師）", "done": False, "note": "", "selfConfirmed": False},
+    {"id": 15, "name": "外網權限（工程師）", "done": False, "note": "", "selfConfirmed": False}
 ]
 
 def _v(val):
@@ -535,9 +548,12 @@ def patch_employee_info(emp_id):
         except Exception:
             return jsonify({'error': '找不到員工資料'}), 404
             
-        _ALLOWED_INFO_FIELDS = {'name', 'startDate', 'mentor', 'leader', 'type'}
+        _ALLOWED_INFO_FIELDS = {'name', 'startDate', 'mentor', 'leader', 'type', 'group'}
         for k, v in patch.items():
             if k in _ALLOWED_INFO_FIELDS:
+                # 組別僅允許合法值(RR / 值班 / 保養組)
+                if k == 'group' and v not in GROUPS:
+                    return jsonify({'error': '組別必須為 RR、值班 或 保養組'}), 400
                 emp[k] = v
         save_employee(emp)
         
@@ -547,10 +563,29 @@ def patch_employee_info(emp_id):
 # ─── PATCH: Onboarding (權限項目) ─────────────────────────────────────────────
 @app.route('/api/employee/<emp_id>/onboarding/<int:item_id>', methods=['PATCH'])
 def patch_employee_onboarding(emp_id, item_id):
-    # 【權限修正】權限項目頁籤在前端為 leader-only,後端同步限制。
-    err = require_leader()
+    # 【權限設計】
+    #   主管(leader):可修改「完成(done)」與「備註(note)」— 所有人的都可以。
+    #   本人(empId 相符的 user):只能修改「本人確認(selfConfirmed)」。
+    #   其他人:一律拒絕。
+    err = require_login()
     if err: return err
+    u = current_user()
+    is_leader = u.get('role') == 'leader'
+    is_self   = u.get('empId', '').upper() == emp_id.upper()
+    if not (is_leader or is_self):
+        return jsonify({'error': '權限不足，只能查看與確認自己的權限項目'}), 403
+
     patch = request.get_json() or {}
+
+    # 依身分過濾允許的欄位:
+    #   主管 → done / note;本人 → selfConfirmed(主管同時是本人時取聯集)
+    allowed = set()
+    if is_leader: allowed |= {'done', 'note'}
+    if is_self:   allowed |= {'selfConfirmed'}
+    filtered = {k: v for k, v in patch.items() if k in allowed}
+    if not filtered:
+        return jsonify({'error': '沒有可更新的欄位（完成與備註限主管，本人確認限本人）'}), 403
+
     with lock:
         try:
             emp = _read(os.path.join(EMP_DIR, f'{emp_id}.json'))
@@ -561,16 +596,20 @@ def patch_employee_onboarding(emp_id, item_id):
         if 'onboarding' not in emp or not isinstance(emp.get('onboarding'), list) or len(emp['onboarding']) == 0:
             emp['onboarding'] = copy.deepcopy(_DEFAULT_ONBOARDING)
             logger.info(f"[PATCH:onboarding] {who()} | [{emp_id}] 舊資料無 onboarding，已自動初始化 15 項預設清單 | ip={client_ip()}")
-            
+
+        # 【組別格子數限制】RR=15、值班=14、保養組=13,超出該組別範圍的項目不可修改
+        if item_id > group_item_limit(emp):
+            return jsonify({'error': f"此員工組別（{emp.get('group') or '未設定'}）無此權限項目"}), 400
+
         rec = next((r for r in emp.get('onboarding', []) if r.get('id') == item_id), None)
         if rec is None:
             return jsonify({'error': '找不到權限項目'}), 404
-            
-        _ALLOWED_OB_FIELDS = {'done', 'note'}
-        rec.update({k: v for k, v in patch.items() if k in _ALLOWED_OB_FIELDS})
+
+        rec.setdefault('selfConfirmed', False)  # 舊資料相容
+        rec.update(filtered)
         save_employee(emp)
         
-    logger.info(f"[PATCH:onboarding] {who()} | [{emp_id}] 權限項目 {item_id} 更新 | ip={client_ip()}")
+    logger.info(f"[PATCH:onboarding] {who()} | [{emp_id}] 權限項目 {item_id} 更新 {list(filtered.keys())} | ip={client_ip()}")
     return jsonify({'ok': True})
 
 
@@ -675,3 +714,7 @@ def post_accounts():
 
 if __name__ == "__main__":
     app.run(debug=True)
+    # serve(app, host='10.11.99.84', port=8091)  
+    # 原狀態
+    # app.run(host="10.11.104.247", port=9017, debug=True)
+    # 0971-50-2211 修哥電話

@@ -149,18 +149,23 @@ async enterApp(){
       // 舊資料若有尾端空白天,請由主管以「刪除天數」按鈕移除(會同步伺服器)。
       this.state.employees.forEach(emp=>{
         if(!Array.isArray(emp.dailyRecords)) emp.dailyRecords=[];
+        if(!emp.group) emp.group = '值班';  // 【預設組別】載入資料時未設定組別 → 預設為「值班」
+        // 舊資料相容:權限項目補上「本人確認」欄位
+        if(Array.isArray(emp.onboarding)){
+          emp.onboarding.forEach(it=>{ if(it.selfConfirmed === undefined) it.selfConfirmed = false; });
+        }
 
         // [新增] 補齊 onboarding 欄位 (相容舊資料)
         if(!emp.onboarding || !Array.isArray(emp.onboarding) || emp.onboarding.length === 0){
           emp.onboarding = [
-            {id:1, name:"個人基本資料（入賴群）", done:false, note:""}, {id:2, name:"開通 AD", done:false, note:""},
-            {id:3, name:"開通 Notes ID（含設定）", done:false, note:""}, {id:4, name:"MES 相關申請（含設定）", done:false, note:""},
-            {id:5, name:"PIP 拍照申請", done:false, note:""}, {id:6, name:"NDA 保密義務承諾書", done:false, note:""},
-            {id:7, name:"門禁開通", done:false, note:""}, {id:8, name:"無塵服申請", done:false, note:""},
-            {id:9, name:"停車證申請", done:false, note:""}, {id:10, name:"廠區介紹六六", done:false, note:""},
-            {id:11, name:"資安宣導", done:false, note:""}, {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:""},
-            {id:13, name:"新人課程", done:false, note:""}, {id:14, name:"個人槽使用申請（工程師）", done:false, note:""},
-            {id:15, name:"外網權限（工程師）", done:false, note:""}
+            {id:1, name:"個人基本資料（入賴群）", done:false, note:"", selfConfirmed:false}, {id:2, name:"開通 AD", done:false, note:"", selfConfirmed:false},
+            {id:3, name:"開通 Notes ID（含設定）", done:false, note:"", selfConfirmed:false}, {id:4, name:"MES 相關申請（含設定）", done:false, note:"", selfConfirmed:false},
+            {id:5, name:"PIP 拍照申請", done:false, note:"", selfConfirmed:false}, {id:6, name:"NDA 保密義務承諾書", done:false, note:"", selfConfirmed:false},
+            {id:7, name:"門禁開通", done:false, note:"", selfConfirmed:false}, {id:8, name:"無塵服申請", done:false, note:"", selfConfirmed:false},
+            {id:9, name:"停車證申請", done:false, note:"", selfConfirmed:false}, {id:10, name:"廠區介紹六六", done:false, note:"", selfConfirmed:false},
+            {id:11, name:"資安宣導", done:false, note:"", selfConfirmed:false}, {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:"", selfConfirmed:false},
+            {id:13, name:"新人課程", done:false, note:"", selfConfirmed:false}, {id:14, name:"個人槽使用申請（工程師）", done:false, note:"", selfConfirmed:false},
+            {id:15, name:"外網權限（工程師）", done:false, note:"", selfConfirmed:false}
           ];
         }
       });
@@ -233,9 +238,10 @@ _restoreView(){
   if(v.obEmpId) this.onboardingSelectedEmpId = v.obEmpId;
 
   // 還原頁籤:非 Leader 不可回到 leader 專屬頁籤
+  // (權限項目 onboarding 開放給所有人:User 進入後只會看到自己)
   const allowed = this.isLeader()
     ? ['training','ojt','cert','settings','onboarding']
-    : ['training','cert'];
+    : ['training','cert','onboarding'];
   return allowed.includes(v.tab) ? v.tab : 'training';
 },
 
@@ -593,26 +599,27 @@ newEmployee(empId, name){
   });
 
   const onboardingItems = [
-    {id:1, name:"個人基本資料（入賴群）", done:false, note:""},
-    {id:2, name:"開通 AD", done:false, note:""},
-    {id:3, name:"開通 Notes ID（含設定）", done:false, note:""},
-    {id:4, name:"MES 相關申請（含設定）", done:false, note:""},
-    {id:5, name:"PIP 拍照申請", done:false, note:""},
-    {id:6, name:"NDA 保密義務承諾書", done:false, note:""},
-    {id:7, name:"門禁開通", done:false, note:""},
-    {id:8, name:"無塵服申請", done:false, note:""},
-    {id:9, name:"停車證申請", done:false, note:""},
-    {id:10, name:"廠區介紹六六", done:false, note:""},
-    {id:11, name:"資安宣導", done:false, note:""},
-    {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:""},
-    {id:13, name:"新人課程", done:false, note:""},
-    {id:14, name:"個人槽使用申請（工程師）", done:false, note:""},
-    {id:15, name:"外網權限（工程師）", done:false, note:""}
+    {id:1, name:"個人基本資料（入賴群）", done:false, note:"", selfConfirmed:false},
+    {id:2, name:"開通 AD", done:false, note:"", selfConfirmed:false},
+    {id:3, name:"開通 Notes ID（含設定）", done:false, note:"", selfConfirmed:false},
+    {id:4, name:"MES 相關申請（含設定）", done:false, note:"", selfConfirmed:false},
+    {id:5, name:"PIP 拍照申請", done:false, note:"", selfConfirmed:false},
+    {id:6, name:"NDA 保密義務承諾書", done:false, note:"", selfConfirmed:false},
+    {id:7, name:"門禁開通", done:false, note:"", selfConfirmed:false},
+    {id:8, name:"無塵服申請", done:false, note:"", selfConfirmed:false},
+    {id:9, name:"停車證申請", done:false, note:"", selfConfirmed:false},
+    {id:10, name:"廠區介紹六六", done:false, note:"", selfConfirmed:false},
+    {id:11, name:"資安宣導", done:false, note:"", selfConfirmed:false},
+    {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:"", selfConfirmed:false},
+    {id:13, name:"新人課程", done:false, note:"", selfConfirmed:false},
+    {id:14, name:"個人槽使用申請（工程師）", done:false, note:"", selfConfirmed:false},
+    {id:15, name:"外網權限（工程師）", done:false, note:"", selfConfirmed:false}
   ];
 
   return {
     id: Date.now().toString(36)+Math.random().toString(36).slice(2,6),
     empId: empId||"", name: name||"", startDate:"", mentor:"", leader:"", type:"新人訓練",
+    group: "值班",  // 組別預設「值班」;於系統設定新增帳號時選定並同步
     dailyRecords: [{
       day:1, date:"", learningItems:"", practiceItems:"",
       mentorScore:"", mentorAttitude:"", leaderScore:"", total:"", notes:"",
@@ -795,6 +802,15 @@ confirmAddEmployee(){
   this.save({force:true});
   this.closeModal();
   this.renderEmployeeList();
+
+  // 【流程引導】新增人員後 → 提示並轉向「系統設定」建立登入權限,
+  // 工號與姓名自動帶入新增帳號欄位,組別於此強制選擇(選定後自動同步回員工資料)
+  alert('人員已新增！\n\n接下來將前往「系統設定」,請為該員工設定登入權限（帳號與組別）。');
+  this.switchTab('settings');
+  const idEl = document.getElementById('newAcctId');
+  const nameEl = document.getElementById('newAcctName');
+  if(idEl) idEl.value = empId;
+  if(nameEl) nameEl.value = name;
 },
 
 async deleteEmployee(id){
@@ -913,6 +929,15 @@ renderEmployeeDetail(doScroll){
                 <option ${emp.type==='新人訓練'?'selected':''}>新人訓練</option>
                 <option ${emp.type==='第二專長訓練'?'selected':''}>第二專長訓練</option>
                 <option ${emp.type==='調站'?'selected':''}>調站</option>
+              </select>
+            </div>
+            <div class="emp-info-item">
+              <label>組別</label>
+              <select class="field field-sm" onchange="updateEmpField('${emp.id}','group',this.value);renderEmployeeDetail()">
+                <option value="" ${!emp.group?'selected':''} disabled>未設定</option>
+                <option value="RR" ${emp.group==='RR'?'selected':''}>RR</option>
+                <option value="值班" ${emp.group==='值班'?'selected':''}>值班</option>
+                <option value="保養組" ${emp.group==='保養組'?'selected':''}>保養組</option>
               </select>
             </div>
           </div>
@@ -1358,10 +1383,16 @@ renderSettings(){
             <option value="leader">Leader</option>
             <option value="user" selected>User</option>
           </select>
+          <select class="field field-sm" id="newAcctGroup" style="width:130px">
+            <option value="" selected disabled>組別（必選）</option>
+            <option value="RR">RR</option>
+            <option value="值班">值班</option>
+            <option value="保養組">保養組</option>
+          </select>
           <button class="btn btn-primary btn-sm" onclick="addAccount()">新增帳號</button>
         </div>
         <table class="tbl">
-          <thead><tr><th>工號</th><th>姓名</th><th>角色</th><th>操作</th></tr></thead>
+          <thead><tr><th>工號</th><th>姓名</th><th>組別</th><th>角色</th><th>操作</th></tr></thead>
           <tbody>
             ${this.ACCOUNTS.map((a,i)=>{
               const isCurrentUser = this.currentUser && a.empId===this.currentUser.empId;
@@ -1369,6 +1400,7 @@ renderSettings(){
               return `<tr>
                 <td><span style="font-family:var(--mono);font-weight:600;color:var(--blue2)">${esc(a.empId)}</span></td>
                 <td style="font-weight:500">${esc(a.name)||'—'}</td>
+                <td><span class="badge" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border2)">${esc(a.group)||'—'}</span></td>
                 <td>
                   <select class="field field-sm" style="width:100px;color:${rc};font-weight:600" onchange="changeAccountRole(${i},this.value)" ${isCurrentUser?'disabled title="無法變更自己的角色"':''}>
                     <option value="leader" ${a.role==='leader'?'selected':''} style="color:#16a34a">Leader</option>
@@ -1440,40 +1472,73 @@ renderSettings(){
 
 renderOnboarding(){
   const el = document.getElementById('tab-onboarding');
-  // 撈取 accounts.json 中 role 為 user 的帳號
-  const users = this.ACCOUNTS.filter(a => a.role === 'user');
-  
-  if(!users.length){
-    el.innerHTML = `<div class="empty fade-up"><div class="empty-icon">👤</div><div>目前尚無 role 為 User 的帳號</div><div style="font-size:12px;margin-top:8px;color:var(--text4)">請至「系統設定」新增一般使用者帳號</div></div>`;
-    return;
+  const amLeader = this.isLeader();
+  const myEmpId = (this.currentUser && this.currentUser.empId || '').toUpperCase();
+
+  // 【檢視權限】Leader 可看所有人;一般 User 只能看「自己」
+  let emp = null, selectedUser = null;
+
+  if(amLeader){
+    // 撈取 accounts.json 中 role 為 user 的帳號
+    const users = this.ACCOUNTS.filter(a => a.role === 'user');
+    if(!users.length){
+      el.innerHTML = `<div class="empty fade-up"><div class="empty-icon">👤</div><div>目前尚無 role 為 User 的帳號</div><div style="font-size:12px;margin-top:8px;color:var(--text4)">請至「系統設定」新增一般使用者帳號</div></div>`;
+      return;
+    }
+    if(!this.onboardingSelectedEmpId || !users.find(u => u.empId === this.onboardingSelectedEmpId)){
+      this.onboardingSelectedEmpId = users[0].empId;
+    }
+    selectedUser = users.find(u => u.empId === this.onboardingSelectedEmpId);
+    emp = this.state.employees.find(e => e.empId === this.onboardingSelectedEmpId);
+    // 如果該 User 還沒建立員工資料，自動幫他建立一筆(Leader 有權限整包儲存)
+    if(!emp){
+      emp = this.newEmployee(selectedUser.empId, selectedUser.name);
+      emp.group = selectedUser.group || '值班';  // 帶入帳號設定的組別,未設定則預設值班
+      this.state.employees.push(emp);
+      this.save({force:true, silent:true});
+    }
+  } else {
+    // 一般 User:鎖定為本人,不提供人員選單
+    this.onboardingSelectedEmpId = this.currentUser.empId;
+    emp = this.state.employees.find(e => (e.empId||'').toUpperCase() === myEmpId);
+    if(!emp){
+      el.innerHTML = `<div class="empty fade-up"><div class="empty-icon">📋</div><div>尚未建立你的訓練資料</div><div style="font-size:12px;margin-top:8px;color:var(--text4)">請聯絡主管於「訓練紀錄表」新增你的人員資料後再查看</div></div>`;
+      return;
+    }
+    selectedUser = {empId: emp.empId, name: emp.name};
   }
 
-  if(!this.onboardingSelectedEmpId || !users.find(u => u.empId === this.onboardingSelectedEmpId)){
-    this.onboardingSelectedEmpId = users[0].empId;
-  }
+  const isSelf = (emp.empId||'').toUpperCase() === myEmpId;  // 目前檢視對象是否為本人
 
-  const selectedUser = users.find(u => u.empId === this.onboardingSelectedEmpId);
-  let emp = this.state.employees.find(e => e.empId === this.onboardingSelectedEmpId);
-  
-  // 如果該 User 還沒建立員工資料，自動幫他建立一筆
-  if(!emp){
-    emp = this.newEmployee(selectedUser.empId, selectedUser.name);
-    this.state.employees.push(emp);
-    this.save({force:true, silent:true});
-  }
+  // 【組別格子數】RR=15、值班=14、保養組=13;未設定顯示全部 15
+  const GROUP_LIMITS = {'RR':15, '值班':14, '保養組':13};
+  const itemLimit = GROUP_LIMITS[emp.group] || GROUP_LIMITS['值班'];  // 未設定組別預設視為「值班」
+  const items = emp.onboarding.filter(i => i.id <= itemLimit);
 
-  const doneCount = emp.onboarding.filter(i => i.done).length;
-  const totalCount = emp.onboarding.length;
-  const progressPct = Math.round((doneCount / totalCount) * 100);
+  const doneCount = items.filter(i => i.done).length;
+  const totalCount = items.length;
+  const progressPct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
 
   let html = `<div class="fade-up">
     <h2 style="font-size:16px;font-weight:700;margin-bottom:14px">📋 新人權限與報到項目追蹤</h2>
     
-    <div class="flex items-center gap-12 mb-16 fw-wrap">
+    <div class="flex items-center gap-12 mb-16 fw-wrap">`;
+
+  if(amLeader){
+    const users = this.ACCOUNTS.filter(a => a.role === 'user');
+    html += `
       <label class="label" style="margin:0">選擇人員 (User)</label>
       <select class="field field-sm" style="width:220px" onchange="_vm.onboardingSelectedEmpId=this.value;renderOnboarding()">
         ${users.map(u => `<option value="${u.empId}" ${u.empId===this.onboardingSelectedEmpId?'selected':''}>${esc(u.empId)} — ${esc(u.name)||'未命名'}</option>`).join('')}
-      </select>
+      </select>`;
+  } else {
+    html += `
+      <span style="font-size:13px;color:var(--text2)">檢視對象:</span>
+      <span class="badge" style="background:var(--surface2);color:var(--text);border:1px solid var(--border2);font-weight:700">${esc(emp.empId)} — ${esc(emp.name)||'未命名'}（本人）</span>`;
+  }
+
+  html += `
+      <span class="badge" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border2)">組別:${esc(emp.group)||'未設定'}（${itemLimit} 項）</span>
       <div class="ml-auto flex items-center gap-10" style="font-size:13px;color:var(--text2)">
         <span>完成進度：</span>
         <div style="width:150px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">
@@ -1489,26 +1554,36 @@ renderOnboarding(){
         <span class="badge ml-auto" style="background:var(--surface2);color:var(--text3)">${esc(selectedUser.empId)}</span>
       </div>
       <div style="overflow-x:auto">
-        <table class="tbl" style="min-width:700px">
+        <table class="tbl" style="min-width:760px">
           <thead><tr>
             <th style="width:60px;text-align:center">完成</th>
+            <th style="width:80px;text-align:center">本人確認</th>
             <th style="width:60px;text-align:center">項目</th>
             <th>名稱</th>
             <th style="min-width:200px">備註</th>
           </tr></thead>
           <tbody>`;
 
-  emp.onboarding.forEach((item, idx) => {
+  items.forEach((item) => {
+    // 【欄位權限】完成 / 備註:限 Leader;本人確認:限本人(Leader 檢視他人時唯讀)
+    const idx = emp.onboarding.indexOf(item);  // 以完整清單的索引更新,確保 id 對應正確
+    const canDone = amLeader;
+    const canSelf = isSelf;
     html += `<tr>
       <td style="text-align:center">
-        <input type="checkbox" style="width:20px;height:20px;cursor:pointer;accent-color:var(--green2)" 
-          ${item.done?'checked':''} 
+        <input type="checkbox" style="width:20px;height:20px;accent-color:var(--green2);${canDone?'cursor:pointer':'cursor:not-allowed;opacity:.5'}" 
+          ${item.done?'checked':''} ${canDone?'':'disabled'}
           onchange="updateOnboardingField('${emp.id}', ${idx}, 'done', this.checked)">
+      </td>
+      <td style="text-align:center">
+        <input type="checkbox" title="${canSelf?'本人確認':'僅本人可勾選'}" style="width:18px;height:18px;accent-color:var(--blue2);${canSelf?'cursor:pointer':'cursor:not-allowed;opacity:.5'}" 
+          ${item.selfConfirmed?'checked':''} ${canSelf?'':'disabled'}
+          onchange="updateOnboardingField('${emp.id}', ${idx}, 'selfConfirmed', this.checked)">
       </td>
       <td style="text-align:center;font-family:var(--mono);font-weight:700;color:var(--blue2)">${item.id}</td>
       <td style="font-weight:500;${item.done?'text-decoration:line-through;color:var(--text4)':''}">${esc(item.name)}</td>
       <td>
-        <input class="field field-sm" placeholder="填寫備註..." value="${esc(item.note)}" 
+        <input class="field field-sm" placeholder="${canDone?'填寫備註...':'（僅主管可填寫）'}" value="${esc(item.note)}" ${canDone?'':'disabled'}
           onchange="updateOnboardingField('${emp.id}', ${idx}, 'note', this.value)">
       </td>
     </tr>`;
@@ -1534,7 +1609,7 @@ updateOnboardingField(empId, idx, field, value){
         body: JSON.stringify({[field]: value})
       }), emp);
 
-    if(field === 'done') this.renderOnboarding(); // 更新進度條與刪除線樣式
+    if(field === 'done' || field === 'selfConfirmed') this.renderOnboarding(); // 更新進度條與勾選狀態
   }
 },
 
@@ -1542,13 +1617,17 @@ updateOnboardingField(empId, idx, field, value){
 
 addAccount(){
   const empId = document.getElementById('newAcctId').value.trim();
-  // const pwd = document.getElementById('newAcctPwd').value.trim();
   const name = document.getElementById('newAcctName').value.trim();
   const role = document.getElementById('newAcctRole').value;
+  const group = document.getElementById('newAcctGroup').value;
 
-  // 只檢查工號必填
   if(!empId){
     alert('請填寫工號');
+    return;
+  }
+  // 【需求】新增帳號時強制選擇組別
+  if(!group){
+    alert('請選擇組別（RR / 值班 / 保養組）');
     return;
   }
 
@@ -1561,8 +1640,16 @@ addAccount(){
   this.ACCOUNTS.push({
     empId,
     role,
+    group,
     name: name || (role === 'leader' ? 'Leader-' : 'User-') + empId
   });
+
+  // 【組別同步】若該工號已有員工資料,將此處選定的組別同步寫回員工檔案,
+  // 權限項目的格子數(RR=15/值班=14/保養組=13)依員工資料的組別生效。
+  const empRec = this.state.employees.find(e => (e.empId||'').toUpperCase() === empId.toUpperCase());
+  if(empRec && empRec.group !== group){
+    this.updateEmpField(empRec.id, 'group', group);
+  }
 
   this.save({force:true});
 
@@ -1657,14 +1744,14 @@ exportData(){
           // [新增] 補齊 onboarding 欄位 (相容舊資料)
           if(!emp.onboarding || !Array.isArray(emp.onboarding) || emp.onboarding.length === 0){
             emp.onboarding = [
-              {id:1, name:"個人基本資料（入賴群）", done:false, note:""}, {id:2, name:"開通 AD", done:false, note:""},
-              {id:3, name:"開通 Notes ID（含設定）", done:false, note:""}, {id:4, name:"MES 相關申請（含設定）", done:false, note:""},
-              {id:5, name:"PIP 拍照申請", done:false, note:""}, {id:6, name:"NDA 保密義務承諾書", done:false, note:""},
-              {id:7, name:"門禁開通", done:false, note:""}, {id:8, name:"無塵服申請", done:false, note:""},
-              {id:9, name:"停車證申請", done:false, note:""}, {id:10, name:"廠區介紹六六", done:false, note:""},
-              {id:11, name:"資安宣導", done:false, note:""}, {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:""},
-              {id:13, name:"新人課程", done:false, note:""}, {id:14, name:"個人槽使用申請（工程師）", done:false, note:""},
-              {id:15, name:"外網權限（工程師）", done:false, note:""}
+              {id:1, name:"個人基本資料（入賴群）", done:false, note:"", selfConfirmed:false}, {id:2, name:"開通 AD", done:false, note:"", selfConfirmed:false},
+              {id:3, name:"開通 Notes ID（含設定）", done:false, note:"", selfConfirmed:false}, {id:4, name:"MES 相關申請（含設定）", done:false, note:"", selfConfirmed:false},
+              {id:5, name:"PIP 拍照申請", done:false, note:"", selfConfirmed:false}, {id:6, name:"NDA 保密義務承諾書", done:false, note:"", selfConfirmed:false},
+              {id:7, name:"門禁開通", done:false, note:"", selfConfirmed:false}, {id:8, name:"無塵服申請", done:false, note:"", selfConfirmed:false},
+              {id:9, name:"停車證申請", done:false, note:"", selfConfirmed:false}, {id:10, name:"廠區介紹六六", done:false, note:"", selfConfirmed:false},
+              {id:11, name:"資安宣導", done:false, note:"", selfConfirmed:false}, {id:12, name:"配件領取（無塵袋〈大、小〉、安全帽）", done:false, note:"", selfConfirmed:false},
+              {id:13, name:"新人課程", done:false, note:"", selfConfirmed:false}, {id:14, name:"個人槽使用申請（工程師）", done:false, note:"", selfConfirmed:false},
+              {id:15, name:"外網權限（工程師）", done:false, note:"", selfConfirmed:false}
             ];
           }
         });

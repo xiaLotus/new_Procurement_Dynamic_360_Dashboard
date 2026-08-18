@@ -1,0 +1,29 @@
+2026-08-18 19:34:39 | INFO     | [LOGIN] 成功 | empId=K18251 | role=leader | ip=127.0.0.1
+2026-08-18 19:59:41 | INFO     | [PATCH:onboarding] K18251(User-K18251) | [K27124] 舊資料無 onboarding，已自動初始化 15 項預設清單 | ip=127.0.0.1
+2026-08-18 19:59:41 | INFO     | [PATCH:onboarding] K18251(User-K18251) | [K27124] 權限項目 1 更新 ['done'] | ip=127.0.0.1
+2026-08-18 19:59:42 | INFO     | [PATCH:onboarding] K18251(User-K18251) | [K27124] 權限項目 2 更新 ['done'] | ip=127.0.0.1
+2026-08-18 19:59:43 | INFO     | [PATCH:onboarding] K18251(User-K18251) | [K27124] 權限項目 3 更新 ['done'] | ip=127.0.0.1
+2026-08-18 19:59:45 | INFO     | [PATCH:onboarding] K18251(User-K18251) | [K27124] 權限項目 1 更新 ['done'] | ip=127.0.0.1
+2026-08-18 19:59:46 | INFO     | [PATCH:onboarding] K18251(User-K18251) | [K27124] 權限項目 2 更新 ['done'] | ip=127.0.0.1
+2026-08-18 19:59:47 | INFO     | [PATCH:onboarding] K18251(User-K18251) | [K27124] 權限項目 3 更新 ['done'] | ip=127.0.0.1
+2026-08-18 19:59:53 | INFO     | [LOGOUT] | empId=K18251 | ip=127.0.0.1
+2026-08-18 19:59:58 | INFO     | [LOGIN] 成功 | empId=K25578 | role=user | ip=127.0.0.1
+2026-08-18 20:00:03 | INFO     | [PATCH:onboarding] K25578(User-K25578) | [K25578] 權限項目 1 更新 ['selfConfirmed'] | ip=127.0.0.1
+2026-08-18 20:00:04 | INFO     | [PATCH:onboarding] K25578(User-K25578) | [K25578] 權限項目 2 更新 ['selfConfirmed'] | ip=127.0.0.1
+2026-08-18 20:00:05 | INFO     | [PATCH:onboarding] K25578(User-K25578) | [K25578] 權限項目 3 更新 ['selfConfirmed'] | ip=127.0.0.1
+2026-08-18 20:00:05 | INFO     | [PATCH:onboarding] K25578(User-K25578) | [K25578] 權限項目 4 更新 ['selfConfirmed'] | ip=127.0.0.1
+2026-08-18 20:00:39 | INFO     | [LOGOUT] | empId=K25578 | ip=127.0.0.1
+2026-08-18 20:00:43 | INFO     | [LOGIN] 成功 | empId=K18251 | role=leader | ip=127.0.0.1
+2026-08-18 20:01:03 | INFO     | [WRITE:employee] K18251(User-K18251) | K30125 資料新增 | ip=127.0.0.1
+2026-08-18 20:01:31 | INFO     | [WRITE:accounts] K18251(User-K18251) | 新增帳號=K3012 | ip=127.0.0.1
+2026-08-18 20:23:04 | INFO     | [WRITE:employee] K18251(User-K18251) | K33333 資料新增 | ip=127.0.0.1
+2026-08-18 20:23:12 | INFO     | [PATCH:info] K18251(User-K18251) | [K33333] 基本資料更新 | ip=127.0.0.1
+2026-08-18 20:23:12 | INFO     | [WRITE:employee] K18251(User-K18251) | K33333 (無變動) | ip=127.0.0.1
+2026-08-18 20:23:12 | INFO     | [WRITE:accounts] K18251(User-K18251) | 新增帳號=K33333 | ip=127.0.0.1
+2026-08-18 20:23:18 | INFO     | [PATCH:onboarding] K18251(User-K18251) | [K33333] 權限項目 1 更新 ['done'] | ip=127.0.0.1
+2026-08-18 20:23:20 | INFO     | [WRITE:employee] K18251(User-K18251) | K3012 資料新增 | ip=127.0.0.1
+2026-08-18 20:23:23 | INFO     | [LOGOUT] | empId=K18251 | ip=127.0.0.1
+2026-08-18 20:23:28 | INFO     | [LOGIN] 成功 | empId=K33333 | role=user | ip=127.0.0.1
+2026-08-18 20:23:34 | INFO     | [PATCH:onboarding] K33333(WDFSFDSD) | [K33333] 權限項目 1 更新 ['selfConfirmed'] | ip=127.0.0.1
+2026-08-18 20:23:34 | INFO     | [PATCH:onboarding] K33333(WDFSFDSD) | [K33333] 權限項目 2 更新 ['selfConfirmed'] | ip=127.0.0.1
+2026-08-18 20:23:35 | INFO     | [PATCH:onboarding] K33333(WDFSFDSD) | [K33333] 權限項目 3 更新 ['selfConfirmed'] | ip=127.0.0.1

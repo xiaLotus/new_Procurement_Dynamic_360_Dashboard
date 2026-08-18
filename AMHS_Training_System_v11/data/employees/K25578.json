@@ -243,25 +243,29 @@
       "done": true,
       "id": 1,
       "name": "個人基本資料（入賴群）",
-      "note": ""
+      "note": "",
+      "selfConfirmed": true
     },
     {
       "done": true,
       "id": 2,
       "name": "開通 AD",
-      "note": "555"
+      "note": "555",
+      "selfConfirmed": true
     },
     {
       "done": true,
       "id": 3,
       "name": "開通 Notes ID（含設定）",
-      "note": ""
+      "note": "",
+      "selfConfirmed": true
     },
     {
       "done": true,
       "id": 4,
       "name": "MES 相關申請（含設定）",
-      "note": ""
+      "note": "",
+      "selfConfirmed": true
     },
     {
       "done": true,

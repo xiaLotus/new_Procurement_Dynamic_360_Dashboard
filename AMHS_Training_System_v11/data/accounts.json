@@ -172,5 +172,17 @@
     "name": "吳培銘",
     "password": "",
     "role": "leader"
+  },
+  {
+    "empId": "K3012",
+    "group": "RR",
+    "name": "TEST",
+    "role": "user"
+  },
+  {
+    "empId": "K33333",
+    "role": "user",
+    "group": "RR",
+    "name": "WDFSFDSD"
   }
 ]
