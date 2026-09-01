@@ -6,6 +6,7 @@
 <title>部門通訊錄</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -17,7 +18,9 @@
     --line:#E1E8E8;
     --accent:#0B6E6E;
     --accent-soft:#E2F0EE;
-    --card-h:120px;   /* 卡片高度，需與 JS 內 CARD_H 一致 */
+    --danger:#DC2626;
+    --danger-soft:#FEF2F2;
+    --card-h:120px;
   }
   [v-cloak]{display:none}
   html,body{height:100%}
@@ -39,7 +42,7 @@
     padding:14px 16px;
     display:flex;flex-direction:column;justify-content:space-between;
     box-shadow:0 1px 2px rgba(23,38,46,.05);
-    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, background .15s ease;
     cursor:pointer;
   }
   .badge-card::before{
@@ -49,8 +52,41 @@
   .badge-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(11,110,110,.14);border-color:#BFD8D6}
   .badge-card:hover::before{opacity:1}
   .badge-card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
+  .badge-card.selecting:hover{transform:none}
+  .badge-card.selected{
+    border-color:var(--accent);
+    background:#F5FBFA;
+    box-shadow:0 0 0 2px rgba(11,110,110,.16);
+  }
+  .badge-card.selected::before{opacity:1;width:4px}
+  .select-check{
+    position:absolute;right:10px;top:10px;z-index:2;
+    width:24px;height:24px;border-radius:9999px;
+    display:flex;align-items:center;justify-content:center;
+    border:1px solid #B9C9C9;background:#fff;color:transparent;
+    transition:background .15s, border-color .15s, color .15s;
+  }
+  .badge-card.selected .select-check{
+    background:var(--accent);border-color:var(--accent);color:#fff;
+  }
   .field-label{font-size:10px;letter-spacing:.14em;color:var(--muted)}
+  .badge-card.entering{transition:none}
+
+  /* ---------- 登入者 ---------- */
+  .user-chip{
+    display:flex;align-items:center;gap:8px;
+    padding:4px 6px 4px 4px;border:1px solid var(--line);border-radius:999px;background:#fff;
+  }
+  .user-avatar{
+    width:28px;height:28px;border-radius:9999px;flex-shrink:0;
+    background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;
+  }
+  .user-logout{
+    width:28px;height:28px;border-radius:9999px;flex-shrink:0;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;transition:background .15s, color .15s;
+  }
+  .user-logout:hover{background:var(--danger-soft);color:var(--danger)}
 
   /* ---------- 表單 ---------- */
   .sec-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
@@ -79,6 +115,14 @@
   }
   .btn-ghost:hover{background:var(--accent-soft);border-color:#BFD8D6}
   .btn-ghost:disabled{opacity:.5;cursor:not-allowed}
+  .btn-danger{
+    background:var(--danger);color:#fff;border-radius:10px;
+    padding:8px 16px;font-size:14px;font-weight:500;
+    transition:opacity .15s, transform .1s;
+  }
+  .btn-danger:hover{opacity:.9}
+  .btn-danger:active{transform:scale(.98)}
+  .btn-danger:disabled{opacity:.42;cursor:not-allowed}
 
   /* ---------- 自動儲存狀態 ---------- */
   .save-dot{width:7px;height:7px;border-radius:9999px;display:inline-block}
@@ -86,6 +130,14 @@
   .save-dot.busy{background:var(--muted);animation:pulse-dot 1s infinite}
   .save-dot.ok{background:var(--accent)}
   .save-dot.err{background:#EF4444}
+
+  /* ---------- Loading ---------- */
+  .loading-ring{
+    width:34px;height:34px;border-radius:9999px;
+    border:3px solid #D8E4E4;border-top-color:var(--accent);
+    animation:loading-spin .75s linear infinite;
+  }
+  @keyframes loading-spin{to{transform:rotate(360deg)}}
 
   /* ---------- 分頁 ---------- */
   .page-btn{
@@ -100,9 +152,7 @@
   /* ---------- 照片裁切視窗 ---------- */
   .crop-viewport{
     position:relative;overflow:hidden;border-radius:14px;
-    background:#0F1B20;
-    touch-action:none;              /* 觸控拖曳時不捲動頁面 */
-    user-select:none;
+    background:#0F1B20;touch-action:none;user-select:none;
   }
   .crop-viewport img{
     position:absolute;max-width:none;
@@ -110,9 +160,8 @@
   }
   .crop-mask{
     position:absolute;border-radius:9999px;pointer-events:none;
-    box-shadow:0 0 0 9999px rgba(15,27,32,.62);  /* 圓圈外壓暗，模擬頭像顯示範圍 */
-    outline:2px solid rgba(255,255,255,.85);
-    outline-offset:-1px;
+    box-shadow:0 0 0 9999px rgba(15,27,32,.62);
+    outline:2px solid rgba(255,255,255,.85);outline-offset:-1px;
   }
   input[type=range]{accent-color:var(--accent)}
 
@@ -130,7 +179,6 @@
   .view-enter-active,.view-leave-active{transition:opacity .16s ease, transform .16s ease}
   .view-enter-from{opacity:0;transform:translateY(6px)}
   .view-leave-to{opacity:0;transform:translateY(-4px)}
-
   .modal-enter-active,.modal-leave-active{transition:opacity .18s ease}
   .modal-enter-from,.modal-leave-to{opacity:0}
   .modal-enter-active .modal-panel,.modal-leave-active .modal-panel{transition:transform .18s ease}
@@ -141,14 +189,14 @@
   .scroll-area::-webkit-scrollbar-thumb{background:#C8D6D6;border-radius:8px}
   .scroll-area::-webkit-scrollbar-track{background:transparent}
 
-  @media (prefers-reduced-motion: reduce){
+  @media (prefers-reduced-motion:reduce){
     *{transition:none!important;animation:none!important}
   }
 </style>
 </head>
 <body>
 <div id="app" v-cloak class="h-screen flex flex-col overflow-hidden">
-  <transition name="view" mode="out-in">
+  <transition name="view" mode="out-in" @enter="onViewEnter">
 
     <!-- ==================== 清單頁 ==================== -->
     <div v-if="view === 'list'" key="list" class="flex-1 min-h-0 flex flex-col">
@@ -158,39 +206,105 @@
           <div class="mono text-[11px] tracking-[0.22em] text-[var(--accent)] font-medium">STAFF DIRECTORY</div>
           <h1 class="text-2xl font-bold">部門通訊錄</h1>
         </div>
-        <div class="flex items-center gap-3">
-          <span class="text-sm text-[var(--muted)]">共 {{ list.length }} 位人員</span>
-          <button class="btn-accent flex items-center gap-1.5 !py-2" @click="openCreate">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
-            </svg>新增人員
-          </button>
+
+        <div class="flex flex-wrap items-center justify-end gap-3">
+          <span v-if="selectionMode" class="text-sm font-medium text-[var(--accent)]">
+            已選擇 {{ selectedEmpNos.length }} 位
+          </span>
+          <span v-else class="text-sm text-[var(--muted)]">共 {{ list.length }} 位人員</span>
+
+          <template v-if="selectionMode">
+            <button class="btn-ghost !py-2" :disabled="deleting" @click="cancelSelection">
+              取消選取
+            </button>
+            <button class="btn-danger flex items-center gap-1.5 !py-2"
+                    :disabled="!selectedEmpNos.length || deleting"
+                    @click="deleteSelected">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              {{ deleting ? '移除中…' : `移除選取 (${selectedEmpNos.length})` }}
+            </button>
+          </template>
+
+          <template v-else>
+            <button v-if="user && user.isAdmin"
+                    class="btn-ghost flex items-center gap-1.5 !py-2 !text-red-600"
+                    title="批次移除人員" @click="startSelection">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 10v6M14 10v6"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              移除人員
+            </button>
+
+            <button class="btn-accent flex items-center gap-1.5 !py-2" @click="openCreate">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path d="M12 5v14M5 12h14" stroke-linecap="round"/>
+              </svg>
+              新增人員
+            </button>
+          </template>
+
           <div class="relative">
-            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/>
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]"
+                 fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="M21 21l-4.3-4.3" stroke-linecap="round"/>
             </svg>
             <input v-model="keyword" type="text" placeholder="搜尋工號、姓名、手機…"
                    class="ipt !pl-9 !rounded-full w-64 md:w-72 !bg-white">
           </div>
+
+          <div v-if="user" class="user-chip" :title="'登入帳號：' + user.username">
+            <span class="user-avatar">{{ initialOf({ nameZh: user.name, nameEn: user.username }) }}</span>
+            <span class="text-sm font-medium truncate max-w-[120px]">{{ user.name || user.username }}</span>
+            <button class="user-logout" title="登出" aria-label="登出" @click="logout">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M10 17l5-5-5-5M15 12H3M21 4v16" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
 
-      <!-- 卡片區：依此區塊實際大小自動計算每頁筆數，永不超出畫面 -->
       <main ref="gridArea" class="flex-1 min-h-0 px-8 pb-3">
-        <div v-if="pagedList.length"
+        <div v-if="loading" class="h-full flex flex-col items-center justify-center gap-3 text-[var(--muted)]">
+          <div class="loading-ring"></div>
+          <p class="text-sm">Loading…</p>
+        </div>
+
+        <div v-else-if="pagedList.length"
              class="grid"
              :style="{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: gap + 'px' }">
-          <button v-for="p in pagedList" :key="p.empNo" class="badge-card" @click="openEdit(p)">
-            <!-- 只顯示：姓名（含照片頭像）、工號、手機 -->
-            <div class="flex items-center gap-3 min-w-0">
+          <button v-for="p in pagedList"
+                  :key="p.empNo"
+                  class="badge-card"
+                  :class="{ selecting: selectionMode, selected: isSelected(p.empNo) }"
+                  @click="selectionMode ? toggleSelection(p.empNo) : openEdit(p)">
+
+            <span v-if="selectionMode" class="select-check">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                <path d="M5 12l4 4L19 6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+
+            <div class="flex items-center gap-3 min-w-0" :class="{ 'pr-7': selectionMode }">
               <img v-if="p.photoUrl" :src="photoSrc(p)" alt=""
                    class="w-11 h-11 rounded-full object-cover border border-[var(--line)] shrink-0">
               <div v-else class="w-11 h-11 rounded-full bg-[var(--accent-soft)] text-[var(--accent)]
                                  flex items-center justify-center font-bold text-lg shrink-0">
                 {{ initialOf(p) }}
               </div>
-              <div class="font-semibold text-[15px] truncate">{{ p.nameZh || '（未填姓名）' }}</div>
+              <div class="min-w-0">
+                <div class="font-semibold text-[15px] truncate">{{ p.nameZh || '（未填姓名）' }}</div>
+                <div class="text-[11px] text-[var(--muted)] truncate" :title="p.unit || '未指定單位'">
+                  {{ unitShort(p.unit) || '未指定單位' }}
+                </div>
+              </div>
             </div>
+
             <div class="flex items-end justify-between gap-3">
               <div class="min-w-0">
                 <div class="field-label">工號</div>
@@ -198,7 +312,9 @@
               </div>
               <div class="text-right min-w-0">
                 <div class="field-label">手機</div>
-                <a v-if="p.mobile" :href="'tel:' + p.mobile" @click.stop
+                <a v-if="hasMobile(p.mobile)"
+                   :href="selectionMode ? undefined : 'tel:' + p.mobile"
+                   @click.stop="selectionMode ? toggleSelection(p.empNo) : null"
                    class="mono text-[13px] font-medium text-[var(--accent)] hover:underline truncate block">
                   {{ p.mobile }}
                 </a>
@@ -210,7 +326,8 @@
 
         <div v-else class="h-full flex flex-col items-center justify-center text-[var(--muted)] gap-3">
           <svg class="w-10 h-10 opacity-40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/>
+            <circle cx="11" cy="11" r="7"/>
+            <path d="M21 21l-4.3-4.3" stroke-linecap="round"/>
           </svg>
           <p class="text-sm">{{ list.length ? '找不到符合的人員' : '尚無資料，點「新增人員」建立第一筆' }}</p>
         </div>
@@ -220,24 +337,32 @@
                      border-t border-[var(--line)] bg-white/70 backdrop-blur">
         <span class="text-xs text-[var(--muted)]">{{ rangeText }}</span>
         <div class="flex items-center gap-1">
-          <button class="page-btn" :disabled="page <= 1" @click="page--">‹ 上一頁</button>
+          <button class="page-btn"
+                  :disabled="totalPages <= 1"
+                  @click="page = page <= 1 ? totalPages : page - 1">
+            ‹ 上一頁
+          </button>
           <template v-for="(n, i) in pageItems" :key="i">
             <span v-if="n === '…'" class="px-1 text-[var(--muted)] text-sm">…</span>
             <button v-else class="page-btn" :class="{ active: n === page }" @click="page = n">{{ n }}</button>
           </template>
-          <button class="page-btn" :disabled="page >= totalPages" @click="page++">下一頁 ›</button>
+          <button class="page-btn"
+                  :disabled="totalPages <= 1"
+                  @click="page = page >= totalPages ? 1 : page + 1">
+            下一頁 ›
+          </button>
         </div>
       </footer>
     </div>
 
     <!-- ==================== 編輯／新增頁 ==================== -->
     <div v-else key="edit" class="flex-1 min-h-0 flex flex-col">
-
       <header class="shrink-0 px-8 py-4 flex items-center gap-4 border-b border-[var(--line)] bg-white/85 backdrop-blur">
         <button class="btn-ghost flex items-center gap-1.5" @click="backToList">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>返回
+          </svg>
+          返回
         </button>
         <div class="flex-1 min-w-0">
           <div class="text-lg font-bold truncate">
@@ -252,7 +377,6 @@
           </div>
         </div>
 
-        <!-- 編輯模式：自動儲存狀態；新增模式：建立按鈕 -->
         <div v-if="mode === 'edit'" class="flex items-center gap-2 text-sm shrink-0">
           <template v-if="saveState === 'pending' || saveState === 'saving'">
             <span class="save-dot busy"></span><span class="text-[var(--muted)]">儲存中…</span>
@@ -272,11 +396,9 @@
       <main class="flex-1 min-h-0 overflow-y-auto scroll-area px-8 py-6">
         <div class="max-w-5xl mx-auto grid gap-5 md:grid-cols-2">
 
-          <!-- 基本資料（含個人照片上傳） -->
           <section class="sec-card">
             <h2 class="sec-title">基本資料</h2>
 
-            <!-- 個人照片 -->
             <div class="flex items-center gap-4 mb-4 pb-4 border-b border-dashed border-[var(--line)]">
               <img v-if="form.photoUrl" :src="photoSrc(form)" alt="個人照片"
                    class="w-20 h-20 rounded-full object-cover border border-[var(--line)] shrink-0">
@@ -292,7 +414,7 @@
                       {{ uploadingPhoto ? '上傳中…' : (form.photoUrl ? '更換照片' : '上傳照片') }}
                     </button>
                     <button v-if="form.photoUrl" class="btn-ghost !py-1.5 text-sm !text-red-500"
-                            @click="removePhoto">移除</button>
+                            :disabled="uploadingPhoto" @click="removePhoto">移除</button>
                   </div>
                   <p class="text-xs text-[var(--muted)]">選取後可調整位置與大小，圓圈內為顯示範圍</p>
                 </template>
@@ -303,6 +425,13 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3">
+              <label class="block col-span-2">
+                <span class="lbl">所屬單位 <span v-if="mode === 'create'" class="text-red-500">*</span></span>
+                <select class="ipt" v-model="form.unit">
+                  <option value="" disabled>{{ units.length ? '請選擇單位' : '（找不到 單位.json，無法選擇）' }}</option>
+                  <option v-for="u in units" :key="u" :value="u">{{ u }}</option>
+                </select>
+              </label>
               <label v-if="mode === 'create'" class="block col-span-2">
                 <span class="lbl">工號 <span class="text-red-500">*</span>（建立後不可修改）</span>
                 <input class="ipt mono" v-model="form.empNo" placeholder="例：4563">
@@ -321,7 +450,6 @@
                   <option value="">未填寫</option><option>未婚</option><option>已婚</option>
                 </select>
               </label>
-              <!-- 到職日／生日：日期選擇器，固定 yyyy-mm-dd 格式 -->
               <label class="block"><span class="lbl">到職日</span><input type="date" class="ipt mono" v-model="form.hireDate"></label>
               <label class="block"><span class="lbl">生日</span><input type="date" class="ipt mono" v-model="form.birthDate"></label>
               <label class="block"><span class="lbl">血型</span>
@@ -333,7 +461,6 @@
             </div>
           </section>
 
-          <!-- 聯絡資訊 -->
           <section class="sec-card">
             <h2 class="sec-title">聯絡資訊</h2>
             <div class="grid grid-cols-2 gap-3">
@@ -345,7 +472,6 @@
             </div>
           </section>
 
-          <!-- 學歷 -->
           <section class="sec-card">
             <h2 class="sec-title">學歷</h2>
             <div class="space-y-4">
@@ -368,7 +494,6 @@
             </div>
           </section>
 
-          <!-- 經歷 -->
           <section class="sec-card">
             <h2 class="sec-title">經歷</h2>
             <div class="space-y-2">
@@ -390,7 +515,6 @@
             </div>
           </section>
 
-          <!-- 專長與興趣 -->
           <section class="sec-card md:col-span-2">
             <h2 class="sec-title">專長與興趣</h2>
             <div class="grid md:grid-cols-2 gap-3">
@@ -398,7 +522,6 @@
               <label class="block"><span class="lbl">興趣</span><textarea class="ipt" rows="3" v-model="form.interests"></textarea></label>
             </div>
           </section>
-
         </div>
       </main>
     </div>
@@ -411,7 +534,6 @@
         <h3 class="font-bold text-[15px] mb-1">調整個人照片</h3>
         <p class="text-xs text-[var(--muted)] mb-4">拖曳移動位置、滑桿或滾輪縮放，圓圈內為實際顯示範圍</p>
 
-        <!-- 裁切區：固定 320x320，圓圈遮罩模擬頭像 -->
         <div class="crop-viewport mx-auto"
              :style="{ width: CROP_VIEW + 'px', height: CROP_VIEW + 'px', cursor: cropper.dragging ? 'grabbing' : 'grab' }"
              @pointerdown="onCropPointerDown"
@@ -420,11 +542,9 @@
              @pointercancel="onCropPointerUp"
              @wheel.prevent="onCropWheel">
           <img :src="cropper.src" :style="cropImgStyle" alt="">
-          <div class="crop-mask"
-               :style="{ width: CROP_VIEW + 'px', height: CROP_VIEW + 'px', left: 0, top: 0 }"></div>
+          <div class="crop-mask" :style="{ width: CROP_VIEW + 'px', height: CROP_VIEW + 'px', left: 0, top: 0 }"></div>
         </div>
 
-        <!-- 縮放滑桿 -->
         <div class="flex items-center gap-3 mt-4">
           <svg class="w-4 h-4 text-[var(--muted)] shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6" stroke-linecap="round"/>
@@ -446,55 +566,76 @@
     </div>
   </transition>
 
-  <!-- Toast -->
   <transition name="toast">
     <div v-if="toast.show" class="toast-pill">{{ toast.msg }}</div>
   </transition>
 </div>
 
 <script>
-// 若由 Flask 提供頁面則走相對路徑；若直接用 file:// 開啟則指向本機 5000 port
 const API_BASE = location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:5000';
 
+// 所有 API 請求都帶上 session cookie；收到 401（未登入或逾期）時回到登入頁，登入後導回原頁
+async function apiFetch(url, options = {}) {
+  const response = await fetch(url, { credentials: 'include', ...options });
+  if (response.status === 401) {
+    const next = encodeURIComponent(location.pathname + location.search);
+    location.replace(`${API_BASE}/login.html?next=${next}`);
+    throw new Error('UNAUTHORIZED');
+  }
+  return response;
+}
 const { createApp } = Vue;
 
 createApp({
   data() {
     return {
-      view: 'list',        // 'list' 清單頁 | 'edit' 編輯／新增頁
-      mode: 'edit',        // 'edit' 編輯既有資料（自動儲存） | 'create' 新增人員（按「建立」）
+      view: 'list',
+      mode: 'edit',
+      user: null,
+      units: [],
       list: [],
+      loading: true,
       keyword: '',
       page: 1,
-      pageSize: 8,         // 由 recalcLayout() 依視窗大小自動計算
+      pageSize: 8,
       cols: 3,
-      gap: 14,             // 卡片間距(px)，需與 recalcLayout 內 GAP 一致
-      form: {},            // 編輯中的資料副本
-      saving: false,       // 新增模式「建立」進行中
-      saveState: 'saved',  // 自動儲存狀態：saved | pending | saving | error
+      gap: 14,
+      form: {},
+      saving: false,
+      saveState: 'saved',
       uploadingPhoto: false,
       toast: { show: false, msg: '', timer: null },
 
-      // ---------- 照片裁切 ----------
-      CROP_VIEW: 320,      // 裁切視窗大小(px)
+      selectionMode: false,
+      selectedEmpNos: [],
+      deleting: false,
+
+      CROP_VIEW: 320,
       ZOOM_MAX: 3,
       cropper: {
         show: false,
-        src: '',           // 選取圖片的 dataURL
-        iw: 0, ih: 0,      // 圖片原始尺寸
+        src: '',
+        iw: 0,
+        ih: 0,
         zoom: 1,
-        offsetX: 0, offsetY: 0,   // 圖片左上角相對裁切區的位移
+        offsetX: 0,
+        offsetY: 0,
         dragging: false,
-        startX: 0, startY: 0, startOffX: 0, startOffY: 0,
+        startX: 0,
+        startY: 0,
+        startOffX: 0,
+        startOffY: 0,
       },
     };
   },
   computed: {
     filtered() {
-      const k = this.keyword.trim().toLowerCase();
-      if (!k) return this.list;
-      const fields = ['empNo', 'nameZh', 'nameEn', 'mobile', 'phone', 'title'];
-      return this.list.filter(p => fields.some(f => String(p[f] || '').toLowerCase().includes(k)));
+      const keyword = this.keyword.trim().toLowerCase();
+      if (!keyword) return this.list;
+      const fields = ['empNo', 'nameZh', 'nameEn', 'mobile', 'phone', 'title', 'unit'];
+      return this.list.filter(person =>
+        fields.some(field => String(person[field] || '').toLowerCase().includes(keyword))
+      );
     },
     totalPages() {
       return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
@@ -510,40 +651,48 @@ createApp({
       return `第 ${start}–${end} 筆，共 ${this.filtered.length} 筆`;
     },
     pageItems() {
-      const t = this.totalPages, c = this.page;
-      if (t <= 7) return Array.from({ length: t }, (_, i) => i + 1);
-      const keep = [...new Set([1, 2, c - 1, c, c + 1, t - 1, t])]
-        .filter(n => n >= 1 && n <= t)
+      const total = this.totalPages;
+      const current = this.page;
+      if (total <= 7) return Array.from({ length: total }, (_, index) => index + 1);
+
+      const keep = [...new Set([1, 2, current - 1, current, current + 1, total - 1, total])]
+        .filter(number => number >= 1 && number <= total)
         .sort((a, b) => a - b);
-      const out = [];
-      let prev = 0;
-      for (const n of keep) {
-        if (n - prev > 1) out.push('…');
-        out.push(n);
-        prev = n;
+      const output = [];
+      let previous = 0;
+      for (const number of keep) {
+        if (number - previous > 1) output.push('…');
+        output.push(number);
+        previous = number;
       }
-      return out;
+      return output;
     },
-    // 目前縮放比例 = 覆蓋裁切區的基礎比例 × 使用者縮放倍率
     cropScale() {
-      const c = this.cropper;
-      if (!c.iw || !c.ih) return 1;
-      return Math.max(this.CROP_VIEW / c.iw, this.CROP_VIEW / c.ih) * c.zoom;
+      const cropper = this.cropper;
+      if (!cropper.iw || !cropper.ih) return 1;
+      return Math.max(this.CROP_VIEW / cropper.iw, this.CROP_VIEW / cropper.ih) * cropper.zoom;
     },
     cropImgStyle() {
-      const c = this.cropper, s = this.cropScale;
+      const cropper = this.cropper;
+      const scale = this.cropScale;
       return {
-        width: c.iw * s + 'px',
-        height: c.ih * s + 'px',
-        left: c.offsetX + 'px',
-        top: c.offsetY + 'px',
+        width: cropper.iw * scale + 'px',
+        height: cropper.ih * scale + 'px',
+        left: cropper.offsetX + 'px',
+        top: cropper.offsetY + 'px',
       };
     },
   },
   watch: {
-    keyword() { this.page = 1; },
-    totalPages(v) { if (this.page > v) this.page = v; },
-    // 編輯模式下任何欄位變動 → 去抖動後自動儲存
+    keyword() {
+      this.page = 1;
+    },
+    totalPages(value) {
+      if (this.page > value) this.page = value;
+    },
+    pagedList() {
+      this.$nextTick(() => this.animateCards());
+    },
     form: {
       deep: true,
       handler() {
@@ -553,18 +702,20 @@ createApp({
     },
   },
   methods: {
-    initialOf(p) {
-      return (p.nameZh || p.nameEn || '?').trim().charAt(0).toUpperCase() || '?';
+    initialOf(person) {
+      return (person.nameZh || person.nameEn || '?').trim().charAt(0).toUpperCase() || '?';
     },
-    // 照片路徑：後端回傳的相對路徑（/photos/xxx）需加上 API_BASE 才能在 file:// 模式下顯示
-    photoSrc(p) {
-      if (!p.photoUrl) return '';
-      return /^https?:\/\//.test(p.photoUrl) ? p.photoUrl : API_BASE + p.photoUrl;
+    hasMobile(value) {
+      const text = String(value ?? '').trim();
+      return Boolean(text) && text.toLowerCase() !== 'nan';
     },
-    // 空白表單範本（新增人員用）
+    photoSrc(person) {
+      if (!person.photoUrl) return '';
+      return /^https?:\/\//.test(person.photoUrl) ? person.photoUrl : API_BASE + person.photoUrl;
+    },
     emptyForm() {
       return {
-        empNo: '', nameZh: '', title: '', nameEn: '', grade: '', gender: '',
+        empNo: '', unit: '', nameZh: '', title: '', nameEn: '', grade: '', gender: '',
         hireDate: '', blood: '', zodiac: '', emgName: '', birthDate: '',
         emgPhone: '', marriage: '', phone: '', mobile: '', address: '',
         eduTop: { school: '', major: '', period: '' },
@@ -572,74 +723,239 @@ createApp({
         experiences: [], interests: '', skills: '', photoUrl: '', lastModified: '',
       };
     },
-    // 舊資料日期轉為 yyyy-mm-dd（date input 才吃得下）；非日期字串一律清空
-    fixDate(v) {
-      const m = String(v || '').match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
-      return m ? `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}` : '';
+    fixDate(value) {
+      const match = String(value || '').match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+      return match ? `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}` : '';
     },
-    normalize(rec) {
-      rec.eduTop = Object.assign({ school: '', major: '', period: '' }, rec.eduTop || {});
-      rec.eduSecond = Object.assign({ school: '', major: '', period: '' }, rec.eduSecond || {});
-      rec.experiences = Array.isArray(rec.experiences) ? rec.experiences : [];
-      rec.hireDate = this.fixDate(rec.hireDate);
-      rec.birthDate = this.fixDate(rec.birthDate);
-      return rec;
+    normalize(record) {
+      record.eduTop = Object.assign({ school: '', major: '', period: '' }, record.eduTop || {});
+      record.eduSecond = Object.assign({ school: '', major: '', period: '' }, record.eduSecond || {});
+      record.experiences = Array.isArray(record.experiences) ? record.experiences : [];
+      record.unit = record.unit || '';
+      record.hireDate = this.fixDate(record.hireDate);
+      record.birthDate = this.fixDate(record.birthDate);
+      return record;
     },
-    // 更動 form 但不觸發自動儲存（載入資料、寫回伺服器回應時使用）
-    withSuppressedAutoSave(fn) {
+    withSuppressedAutoSave(action) {
       this._suppressAutoSave = true;
-      fn();
-      this.$nextTick(() => { this._suppressAutoSave = false; });
+      action();
+      this.$nextTick(() => {
+        this._suppressAutoSave = false;
+      });
     },
-    // 依卡片區實際寬高計算欄數與每頁筆數，確保清單永不超出一個畫面
     recalcLayout() {
-      const el = this.$refs.gridArea;
-      if (!el) return;
-      const CARD_H = 120;   // 與 CSS 變數 --card-h 一致
+      const element = this.$refs.gridArea;
+      if (!element) return;
+      const CARD_H = 120;
       const GAP = this.gap;
       const MIN_CARD_W = 250;
-      this.cols = Math.max(1, Math.floor((el.clientWidth + GAP) / (MIN_CARD_W + GAP)));
-      const rows = Math.max(1, Math.floor((el.clientHeight + GAP) / (CARD_H + GAP)));
+      this.cols = Math.max(1, Math.floor((element.clientWidth + GAP) / (MIN_CARD_W + GAP)));
+      const rows = Math.max(1, Math.floor((element.clientHeight + GAP) / (CARD_H + GAP)));
       this.pageSize = this.cols * rows;
     },
     async fetchList() {
+      this.loading = true;
       try {
-        const res = await fetch(`${API_BASE}/api/contacts`);
-        if (!res.ok) throw new Error();
-        this.list = await res.json();
-      } catch (e) {
+        const response = await apiFetch(`${API_BASE}/api/contacts`);
+        if (!response.ok) throw new Error();
+        this.list = await response.json();
+        return true;
+      } catch (error) {
         this.showToast('無法連線後端 API，請確認 app.py 已啟動');
+        return false;
+      } finally {
+        this.loading = false;
+        this.$nextTick(() => this.recalcLayout());
       }
     },
+
+    // ---------- 單位 ----------
+    unitShort(unit) {
+      // 「BN40 工廠自動化系統部 2000 先進技術開發組」→ 只顯示最後一段「先進技術開發組」
+      const parts = String(unit || '').trim().split(/\s+/);
+      return parts[parts.length - 1] || '';
+    },
+    async fetchUnits() {
+      try {
+        const response = await apiFetch(`${API_BASE}/api/units`);
+        if (response.ok) this.units = (await response.json()).units || [];
+      } catch (error) {}
+    },
+
+    // ---------- 登入者 ----------
+    async fetchMe() {
+      try {
+        const response = await apiFetch(`${API_BASE}/api/me`);
+        if (response.ok) this.user = await response.json();
+      } catch (error) {}
+    },
+    async logout() {
+      this.flushAutoSave();
+      try {
+        await apiFetch(`${API_BASE}/api/logout`, { method: 'POST' });
+      } catch (error) {}
+      location.replace(`${API_BASE}/login.html`);
+    },
+
+    // ---------- 名牌卡片進場 ----------
+    onViewEnter() {
+      if (this.view !== 'list') return;
+      this.recalcLayout();
+      this.animateCards();
+    },
+    animateCards() {
+      // 同一個畫格內的多次呼叫只執行一次，確保 DOM 已更新完畢
+      cancelAnimationFrame(this._cardAnimFrame);
+      this._cardAnimFrame = requestAnimationFrame(() => this.runCardAnimation());
+    },
+    runCardAnimation() {
+      if (this.view !== 'list') return;
+      const grid = this.$refs.gridArea;
+      if (!grid) return;
+      const cards = grid.querySelectorAll('.badge-card');
+      if (!cards.length) return;
+      if (typeof anime === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const reset = () => cards.forEach(card => {
+        card.style.opacity = '';
+        card.style.transform = '';
+        card.classList.remove('entering');
+      });
+      anime.remove(cards);
+      reset();
+      cards.forEach(card => card.classList.add('entering'));
+      anime({
+        targets: cards,
+        opacity: [0, 1],
+        translateY: [10, 0],
+        duration: 360,
+        delay: anime.stagger(26),
+        easing: 'easeOutCubic',
+        complete: reset,
+      });
+    },
+
+    // ---------- 批次選取與移除 ----------
+    startSelection() {
+      this.selectedEmpNos = [];
+      this.selectionMode = true;
+    },
+    cancelSelection() {
+      if (this.deleting) return;
+      this.selectedEmpNos = [];
+      this.selectionMode = false;
+    },
+    isSelected(empNo) {
+      return this.selectedEmpNos.includes(String(empNo));
+    },
+    toggleSelection(empNo) {
+      const key = String(empNo);
+      const index = this.selectedEmpNos.indexOf(key);
+      if (index === -1) {
+        this.selectedEmpNos.push(key);
+      } else {
+        this.selectedEmpNos.splice(index, 1);
+      }
+    },
+    async deleteSelected() {
+      if (!this.selectedEmpNos.length || this.deleting) return;
+
+      const selectedPeople = this.list.filter(person =>
+        this.selectedEmpNos.includes(String(person.empNo))
+      );
+      const preview = selectedPeople
+        .slice(0, 5)
+        .map(person => `${person.nameZh || '未填姓名'}（${person.empNo}）`)
+        .join('、');
+      const more = selectedPeople.length > 5 ? ` 等 ${selectedPeople.length} 位` : '';
+      const confirmed = window.confirm(
+        `確定要移除 ${preview}${more}？\n\n人員資料與個人照片會一併移除，此動作無法復原。`
+      );
+      if (!confirmed) return;
+
+      this.deleting = true;
+      try {
+        const response = await apiFetch(`${API_BASE}/api/contacts/batch-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ empNos: this.selectedEmpNos }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(result.error || '移除失敗');
+        }
+
+        const deletedCount = Array.isArray(result.deleted) ? result.deleted.length : 0;
+        const failedCount = Array.isArray(result.failed) ? result.failed.length : 0;
+        this.selectedEmpNos = [];
+        this.selectionMode = false;
+
+        await this.fetchList();
+        if (failedCount) {
+          this.showToast(`已移除 ${deletedCount} 位，另有 ${failedCount} 位移除失敗`);
+        } else {
+          this.showToast(`已成功移除 ${deletedCount} 位人員`);
+        }
+      } catch (error) {
+        this.showToast(error.message || '移除失敗');
+      } finally {
+        this.deleting = false;
+      }
+    },
+
     openCreate() {
-      this.withSuppressedAutoSave(() => { this.form = this.emptyForm(); });
+      this.withSuppressedAutoSave(() => {
+        this.form = this.emptyForm();
+      });
       this.mode = 'create';
       this.view = 'edit';
     },
-    async openEdit(p) {
+    async openEdit(person) {
       try {
-        const res = await fetch(`${API_BASE}/api/contacts/${encodeURIComponent(p.empNo)}`);
-        if (!res.ok) throw new Error();
-        const rec = this.normalize(await res.json());
-        this.withSuppressedAutoSave(() => { this.form = rec; });
+        const response = await apiFetch(`${API_BASE}/api/contacts/${encodeURIComponent(person.empNo)}`);
+        if (!response.ok) throw new Error();
+        const record = this.normalize(await response.json());
+        this.withSuppressedAutoSave(() => {
+          this.form = record;
+        });
         this.mode = 'edit';
         this.saveState = 'saved';
         this.view = 'edit';
-      } catch (e) {
+      } catch (error) {
         this.showToast('讀取資料失敗');
       }
     },
     backToList() {
-      this.flushAutoSave();   // 有未送出的變更就立即送出
+      this.flushAutoSave();
       this.view = 'list';
       this.$nextTick(() => this.recalcLayout());
     },
 
-    // ---------- 自動儲存（編輯模式） ----------
+    handlePageKeydown(event) {
+      if (this.view !== 'list') return;
+
+      const target = event.target;
+      if (
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        this.page = this.page <= 1 ? this.totalPages : this.page - 1;
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        this.page = this.page >= this.totalPages ? 1 : this.page + 1;
+      }
+    },
+
+    // ---------- 自動儲存 ----------
     queueAutoSave() {
       this.saveState = 'pending';
       clearTimeout(this._saveTimer);
-      this._saveTimer = setTimeout(() => this.autoSave(), 800);   // 停止輸入 0.8 秒後儲存
+      this._saveTimer = setTimeout(() => this.autoSave(), 800);
     },
     flushAutoSave() {
       if (this._saveTimer) {
@@ -655,23 +971,22 @@ createApp({
 
       this.saveState = 'saving';
       try {
-        const res = await fetch(`${API_BASE}/api/contacts/${encodeURIComponent(this.form.empNo)}`, {
+        const response = await apiFetch(`${API_BASE}/api/contacts/${encodeURIComponent(this.form.empNo)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.form),
         });
-        if (!res.ok) throw new Error();
-        const updated = await res.json();
+        if (!response.ok) throw new Error();
+        const updated = await response.json();
 
-        this.withSuppressedAutoSave(() => { this.form.lastModified = updated.lastModified; });
-        const i = this.list.findIndex(x => String(x.empNo) === String(updated.empNo));
-        if (i > -1) this.list.splice(i, 1, updated);
-
-        // 儲存期間若又有新輸入（已排入新 timer），維持「儲存中」顯示
+        this.withSuppressedAutoSave(() => {
+          this.form.lastModified = updated.lastModified;
+        });
+        const index = this.list.findIndex(item => String(item.empNo) === String(updated.empNo));
+        if (index > -1) this.list.splice(index, 1, updated);
         if (!this._saveTimer) this.saveState = 'saved';
-      } catch (e) {
+      } catch (error) {
         this.saveState = 'error';
-        // 3 秒後自動重試
         clearTimeout(this._retryTimer);
         this._retryTimer = setTimeout(() => {
           if (this.view === 'edit' && this.mode === 'edit') this.autoSave();
@@ -679,45 +994,50 @@ createApp({
       }
     },
 
-    // ---------- 新增人員（按「建立」） ----------
     async createPerson() {
+      if (this.units.length && !this.form.unit) {
+        this.showToast('請先選擇所屬單位');
+        return;
+      }
       if (!String(this.form.empNo || '').trim()) {
         this.showToast('請先輸入工號');
         return;
       }
       this.saving = true;
       try {
-        const res = await fetch(`${API_BASE}/api/contacts`, {
+        const response = await apiFetch(`${API_BASE}/api/contacts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.form),
         });
-        if (!res.ok) {
-          let msg = '新增失敗';
+        if (!response.ok) {
+          let message = '新增失敗';
           try {
-            const err = await res.json();
-            if (err && err.error) msg = err.error;   // 例如「工號 4563 已存在」
+            const error = await response.json();
+            if (error && error.error) message = error.error;
           } catch (_) {}
-          this.showToast(msg);
+          this.showToast(message);
           return;
         }
-        const updated = await res.json();
-        this.withSuppressedAutoSave(() => { this.form = this.normalize(updated); });
+        const updated = await response.json();
+        this.withSuppressedAutoSave(() => {
+          this.form = this.normalize(updated);
+        });
         this.list.push(updated);
-        this.mode = 'edit';       // 建立完成後轉為編輯模式：之後的修改自動儲存、可上傳照片
+        this.mode = 'edit';
         this.saveState = 'saved';
         this.showToast('已新增人員，之後的修改會自動儲存');
-      } catch (e) {
+      } catch (error) {
         this.showToast('新增失敗');
       } finally {
         this.saving = false;
       }
     },
 
-    // ---------- 個人照片：選取 → 裁切視窗 → 上傳 ----------
-    onPhotoPicked(e) {
-      const file = e.target.files && e.target.files[0];
-      e.target.value = '';   // 清空，讓同一檔案可重複選取
+    // ---------- 個人照片 ----------
+    onPhotoPicked(event) {
+      const file = event.target.files && event.target.files[0];
+      event.target.value = '';
       if (!file) return;
       if (!/^image\//.test(file.type)) {
         this.showToast('請選擇圖片檔');
@@ -728,89 +1048,87 @@ createApp({
       reader.onerror = () => this.showToast('無法讀取圖片');
       reader.readAsDataURL(file);
     },
-    openCropper(src) {
-      const img = new Image();
-      img.onload = () => {
-        this._cropImg = img;   // 保留原圖供 canvas 裁切（不放進 reactive data）
-        const c = this.cropper;
-        c.iw = img.naturalWidth;
-        c.ih = img.naturalHeight;
-        c.zoom = 1;
-        c.src = src;
-        // 置中
-        const s = Math.max(this.CROP_VIEW / c.iw, this.CROP_VIEW / c.ih);
-        c.offsetX = (this.CROP_VIEW - c.iw * s) / 2;
-        c.offsetY = (this.CROP_VIEW - c.ih * s) / 2;
-        c.show = true;
+    openCropper(source) {
+      const image = new Image();
+      image.onload = () => {
+        this._cropImg = image;
+        const cropper = this.cropper;
+        cropper.iw = image.naturalWidth;
+        cropper.ih = image.naturalHeight;
+        cropper.zoom = 1;
+        cropper.src = source;
+        const scale = Math.max(this.CROP_VIEW / cropper.iw, this.CROP_VIEW / cropper.ih);
+        cropper.offsetX = (this.CROP_VIEW - cropper.iw * scale) / 2;
+        cropper.offsetY = (this.CROP_VIEW - cropper.ih * scale) / 2;
+        cropper.show = true;
       };
-      img.onerror = () => this.showToast('無法讀取圖片');
-      img.src = src;
+      image.onerror = () => this.showToast('無法讀取圖片');
+      image.src = source;
     },
     closeCropper() {
       this.cropper.show = false;
       this.cropper.src = '';
       this._cropImg = null;
     },
-    // 位移不得讓圖片邊緣露出裁切區
     clampOffsets() {
-      const c = this.cropper, s = this.cropScale;
-      const minX = this.CROP_VIEW - c.iw * s;
-      const minY = this.CROP_VIEW - c.ih * s;
-      c.offsetX = Math.min(0, Math.max(minX, c.offsetX));
-      c.offsetY = Math.min(0, Math.max(minY, c.offsetY));
+      const cropper = this.cropper;
+      const scale = this.cropScale;
+      const minX = this.CROP_VIEW - cropper.iw * scale;
+      const minY = this.CROP_VIEW - cropper.ih * scale;
+      cropper.offsetX = Math.min(0, Math.max(minX, cropper.offsetX));
+      cropper.offsetY = Math.min(0, Math.max(minY, cropper.offsetY));
     },
-    // 縮放時以裁切區中心為基準點，避免畫面跳動
     applyZoom(newZoom) {
-      const c = this.cropper;
+      const cropper = this.cropper;
       newZoom = Math.min(this.ZOOM_MAX, Math.max(1, newZoom));
-      const base = Math.max(this.CROP_VIEW / c.iw, this.CROP_VIEW / c.ih);
-      const s1 = base * c.zoom;
-      const s2 = base * newZoom;
-      const cx = (this.CROP_VIEW / 2 - c.offsetX) / s1;
-      const cy = (this.CROP_VIEW / 2 - c.offsetY) / s1;
-      c.zoom = newZoom;
-      c.offsetX = this.CROP_VIEW / 2 - cx * s2;
-      c.offsetY = this.CROP_VIEW / 2 - cy * s2;
+      const base = Math.max(this.CROP_VIEW / cropper.iw, this.CROP_VIEW / cropper.ih);
+      const oldScale = base * cropper.zoom;
+      const newScale = base * newZoom;
+      const centerX = (this.CROP_VIEW / 2 - cropper.offsetX) / oldScale;
+      const centerY = (this.CROP_VIEW / 2 - cropper.offsetY) / oldScale;
+      cropper.zoom = newZoom;
+      cropper.offsetX = this.CROP_VIEW / 2 - centerX * newScale;
+      cropper.offsetY = this.CROP_VIEW / 2 - centerY * newScale;
       this.clampOffsets();
     },
-    onCropWheel(e) {
-      this.applyZoom(this.cropper.zoom - Math.sign(e.deltaY) * 0.12);
+    onCropWheel(event) {
+      this.applyZoom(this.cropper.zoom - Math.sign(event.deltaY) * 0.12);
     },
-    onCropPointerDown(e) {
-      const c = this.cropper;
-      c.dragging = true;
-      c.startX = e.clientX;
-      c.startY = e.clientY;
-      c.startOffX = c.offsetX;
-      c.startOffY = c.offsetY;
-      e.currentTarget.setPointerCapture(e.pointerId);
+    onCropPointerDown(event) {
+      const cropper = this.cropper;
+      cropper.dragging = true;
+      cropper.startX = event.clientX;
+      cropper.startY = event.clientY;
+      cropper.startOffX = cropper.offsetX;
+      cropper.startOffY = cropper.offsetY;
+      event.currentTarget.setPointerCapture(event.pointerId);
     },
-    onCropPointerMove(e) {
-      const c = this.cropper;
-      if (!c.dragging) return;
-      c.offsetX = c.startOffX + (e.clientX - c.startX);
-      c.offsetY = c.startOffY + (e.clientY - c.startY);
+    onCropPointerMove(event) {
+      const cropper = this.cropper;
+      if (!cropper.dragging) return;
+      cropper.offsetX = cropper.startOffX + (event.clientX - cropper.startX);
+      cropper.offsetY = cropper.startOffY + (event.clientY - cropper.startY);
       this.clampOffsets();
     },
     onCropPointerUp() {
       this.cropper.dragging = false;
     },
-    // 依目前位置與縮放，用 canvas 裁出正方形（512x512）後上傳
     async confirmCrop() {
-      const c = this.cropper, img = this._cropImg;
-      if (!img) return;
-      const OUTPUT = 512;
-      const s = this.cropScale;
-      const sx = -c.offsetX / s;
-      const sy = -c.offsetY / s;
-      const sw = this.CROP_VIEW / s;
+      const cropper = this.cropper;
+      const image = this._cropImg;
+      if (!image) return;
 
+      const OUTPUT = 512;
+      const scale = this.cropScale;
+      const sourceX = -cropper.offsetX / scale;
+      const sourceY = -cropper.offsetY / scale;
+      const sourceWidth = this.CROP_VIEW / scale;
       const canvas = document.createElement('canvas');
       canvas.width = OUTPUT;
       canvas.height = OUTPUT;
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, sx, sy, sw, sw, 0, 0, OUTPUT, OUTPUT);
+      const context = canvas.getContext('2d');
+      context.imageSmoothingQuality = 'high';
+      context.drawImage(image, sourceX, sourceY, sourceWidth, sourceWidth, 0, 0, OUTPUT, OUTPUT);
 
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
       if (!blob) {
@@ -820,60 +1138,92 @@ createApp({
       await this.uploadPhotoBlob(blob);
     },
     async uploadPhotoBlob(blob) {
-      const fd = new FormData();
-      fd.append('photo', blob, 'avatar.jpg');
+      const formData = new FormData();
+      formData.append('photo', blob, 'avatar.jpg');
       this.uploadingPhoto = true;
       try {
-        const res = await fetch(`${API_BASE}/api/contacts/${encodeURIComponent(this.form.empNo)}/photo`, {
+        const response = await apiFetch(`${API_BASE}/api/contacts/${encodeURIComponent(this.form.empNo)}/photo`, {
           method: 'POST',
-          body: fd,
+          body: formData,
         });
-        if (!res.ok) throw new Error();
-        const updated = await res.json();
-        // 後端已存檔，寫回 form 時不需再觸發一次自動儲存
+        if (!response.ok) throw new Error();
+        const updated = await response.json();
         this.withSuppressedAutoSave(() => {
           this.form.photoUrl = updated.photoUrl;
           this.form.lastModified = updated.lastModified;
         });
-        const i = this.list.findIndex(x => String(x.empNo) === String(updated.empNo));
-        if (i > -1) {
-          this.list.splice(i, 1, Object.assign({}, this.list[i], {
+        const index = this.list.findIndex(item => String(item.empNo) === String(updated.empNo));
+        if (index > -1) {
+          this.list.splice(index, 1, Object.assign({}, this.list[index], {
             photoUrl: updated.photoUrl,
             lastModified: updated.lastModified,
           }));
         }
         this.closeCropper();
         this.showToast('照片已更新');
-      } catch (err) {
+      } catch (error) {
         this.showToast('照片上傳失敗');
       } finally {
         this.uploadingPhoto = false;
       }
     },
-    removePhoto() {
-      this.form.photoUrl = '';   // 交由自動儲存寫回後端
-      this.showToast('已移除照片');
+    async removePhoto() {
+      if (!this.form.empNo || this.uploadingPhoto) return;
+      if (!window.confirm('確定要移除這張照片？照片檔會一併刪除，無法復原。')) return;
+
+      this.uploadingPhoto = true;
+      try {
+        const response = await apiFetch(`${API_BASE}/api/contacts/${encodeURIComponent(this.form.empNo)}/photo`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) throw new Error();
+        const updated = await response.json();
+        this.withSuppressedAutoSave(() => {
+          this.form.photoUrl = '';
+          this.form.lastModified = updated.lastModified;
+        });
+        const index = this.list.findIndex(item => String(item.empNo) === String(updated.empNo));
+        if (index > -1) {
+          this.list.splice(index, 1, Object.assign({}, this.list[index], {
+            photoUrl: '',
+            lastModified: updated.lastModified,
+          }));
+        }
+        this.showToast('照片已移除');
+      } catch (error) {
+        this.showToast('移除照片失敗');
+      } finally {
+        this.uploadingPhoto = false;
+      }
     },
-    showToast(msg) {
+    showToast(message) {
       clearTimeout(this.toast.timer);
-      this.toast.msg = msg;
+      this.toast.msg = message;
       this.toast.show = true;
-      this.toast.timer = setTimeout(() => (this.toast.show = false), 2200);
+      this.toast.timer = setTimeout(() => {
+        this.toast.show = false;
+      }, 2200);
     },
   },
   mounted() {
     this._suppressAutoSave = false;
     this._saveTimer = null;
     this._retryTimer = null;
+    this._cardAnimFrame = 0;
+    this.fetchMe();
+    this.fetchUnits();
     this.fetchList();
     this._onResize = () => this.recalcLayout();
     window.addEventListener('resize', this._onResize);
+    window.addEventListener('keydown', this.handlePageKeydown);
     this.$nextTick(() => this.recalcLayout());
   },
   beforeUnmount() {
     window.removeEventListener('resize', this._onResize);
+    window.removeEventListener('keydown', this.handlePageKeydown);
     clearTimeout(this._saveTimer);
     clearTimeout(this._retryTimer);
+    cancelAnimationFrame(this._cardAnimFrame);
   },
 }).mount('#app');
 </script>
