@@ -574,12 +574,17 @@
 <script>
 const API_BASE = location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:5000';
 
-// 所有 API 請求都帶上 session cookie；收到 401（未登入或逾期）時回到登入頁，登入後導回原頁
+// 所有 API 請求都夾帶登入 token（Authorization: Bearer，存於 localStorage）；
+// 收到 401（未登入或 token 逾期）時，直接用前端 window.location 跳回同資料夾的 login.html，
+// 因此用 file:// 開啟時網址會保持 file:///D:/... 的形式。
 async function apiFetch(url, options = {}) {
-  const response = await fetch(url, { credentials: 'include', ...options });
+  const headers = { ...(options.headers || {}) };
+  const token = localStorage.getItem('authToken');
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(url, { credentials: 'include', ...options, headers });
   if (response.status === 401) {
-    const next = encodeURIComponent(location.pathname + location.search);
-    location.replace(`${API_BASE}/login.html?next=${next}`);
+    localStorage.removeItem('authToken');
+    window.location.replace('login.html');
     throw new Error('UNAUTHORIZED');
   }
   return response;
@@ -794,7 +799,8 @@ createApp({
       try {
         await apiFetch(`${API_BASE}/api/logout`, { method: 'POST' });
       } catch (error) {}
-      location.replace(`${API_BASE}/login.html`);
+      localStorage.removeItem('authToken');
+      window.location.replace('login.html');
     },
 
     // ---------- 名牌卡片進場 ----------

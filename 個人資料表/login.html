@@ -274,11 +274,23 @@
   const eyeShow = $('eyeShow');
   const eyeHide = $('eyeHide');
 
-  // 只接受站內相對路徑，避免被導向外部網址
-  function safeNext() {
-    const raw = new URLSearchParams(location.search).get('next') || '/index.html';
-    return /^\/(?![\/\\])/.test(raw) ? raw : '/index.html';
-  }
+  // 已有有效 token（例如勾過「保持登入」）就直接進主頁，跳轉一律用前端 window.location，
+  // 用 file:// 開啟時網址會保持 file:///D:/... 的形式
+  (async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    try {
+      const response = await fetch(`${API_BASE}/api/me`, {
+        credentials: 'include',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (response.ok) {
+        window.location.replace('index.html');
+      } else {
+        localStorage.removeItem('authToken');
+      }
+    } catch (error) {}
+  })();
 
   // ---------- 進場：線路描繪 → 節點亮起 → 訊號流動 → 文字與表單浮現 ----------
   if (!canAnimate) {
@@ -393,10 +405,11 @@
         return;
       }
 
-      // 成功：按鈕顯示歡迎字樣，卡片淡出後前往原本要去的頁面
+      // 成功：存下 token，按鈕顯示歡迎字樣，卡片淡出後用前端跳轉到同資料夾的 index.html
+      if (result.token) localStorage.setItem('authToken', result.token);
       btnSpin.classList.add('hidden');
       btnLabel.textContent = `歡迎，${(result.user && result.user.name) || user}`;
-      const go = () => location.replace(API_BASE + safeNext());
+      const go = () => window.location.replace('index.html');
       if (canAnimate) {
         anime({
           targets: form,
