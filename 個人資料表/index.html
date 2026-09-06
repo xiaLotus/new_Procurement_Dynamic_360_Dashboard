@@ -88,6 +88,15 @@
   }
   .user-logout:hover{background:var(--danger-soft);color:var(--danger)}
 
+  /* ---------- 單位篩選 ---------- */
+  .unit-chip{
+    padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;
+    font-size:12.5px;color:var(--muted);white-space:nowrap;
+    transition:background .15s, color .15s, border-color .15s;
+  }
+  .unit-chip:hover{border-color:#BFD8D6;color:var(--accent);background:var(--accent-soft)}
+  .unit-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+
   /* ---------- 表單 ---------- */
   .sec-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
   .sec-title{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin-bottom:14px}
@@ -211,7 +220,9 @@
           <span v-if="selectionMode" class="text-sm font-medium text-[var(--accent)]">
             已選擇 {{ selectedEmpNos.length }} 位
           </span>
-          <span v-else class="text-sm text-[var(--muted)]">共 {{ list.length }} 位人員</span>
+          <span v-else class="text-sm text-[var(--muted)]">
+            {{ (unitFilter || keyword.trim()) ? `符合 ${filtered.length} 位` : `共 ${list.length} 位人員` }}
+          </span>
 
           <template v-if="selectionMode">
             <button class="btn-ghost !py-2" :disabled="deleting" @click="cancelSelection">
@@ -266,6 +277,17 @@
               </svg>
             </button>
           </div>
+        </div>
+
+        <div v-if="units.length" class="w-full flex flex-wrap items-center gap-2 pt-1">
+          <button class="unit-chip" :class="{ active: unitFilter === '' }" @click="unitFilter = ''">
+            全部
+          </button>
+          <button v-for="f in unitFilters" :key="f.name"
+                  class="unit-chip" :class="{ active: unitFilter === f.name }" :title="f.name"
+                  @click="unitFilter = unitFilter === f.name ? '' : f.name">
+            {{ f.label }}
+          </button>
         </div>
       </header>
 
@@ -601,6 +623,7 @@ createApp({
       list: [],
       loading: true,
       keyword: '',
+      unitFilter: '',
       page: 1,
       pageSize: 8,
       cols: 3,
@@ -636,11 +659,31 @@ createApp({
   computed: {
     filtered() {
       const keyword = this.keyword.trim().toLowerCase();
-      if (!keyword) return this.list;
+      let list = this.list;
+      if (this.unitFilter) {
+        list = list.filter(person => person.unit === this.unitFilter);
+      }
+      if (!keyword) return list;
       const fields = ['empNo', 'nameZh', 'nameEn', 'mobile', 'phone', 'title', 'unit'];
-      return this.list.filter(person =>
+      return list.filter(person =>
         fields.some(field => String(person[field] || '').toLowerCase().includes(keyword))
       );
+    },
+    unitFilters() {
+      // 按鈕用組別簡稱；簡稱撞名時（例如兩個「自動化維運二組」）前面補上廠區辨識
+      const counts = {};
+      for (const unit of this.units) {
+        const short = this.unitShort(unit);
+        counts[short] = (counts[short] || 0) + 1;
+      }
+      return this.units.map(unit => {
+        const parts = String(unit).trim().split(/\s+/);
+        const short = parts[parts.length - 1] || unit;
+        const label = counts[short] > 1 && parts.length > 1
+          ? `${parts[1].slice(0, 3)}·${short}`
+          : short;
+        return { name: unit, label };
+      });
     },
     totalPages() {
       return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
@@ -690,6 +733,9 @@ createApp({
   },
   watch: {
     keyword() {
+      this.page = 1;
+    },
+    unitFilter() {
       this.page = 1;
     },
     totalPages(value) {
