@@ -1,5 +1,6 @@
 const { createApp } = Vue;
 const API_BASE_URL = 'http://127.0.0.1:5000/api';
+// const API_BASE_URL = 'http://10.11.104.247:7001/api';
 
 // 標準化姓名函數
 function normalizeName(name) {
@@ -23,11 +24,13 @@ createApp({
  data() {
    return {
      selectedItems: [],
-     isSending: false
+     isSending: false,
+     remarkOptions: []   // 由後台 accMailData.json 載入
    };
  },
  
  async mounted() {
+   await this.loadRemarkOptions();
    await this.loadSelectedItems();
  },
  
@@ -36,12 +39,17 @@ createApp({
      window.location.href = 'accCheck.html';
    },
    
+    // 判斷備註選項是否需要使用者補上內容（以「：」或「:」結尾）
+    isFillInRemark(text) {
+      const t = String(text || '').trim();
+      return t === '尚未領料： 最後領料日為：' || /[:：]$/.test(t);
+    },
+
     onRemarksChange(item) {
-      if (item.remarks === '尚未領料： 最後領料日為：') {
+      if (this.isFillInRemark(item.remarks)) {
+        // 切換為 textarea，讓使用者補日期 / 內容
         item.showTextarea = true;
         item.isCustomRemark = false;
-        // 設定起始內容，讓使用者補日期
-        item.remarks = '尚未領料： 最後領料日為：';
       } else if (item.remarks === '__custom__') {
         // ✏️ 自行輸入：切換為空白 textarea 讓使用者自由輸入內文
         item.showTextarea = true;
@@ -55,6 +63,137 @@ createApp({
       item.showTextarea = false;
       item.isCustomRemark = false;
       item.remarks = '';
+    },
+
+    // ===== 備註選項（accMailData.json）=====
+    async loadRemarkOptions() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/acc-mail-remarks`);
+        if (!res.ok) throw new Error('無法取得備註選項');
+        const result = await res.json();
+        this.remarkOptions = result.remarks || [];
+      } catch (err) {
+        console.error('載入備註選項失敗:', err);
+        this.remarkOptions = [];
+        Swal.fire({ icon: 'error', title: '載入備註選項失敗', text: err.message, confirmButtonText: '確定' });
+      }
+    },
+
+    async addRemarkOption(text) {
+      const remark = String(text || '').trim();
+      if (!remark) {
+        await Swal.fire({ icon: 'warning', title: '備註內容不可為空', confirmButtonText: '確定' });
+        return false;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/acc-mail-remarks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ remark })
+        });
+        const result = await res.json();
+        if (!res.ok || !result.success) throw new Error(result.message || '新增失敗');
+        this.remarkOptions = result.remarks || [];
+        return true;
+      } catch (err) {
+        console.error('新增備註選項失敗:', err);
+        await Swal.fire({ icon: 'error', title: '新增失敗', text: err.message, confirmButtonText: '確定' });
+        return false;
+      }
+    },
+
+    async removeRemarkOption(text) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/acc-mail-remarks`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ remark: text })
+        });
+        const result = await res.json();
+        if (!res.ok || !result.success) throw new Error(result.message || '移除失敗');
+        this.remarkOptions = result.remarks || [];
+        return true;
+      } catch (err) {
+        console.error('移除備註選項失敗:', err);
+        await Swal.fire({ icon: 'error', title: '移除失敗', text: err.message, confirmButtonText: '確定' });
+        return false;
+      }
+    },
+
+    // 自行輸入 textarea 旁的「＋」：把目前輸入內容存成備註選項
+    async saveRemarkAsOption(item) {
+      const ok = await this.addRemarkOption(item.remarks);
+      if (ok) {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: '已新增為備註選項', timer: 1500, showConfirmButton: false });
+      }
+    },
+
+    // 管理備註選項視窗（SweetAlert2）
+    openRemarkManager() {
+      const escapeHtml = (s) => String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+      const renderList = () => {
+        if (this.remarkOptions.length === 0) {
+          return '<div class="text-gray-400 text-sm py-4">目前沒有任何備註選項</div>';
+        }
+        return this.remarkOptions.map(opt => `
+          <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-200 text-left text-sm">
+            <span class="flex-1 break-all">${escapeHtml(opt)}</span>
+            <button type="button"
+              class="remark-del-btn shrink-0 text-red-500 hover:text-red-700 px-2"
+              data-remark="${escapeHtml(opt)}"
+              title="移除">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>`).join('');
+      };
+
+      Swal.fire({
+        title: '管理備註選項',
+        width: 640,
+        html: `
+          <div class="flex gap-2 mb-3">
+            <input id="remark-new-input" type="text"
+              class="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm"
+              placeholder="輸入新的備註內容（以「：」結尾可讓使用者補內容）">
+            <button type="button" id="remark-add-btn"
+              class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
+              <i class="fas fa-plus mr-1"></i>新增
+            </button>
+          </div>
+          <div id="remark-list" class="max-h-80 overflow-y-auto border rounded">${renderList()}</div>
+        `,
+        showConfirmButton: true,
+        confirmButtonText: '關閉',
+        confirmButtonColor: '#6B7280',
+        didOpen: () => {
+          const popup = Swal.getPopup();
+          const listEl = popup.querySelector('#remark-list');
+          const inputEl = popup.querySelector('#remark-new-input');
+          const addBtn = popup.querySelector('#remark-add-btn');
+
+          const refresh = () => { listEl.innerHTML = renderList(); };
+
+          const doAdd = async () => {
+            const ok = await this.addRemarkOption(inputEl.value);
+            if (ok) { inputEl.value = ''; refresh(); }
+            inputEl.focus();
+          };
+
+          addBtn.addEventListener('click', doAdd);
+          inputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') doAdd(); });
+
+          // 事件委派：刪除按鈕
+          listEl.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.remark-del-btn');
+            if (!btn) return;
+            const remark = btn.dataset.remark;
+            const ok = await this.removeRemarkOption(remark);
+            if (ok) refresh();
+          });
+        }
+      });
     },
    async loadSelectedItems() {
      const selectedItemsJson = localStorage.getItem('selectedItems');
@@ -78,8 +217,8 @@ createApp({
            // 修正取件者姓名
            pickupPerson: normalizeName(item.pickupPerson),
            totalQuantity: item.totalQuantity || item.quantity || '',
-            remarks: item.remarks || '設備修改類, 請 User 提供照片結案', 
-            showTextarea: item.remarks === '尚未領料： 最後領料日為：',
+            remarks: item.remarks || this.remarkOptions[0] || '',
+            showTextarea: this.isFillInRemark(item.remarks),
            // 預設狀態
            materialStatus: 'pending',
            receivedStatus: 'pending', 

@@ -26,11 +26,14 @@ VENDER_FILE_PATH = f'static/data/vender.ini'
 app = Flask(__name__)
 CORS(app)
 CSV_FILE = "static/data/Planned_Purchase_Request_List.csv"
+# CSV_FILE = rf"\\KHA3CIMSEN1\Data\ePR_Data\Planned_Purchase_Request_List.csv"
 JSON_FILE = f"static/data/money.json"
 BUYER_FILE = f"static/data/Buyer_detail.csv"
+# BUYER_FILE = f"\\KHA3CIMSEN1\Data\ePR_Data\Buyer_detail.csv"
 CONFIG_FILE = "config.cfg"
 PHONE_FILE = "static/data/phone.json"
 DELIVERY_RECEIPT_FILE = "static/data/delivery_receipt.csv"
+# DELIVERY_RECEIPT_FILE = rf"D:\Data\ePR_Data\delivery_receipt.csv"
 UPLOAD_DIR = "uploads"
 
 def read_json_file():
@@ -1430,7 +1433,8 @@ def add_vender():
 
 
 # eHub 處理
-BUYER_FILE_LOCK = f"static/data/Buyer_detail.csv.lock"  # 🔒 鎖檔案路徑
+# BUYER_FILE_LOCK = f"static/data/Buyer_detail.csv.lock"  # 🔒 鎖檔案路徑
+BUYER_FILE_LOCK = f"{BUYER_FILE}.lock" 
 
 from difflib import SequenceMatcher
 buyer_file_lock = FileLock(BUYER_FILE_LOCK, timeout=10)
@@ -3302,7 +3306,7 @@ def upload_buyer_detail():
         engine = 'openpyxl' if ext == '.xlsx' else 'xlrd'
         df = pd.read_excel(file, engine=engine)  # 這行最容易報錯
         df.to_csv(DELIVERY_RECEIPT_FILE, index=False, encoding="utf-8-sig")
-        logger.info("💾 已儲存為 static/data/delivery_receipt.csv，開始進行對 Buyer detail 該表數據更新")
+        logger.info(r"💾 已儲存為 D:\Data\ePR_Data\delivery_receipt.csv，開始進行對 Buyer detail 該表數據更新")
 
 
         output_df = pd.read_csv(DELIVERY_RECEIPT_FILE, encoding="utf-8-sig", dtype=str)
@@ -4156,11 +4160,11 @@ def cleanup_processed():
                         if os.path.isfile(file_path) or os.path.islink(file_path):
                             os.unlink(file_path)
                             total_files_removed += 1
-                            print(f"已刪除 processed 文件: {filename}")
+                            logger.info(f"已刪除 processed 文件: {filename}")
                         elif os.path.isdir(file_path):
                             shutil.rmtree(file_path)
                             total_files_removed += 1
-                            print(f"已刪除 processed 目錄: {filename}")
+                            logger.info(f"已刪除 processed 目錄: {filename}")
                     except Exception as e:
                         logger.error(f"無法刪除 processed 文件 {file_path}: {str(e)}")
         
@@ -4174,11 +4178,11 @@ def cleanup_processed():
                         if os.path.isfile(file_path) or os.path.islink(file_path):
                             os.unlink(file_path)
                             total_files_removed += 1
-                            print(f"已刪除 upload 文件: {filename}")
+                            logger.info(f"已刪除 upload 文件: {filename}")
                         elif os.path.isdir(file_path):
                             shutil.rmtree(file_path)
                             total_files_removed += 1
-                            print(f"已刪除 upload 目錄: {filename}")
+                            logger.info(f"已刪除 upload 目錄: {filename}")
                     except Exception as e:
                         logger.error(f"無法刪除 upload 文件 {file_path}: {str(e)}")
         
@@ -4186,7 +4190,7 @@ def cleanup_processed():
         processed_files_after = os.listdir(processed_folder) if os.path.exists(processed_folder) else []
         upload_files_after = os.listdir(upload_folder) if os.path.exists(upload_folder) else []
         
-        print(f"清理完成: 刪除了 {total_files_removed} 個文件")
+        logger.info(f"清理完成: 刪除了 {total_files_removed} 個文件")
         
         return jsonify({
             'success': True,
@@ -4217,7 +4221,7 @@ def update_buyer_csv():
         if not items_to_update:
             return jsonify({'success': False, 'error': '沒有要更新的項目'}), 400
         
-        print(f"準備更新 {len(items_to_update)} 筆資料")
+        logger.info(f"準備更新 {len(items_to_update)} 筆資料")
         
         # 讀取 Buyer CSV
         try:
@@ -4228,15 +4232,15 @@ def update_buyer_csv():
             except:
                 buyer_df = pd.read_csv(BUYER_FILE, encoding='big5', dtype=str)
         
-        print(f"Buyer CSV 原始欄位: {list(buyer_df.columns)}")
+        logger.info(f"Buyer CSV 原始欄位: {list(buyer_df.columns)}")
         
         # 確保有 RT 相關欄位
         if 'RT金額' not in buyer_df.columns:
             buyer_df['RT金額'] = ''
-            print("新增 RT金額 欄位")
+            logger.info("新增 RT金額 欄位")
         if 'RT總金額' not in buyer_df.columns:
             buyer_df['RT總金額'] = ''
-            print("新增 RT總金額 欄位")
+            logger.info("新增 RT總金額 欄位")
         
         updated_count = 0
         
@@ -4257,7 +4261,7 @@ def update_buyer_csv():
                 rt_amount_str = '0'
                 rt_total_amount_str = '0'
             
-            print(f"嘗試更新: PO={po_no}, 品名={description}, RT金額={rt_amount_str}, RT總金額={rt_total_amount_str}")
+            logger.info(f"嘗試更新: PO={po_no}, 品名={description}, RT金額={rt_amount_str}, RT總金額={rt_total_amount_str}")
             
             if po_no:
                 mask_po = buyer_df['PO No.'].astype(str).str.strip() == po_no
@@ -4806,19 +4810,19 @@ def get_next_month_amount():
         if "RT總金額" in df.columns:
             df["RT總金額"] = pd.to_numeric(clean_amount(df["RT總金額"]), errors="coerce").fillna(0)
         else:
-            print("⚠️ 找不到 RT總金額 欄位")
+            logger.info("⚠️ 找不到 RT總金額 欄位")
             df["RT總金額"] = 0
 
         # 處理 總價
         if "總價" in df.columns:
             df["總價"] = pd.to_numeric(clean_amount(df["總價"]), errors="coerce").fillna(0)
         else:
-            print("⚠️ 找不到 總價 欄位")
+            logger.info("⚠️ 找不到 總價 欄位")
             df["總價"] = 0
 
         # 優先用 RT總金額
         df["計算金額"] = df["RT總金額"].where(df["RT總金額"] > 0, df["總價"])
-        print("✅ 計算金額欄位已建立")
+        logger.info("✅ 計算金額欄位已建立")
 
         # 日期清理
         def clean_date(val):
@@ -4839,8 +4843,8 @@ def get_next_month_amount():
         start = int(first_day_next_month.strftime("%Y%m%d"))
         end = int(last_day_next_month.strftime("%Y%m%d"))
 
-        print(f"📅 下個月日期範圍: {first_day_next_month} ~ {last_day_next_month}")
-        print(f"🔢 整數格式: {start} ~ {end}")
+        logger.info(f"📅 下個月日期範圍: {first_day_next_month} ~ {last_day_next_month}")
+        logger.info(f"🔢 整數格式: {start} ~ {end}")
 
         # 篩選符合條件
         df["交期_int"] = pd.to_numeric(df["交期_clean"], errors="coerce")
@@ -4852,13 +4856,13 @@ def get_next_month_amount():
             (df["WBS"].astype(str).str.strip() == "")
         ].copy()
 
-        print(f"✅ 符合條件的資料共 {len(next_month_df)} 筆")
+        logger.info(f"✅ 符合條件的資料共 {len(next_month_df)} 筆")
 
         # 計算總額
         next_month_df["計算金額"] = next_month_df["計算金額"].astype(int)
         total_amount = int(next_month_df["計算金額"].sum())
 
-        print(f"💰 下個月預計入帳總金額: {total_amount:,} 元")
+        logger.info(f"💰 下個月預計入帳總金額: {total_amount:,} 元")
 
         # 準備輸出資料
         cols = ["ePR No.", "PO No.", "品項", "計算金額", "Delivery Date 廠商承諾交期", "WBS"]
@@ -4879,7 +4883,7 @@ def get_next_month_amount():
             }
         }
         
-        print(f"✅ API 執行成功")
+        logger.info(f"✅ API 執行成功")
         return jsonify(result)
 
     except Exception as e:
@@ -4887,9 +4891,9 @@ def get_next_month_amount():
         error_msg = str(e)
         error_trace = traceback.format_exc()
         
-        print(f"❌ 計算下個月預計入帳失敗: {error_msg}")
-        print(f"❌ 詳細錯誤：")
-        print(error_trace)
+        logger.info(f"❌ 計算下個月預計入帳失敗: {error_msg}")
+        logger.info(f"❌ 詳細錯誤：")
+        logger.info(error_trace)
         
         return jsonify({
             "file": file_path if 'file_path' in locals() else "unknown",
@@ -5935,6 +5939,7 @@ def reject_approved_to_pending():
 # ============================================================
 
 MB_DIR          = 'message_board_data'
+# MB_DIR          = rf'D:\Data\ePR_Data\message_board_data'
 MB_CHANNELS_DIR = os.path.join(MB_DIR, 'channels')
 MB_VISITS_DIR   = os.path.join(MB_DIR, 'visits')
 MB_LOG_FILE     = os.path.join(MB_DIR, 'message_board.log')
@@ -6329,7 +6334,96 @@ def remove_requester():
         return jsonify({"error": str(e)}), 500
 
 
+ACC_MAIL_DATA_FILE = "static/data/accMailData.json"   # 驗收發信備註選項
+
+# ========== 驗收發信 備註選項 API（accMailData.json） ==========
+def _read_acc_mail_remarks():
+    """讀取 accMailData.json 的 remarks 清單"""
+    with open(ACC_MAIL_DATA_FILE, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    remarks = data.get('remarks', [])
+    return [str(r) for r in remarks if str(r).strip()]
+
+
+def _write_acc_mail_remarks(remarks):
+    with open(ACC_MAIL_DATA_FILE, 'w', encoding='utf-8') as f:
+        json.dump({"remarks": remarks}, f, ensure_ascii=False, indent=2)
+
+
+@app.route('/api/acc-mail-remarks', methods=['GET'])
+def get_acc_mail_remarks():
+    """取得備註選項清單"""
+    try:
+        with FileLock(ACC_MAIL_DATA_FILE + '.lock', timeout=10):
+            remarks = _read_acc_mail_remarks()
+        return jsonify({'success': True, 'remarks': remarks})
+    except Exception as e:
+        logger.error(f"讀取備註選項失敗: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/acc-mail-remarks', methods=['POST'])
+def add_acc_mail_remark():
+    """新增備註選項  body: { "remark": "..." }"""
+    try:
+        data = request.get_json() or {}
+        remark = str(data.get('remark', '')).strip()
+        if not remark:
+            return jsonify({'success': False, 'message': '備註內容不可為空'}), 400
+
+        with FileLock(ACC_MAIL_DATA_FILE + '.lock', timeout=10):
+            remarks = _read_acc_mail_remarks()
+            if remark in remarks:
+                return jsonify({'success': False, 'message': '此備註已存在', 'remarks': remarks}), 409
+            remarks.append(remark)
+            _write_acc_mail_remarks(remarks)
+
+        logger.info(f"新增備註選項: {remark}")
+        return jsonify({'success': True, 'message': '已新增', 'remarks': remarks})
+    except Exception as e:
+        logger.error(f"新增備註選項失敗: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/acc-mail-remarks', methods=['DELETE'])
+def delete_acc_mail_remark():
+    """移除備註選項  body: { "remark": "..." }"""
+    try:
+        data = request.get_json() or {}
+        remark = str(data.get('remark', '')).strip()
+        if not remark:
+            return jsonify({'success': False, 'message': '備註內容不可為空'}), 400
+
+        with FileLock(ACC_MAIL_DATA_FILE + '.lock', timeout=10):
+            remarks = _read_acc_mail_remarks()
+            if remark not in remarks:
+                return jsonify({'success': False, 'message': '找不到此備註', 'remarks': remarks}), 404
+            remarks = [r for r in remarks if r != remark]
+            _write_acc_mail_remarks(remarks)
+
+        logger.info(f"移除備註選項: {remark}")
+        return jsonify({'success': True, 'message': '已移除', 'remarks': remarks})
+    except Exception as e:
+        logger.error(f"移除備註選項失敗: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 
 if __name__ == "__main__":
     app.run(debug=True)
+    # serve(app, host='10.11.99.84', port=8091)  
+    # 原狀態
+    # app.run(host="10.11.104.247", port=7001, debug=True)
+    # 0971-50-2211 修哥電話
+    
+    
+# CSV_FILE = rf"D:\Data\ePR_Data\Planned_Purchase_Request_List.csv"
+# JSON_FILE = f"static/data/money.json"
+# BACKEND_DATA = f"Backend_data.json"
+# DETAIL_FILE = rf"D:\Data\ePR_Data\Buyer_detail.csv"
+# VENDER_FILE_PATH = r"static/data/vender.ini"
+# PHONE_JSON = f"static/data/phone.json"
+# # DETAIL_FILE = r"D:\Data\ePR_data\Buyer_detail.csv"

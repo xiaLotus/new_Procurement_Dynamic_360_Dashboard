@@ -20,3 +20,6 @@
 2026-08-02 21:16:07  [INFO]  查詢未讀 [K18251]：{'budget': 0, 'purchase': 0, 'general': 0, 'acceptance': 0, 'urgent': 0}（合計 0）
 2026-08-02 21:16:10  [INFO]  查詢未讀 [K18251]：{'budget': 0, 'purchase': 0, 'general': 0, 'acceptance': 0, 'urgent': 0}（合計 0）
 2026-08-02 21:17:40  [INFO]  查詢未讀 [K18251]：{'budget': 0, 'purchase': 0, 'general': 0, 'acceptance': 0, 'urgent': 0}（合計 0）
+2026-08-15 09:06:12  [INFO]  查詢未讀 [K18251]：{'general': 0, 'acceptance': 0, 'budget': 0, 'purchase': 0, 'urgent': 0}（合計 0）
+2026-08-15 09:06:43  [INFO]  查詢未讀 [K18251]：{'general': 0, 'acceptance': 0, 'budget': 0, 'purchase': 0, 'urgent': 0}（合計 0）
+2026-09-06 19:00:12  [INFO]  查詢未讀 [K18251]：{'purchase': 0, 'budget': 0, 'urgent': 0, 'acceptance': 0, 'general': 0}（合計 0）

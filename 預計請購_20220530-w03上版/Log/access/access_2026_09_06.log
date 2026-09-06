@@ -1,0 +1,70 @@
+2026-09-06 19:00:00 INFO [werkzeug]: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-09-06 19:00:00 INFO [werkzeug]: [33mPress CTRL+C to quit[0m
+2026-09-06 19:00:00 INFO [werkzeug]:  * Restarting with stat
+2026-09-06 19:00:00 WARNING [werkzeug]:  * Debugger is active!
+2026-09-06 19:00:00 INFO [werkzeug]:  * Debugger PIN: 565-360-068
+2026-09-06 19:00:10 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:10] "OPTIONS /api/getAllLoginer HTTP/1.1" 200 -
+2026-09-06 19:00:10 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:10] "POST /api/getAllLoginer HTTP/1.1" 200 -
+2026-09-06 19:00:10 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:10] "OPTIONS /api/login HTTP/1.1" 200 -
+2026-09-06 19:00:10 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:10] "POST /api/login HTTP/1.1" 200 -
+2026-09-06 19:00:10 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:10] "OPTIONS /api/get-username-info HTTP/1.1" 200 -
+2026-09-06 19:00:10 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:10] "POST /api/get-username-info HTTP/1.1" 200 -
+2026-09-06 19:00:11 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:11] "GET /data HTTP/1.1" 200 -
+2026-09-06 19:00:11 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:11] "GET /api/unordered-count HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "GET /api/requesters HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "GET /api/admins HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "GET /api/venders HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "GET /api/get-filters-json/K18251 HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "GET /api/getrestofmoney HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "GET /api/message-board/unread/K18251 HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "GET /api/get-filters-json/K18251 HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "OPTIONS /api/save-filters-json HTTP/1.1" 200 -
+2026-09-06 19:00:12 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:12] "POST /api/save-filters-json HTTP/1.1" 200 -
+2026-09-06 19:00:15 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:15] "GET /api/get-filters-json/K18251 HTTP/1.1" 200 -
+2026-09-06 19:00:15 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:15] "GET /api/admins HTTP/1.1" 200 -
+2026-09-06 19:00:15 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:15] "GET /api/buyer_detail HTTP/1.1" 200 -
+2026-09-06 19:00:16 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:16] "GET /api/get_unaccounted_amount HTTP/1.1" 200 -
+2026-09-06 19:00:16 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:16] "GET /api/accounting_summary HTTP/1.1" 200 -
+2026-09-06 19:00:17 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:17] "GET /api/monthly_actual_accounting HTTP/1.1" 200 -
+2026-09-06 19:00:17 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:17] "GET /api/getrestofmoney HTTP/1.1" 200 -
+2026-09-06 19:00:17 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:00:17] "GET /api/next_month_amount HTTP/1.1" 200 -
+2026-09-06 19:01:35 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:01:35] "POST /api/parse-mhtml HTTP/1.1" 200 -
+2026-09-06 19:01:42 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:01:42] "OPTIONS /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:01:43 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:01:43] "POST /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:15:19 INFO [werkzeug]:  * Detected change in 'D:\\網頁\\預計請購_20220530-w03上版\\app.py', reloading
+2026-09-06 19:15:19 INFO [werkzeug]:  * Restarting with stat
+2026-09-06 19:15:23 WARNING [werkzeug]:  * Debugger is active!
+2026-09-06 19:15:23 INFO [werkzeug]:  * Debugger PIN: 565-360-068
+2026-09-06 19:15:26 INFO [werkzeug]: [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-09-06 19:15:26 INFO [werkzeug]: [33mPress CTRL+C to quit[0m
+2026-09-06 19:15:26 INFO [werkzeug]:  * Restarting with stat
+2026-09-06 19:15:27 WARNING [werkzeug]:  * Debugger is active!
+2026-09-06 19:15:27 INFO [werkzeug]:  * Debugger PIN: 565-360-068
+2026-09-06 19:15:33 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:15:33] "[35m[1mGET /api/acc-mail-remarks HTTP/1.1[0m" 500 -
+2026-09-06 19:15:33 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:15:33] "OPTIONS /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:15:34 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:15:34] "POST /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:15:59 INFO [werkzeug]:  * Detected change in 'D:\\網頁\\預計請購_20220530-w03上版\\app.py', reloading
+2026-09-06 19:15:59 INFO [werkzeug]:  * Restarting with stat
+2026-09-06 19:15:59 WARNING [werkzeug]:  * Debugger is active!
+2026-09-06 19:15:59 INFO [werkzeug]:  * Debugger PIN: 565-360-068
+2026-09-06 19:16:01 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:16:01] "GET /api/acc-mail-remarks HTTP/1.1" 200 -
+2026-09-06 19:16:01 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:16:01] "OPTIONS /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:16:01 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:16:01] "POST /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:16:16 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:16:16] "OPTIONS /api/acc-mail-remarks HTTP/1.1" 200 -
+2026-09-06 19:16:16 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:16:16] "POST /api/acc-mail-remarks HTTP/1.1" 200 -
+2026-09-06 19:16:23 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:16:23] "OPTIONS /api/save-mail HTTP/1.1" 200 -
+2026-09-06 19:16:44 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:16:44] "POST /api/save-mail HTTP/1.1" 200 -
+2026-09-06 19:17:11 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:17:11] "POST /api/parse-mhtml HTTP/1.1" 200 -
+2026-09-06 19:17:17 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:17:17] "GET /api/acc-mail-remarks HTTP/1.1" 200 -
+2026-09-06 19:17:17 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:17:17] "OPTIONS /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:17:18 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:17:18] "POST /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:18:33 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:18:33] "OPTIONS /api/acc-mail-remarks HTTP/1.1" 200 -
+2026-09-06 19:18:33 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:18:33] "DELETE /api/acc-mail-remarks HTTP/1.1" 200 -
+2026-09-06 19:18:47 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:18:47] "GET /api/acc-mail-remarks HTTP/1.1" 200 -
+2026-09-06 19:18:47 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:18:47] "OPTIONS /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:18:47 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:18:47] "GET /api/acc-mail-remarks HTTP/1.1" 200 -
+2026-09-06 19:18:47 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:18:47] "OPTIONS /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:18:49 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:18:49] "POST /api/get-user-epr-data HTTP/1.1" 200 -
+2026-09-06 19:18:49 INFO [werkzeug]: 127.0.0.1 - - [06/Sep/2026 19:18:49] "POST /api/get-user-epr-data HTTP/1.1" 200 -
