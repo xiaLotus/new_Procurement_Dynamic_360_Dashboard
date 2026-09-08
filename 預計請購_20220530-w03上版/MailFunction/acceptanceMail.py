@@ -30,9 +30,22 @@ def format_date_simple(date_str):
         return f"{year}/{month}/{day}"
     return date_str
 
+# def read_configuration(mail_name, ccList):
+#     sMailTo = f"{mail_name}" 
+#     sMailCc = f"RuiYing_Chan@aseglobal.com,Otis_Wang@aseglobal.com,{ccList}" 
+#     return sMailCc, sMailTo
+
+MAIL_RECIPIENTS_FILE = "static/data/mailRecipients.json"
+MAIL_DOMAIN = "@aseglobal.com"
+
 def read_configuration(mail_name, ccList):
-    sMailTo = f"{mail_name}" 
-    sMailCc = f"RuiYing_Chan@aseglobal.com,Otis_Wang@aseglobal.com,{ccList}" 
+    with open(MAIL_RECIPIENTS_FILE, "r", encoding="utf-8") as f:
+        fixed = json.load(f).get("acceptance", {})
+
+    fixed_cc = [n + MAIL_DOMAIN for n in fixed.get("cc", []) if n]
+
+    sMailTo = f"{mail_name}"
+    sMailCc = ",".join(fixed_cc + [ccList] if ccList else fixed_cc)
     return sMailCc, sMailTo
 
 def build_table_rows(data_list):

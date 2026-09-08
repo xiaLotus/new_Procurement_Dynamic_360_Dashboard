@@ -1373,6 +1373,13 @@
                     ⚙ 需求者新增
                 </div>
 
+                <!-- Mail 固定人員管理（僅 admin 可見） -->
+                <div v-if="admins.includes(username)"
+                    class="text-white text-lg bg-slate-600 hover:bg-slate-700 px-5 py-3 rounded-full shadow-lg transition cursor-pointer flex items-center justify-center h-12"
+                    @click="goMailRecipientManager">
+                    📧 Mail 管理
+                </div>
+
             </div>
 
             <!-- 右側：三個按鈕群組 -->

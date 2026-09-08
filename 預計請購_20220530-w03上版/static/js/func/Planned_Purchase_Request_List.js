@@ -3583,13 +3583,23 @@ const app = Vue.createApp({
         },
 
         goMemberManager() {
-            try{
-                this.toggleFilterhis.saveCurrentFilters();
-            }catch (err) {
-                console.error("❌ 沒有任何選擇，直接跳轉至 📋 eRT 驗收總表", err);
+            try {
+                this.saveCurrentFilters();
+            } catch (err) {
+                console.error("❌ 沒有任何選擇，直接跳轉至 ⚙ 需求者新增", err);
             }
             localStorage.setItem('username', this.username);
             window.location.href = 'Member_manager.html';
+        },
+
+        goMailRecipientManager() {
+            try {
+                this.saveCurrentFilters();
+            } catch (err) {
+                console.error("❌ 沒有任何選擇，直接跳轉至 📧 Mail 管理", err);
+            }
+            localStorage.setItem('username', this.username);
+            window.location.href = 'Mail_recipient_manager.html';
         }
     }
 });

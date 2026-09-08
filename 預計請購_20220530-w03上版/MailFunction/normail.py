@@ -31,15 +31,30 @@ def format_date_simple(date_str):
         return f"{year}/{month}/{day}"
     return date_str
 
-def read_configuration(mail_name, ccList):
-    # sMailTo = "Jackson_Lo@aseglobal.com" 
-    # sMailCc = "ASEK_ASSYIII_CIM_AS@aseglobal.com"
-    sMailTo = "RuiYing_Chan@aseglobal.com,Shugh_Lin@aseglobal.com" 
-    sMailCc = "RuiYing_Chan@aseglobal.com,Shugh_Lin@aseglobal.com" 
-    # sMailTo = f"Jackson_Lo@aseglobal.com,{mail_name}"
-    # sMailCc = f"ASEK_ASSYIII_CIM_AS@aseglobal.com,{ccList}"
-    return sMailCc, sMailTo
+# def read_configuration(mail_name, ccList):
+#     # sMailTo = "Jackson_Lo@aseglobal.com" 
+#     # sMailCc = "ASEK_ASSYIII_CIM_AS@aseglobal.com"
+#     sMailTo = "RuiYing_Chan@aseglobal.com,Shugh_Lin@aseglobal.com" 
+#     sMailCc = "RuiYing_Chan@aseglobal.com,Shugh_Lin@aseglobal.com" 
+#     # sMailTo = f"Jackson_Lo@aseglobal.com,{mail_name}"
+#     # sMailCc = f"ASEK_ASSYIII_CIM_AS@aseglobal.com,{ccList}"
+#     return sMailCc, sMailTo
 
+
+MAIL_RECIPIENTS_FILE = "static/data/mailRecipients.json"   # 與 app.py 同層執行，相對路徑即可
+MAIL_DOMAIN = "@aseglobal.com"
+
+def read_configuration(mail_name, ccList):
+    # 固定人員從 mailRecipients.json 讀取（網頁「發送Mail固定人員管理」維護）
+    with open(MAIL_RECIPIENTS_FILE, "r", encoding="utf-8") as f:
+        fixed = json.load(f).get("purchase", {})
+
+    fixed_to = [n + MAIL_DOMAIN for n in fixed.get("to", []) if n]
+    fixed_cc = [n + MAIL_DOMAIN for n in fixed.get("cc", []) if n]
+
+    sMailTo = ",".join(fixed_to + [mail_name] if mail_name else fixed_to)
+    sMailCc = ",".join(fixed_cc + [ccList] if ccList else fixed_cc)
+    return sMailCc, sMailTo
 
 def send_mail(mailList, name, mail_name, ccList):
     sMailCc, sMailTo = read_configuration(mail_name, ccList)

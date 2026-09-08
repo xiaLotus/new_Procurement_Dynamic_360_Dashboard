@@ -6411,6 +6411,109 @@ def delete_acc_mail_remark():
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
+# ========== 發送Mail固定人員 API（mailRecipients.json） ==========
+# 放在 acc-mail-remarks API 後面即可（不需額外 import）
+MAIL_RECIPIENTS_FILE = "static/data/mailRecipients.json"   # 發送Mail固定人員
+MAIL_DOMAIN = "@aseglobal.com"
+
+
+def load_recipients():
+    with open(MAIL_RECIPIENTS_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def normalize_name(name):
+    """去頭尾空白、空白轉底線、去掉尾端 @aseglobal.com，只留 Notes ID 前綴"""
+    name = str(name or '').strip().replace(' ', '_')
+    if name.lower().endswith(MAIL_DOMAIN):
+        name = name[:-len(MAIL_DOMAIN)]
+    return name
+
+
+# 允許管理的群組與欄位（防止前端亂傳 key）
+_MAIL_RECIPIENT_FIELDS = {
+    'purchase':   ('to', 'cc'),   # 請購 Mail：normail.py / urgent.py
+    'acceptance': ('cc',),        # 驗收 Mail：acceptanceMail.py（To 為 User 本人，不在此管理）
+}
+
+
+def _write_mail_recipients(data):
+    with open(MAIL_RECIPIENTS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def _validate_mail_recipient_req(data):
+    """檢查 body 的 group / field / name，回傳 (group, field, name, error_msg)"""
+    group = str(data.get('group', '')).strip()
+    field = str(data.get('field', '')).strip()
+    name  = normalize_name(data.get('name', ''))
+    if group not in _MAIL_RECIPIENT_FIELDS or field not in _MAIL_RECIPIENT_FIELDS[group]:
+        return group, field, name, '不支援的群組或欄位'
+    if not name:
+        return group, field, name, 'Notes ID 不可為空'
+    return group, field, name, None
+
+
+@app.route('/api/mail-recipients', methods=['GET'])
+def get_mail_recipients():
+    """取得所有固定人員設定"""
+    try:
+        with FileLock(MAIL_RECIPIENTS_FILE + '.lock', timeout=10):
+            data = load_recipients()
+        return jsonify({'success': True, 'data': data})
+    except Exception as e:
+        logger.error(f"讀取 Mail 固定人員失敗: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/mail-recipients', methods=['POST'])
+def add_mail_recipient():
+    """新增固定人員  body: { "group": "purchase", "field": "cc", "name": "Otis_Wang" }"""
+    try:
+        group, field, name, err = _validate_mail_recipient_req(request.get_json() or {})
+        if err:
+            return jsonify({'success': False, 'message': err}), 400
+
+        with FileLock(MAIL_RECIPIENTS_FILE + '.lock', timeout=10):
+            data = load_recipients()
+            names = data.setdefault(group, {}).setdefault(field, [])
+            if name.lower() in [n.lower() for n in names]:
+                return jsonify({'success': False, 'message': '此人員已存在', 'data': data}), 409
+            names.append(name)
+            _write_mail_recipients(data)
+
+        logger.info(f"新增 Mail 固定人員: {group}.{field} += {name}")
+        return jsonify({'success': True, 'message': f'已新增 {name}', 'data': data})
+    except Exception as e:
+        logger.error(f"新增 Mail 固定人員失敗: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/api/mail-recipients', methods=['DELETE'])
+def delete_mail_recipient():
+    """移除固定人員  body 同 POST"""
+    try:
+        group, field, name, err = _validate_mail_recipient_req(request.get_json() or {})
+        if err:
+            return jsonify({'success': False, 'message': err}), 400
+
+        with FileLock(MAIL_RECIPIENTS_FILE + '.lock', timeout=10):
+            data = load_recipients()
+            names = data.get(group, {}).get(field, [])
+            if name.lower() not in [n.lower() for n in names]:
+                return jsonify({'success': False, 'message': '找不到此人員', 'data': data}), 404
+            data[group][field] = [n for n in names if n.lower() != name.lower()]
+            _write_mail_recipients(data)
+
+        logger.info(f"移除 Mail 固定人員: {group}.{field} -= {name}")
+        return jsonify({'success': True, 'message': f'已移除 {name}', 'data': data})
+    except Exception as e:
+        logger.error(f"移除 Mail 固定人員失敗: {e}")
+        logger.error(traceback.format_exc())
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
