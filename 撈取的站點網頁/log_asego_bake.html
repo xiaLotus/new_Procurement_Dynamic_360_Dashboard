@@ -45,6 +45,12 @@
     }
     .brand-title { color: #fff; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; }
     .brand-sub { color: rgba(255,255,255,0.4); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 1px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .fetch-time {
+      color: rgba(255,255,255,0.55); font-size: 0.72rem; font-weight: 500;
+      font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.02em;
+    }
+    .fetch-time span { color: var(--amber-light); font-weight: 600; }
     .status-pill {
       display: flex; align-items: center; gap: 6px;
       background: rgba(20,184,166,0.15); border: 1px solid rgba(20,184,166,0.3);
@@ -283,12 +289,15 @@
       <div class="brand">
         <div class="brand-icon">🏭</div>
         <div>
-          <div class="brand-title">設備監控儀表板</div>
+          <div class="brand-title">派報歷史資訊報表</div>
           <div class="brand-sub">Equipment Monitoring Dashboard</div>
         </div>
       </div>
-      <div class="status-pill">
-        <span class="pulse-dot"></span> 即時監控中
+      <div class="header-right">
+        <div class="fetch-time">撈取時間 <span id="fetch-time">--</span></div>
+        <div class="status-pill">
+          <span class="pulse-dot"></span> 即時監控中
+        </div>
       </div>
     </div>
   </header>

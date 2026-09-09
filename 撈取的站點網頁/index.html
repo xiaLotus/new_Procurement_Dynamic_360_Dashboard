@@ -16,6 +16,10 @@
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
+    html, body {
+      overflow: hidden !important;
+      height: 100vh;
+    }
     /* 背景動畫與特效 */
     body {
         background-color: #0f172a;
@@ -38,7 +42,7 @@
 
 <body class="text-slate-200 min-h-screen font-sans selection:bg-blue-500 selection:text-white">
 
-<div id="app" class="max-w-[1600px] mx-auto p-4 md:p-8 min-h-screen flex flex-col">
+<div id="app" class="max-w-[1600px] mx-auto p-4 md:p-8 h-screen flex flex-col overflow-hidden">
 
   <header class="mb-6 mt-4 flex flex-col md:flex-row md:items-center justify-between gap-6">
     <div class="flex items-center gap-4">
@@ -51,13 +55,38 @@
         </div>
     </div>
 
-    <div class="bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/50 flex gap-2 shadow-lg backdrop-blur-sm">
+    <div class="flex items-center gap-3">
+      <button 
+        @click="openBakeHistory"
+        class="relative flex items-center gap-2 px-5 py-2.5 
+               bg-gradient-to-r from-violet-600 to-indigo-600 
+               hover:from-violet-500 hover:to-indigo-500
+               text-white font-bold rounded-xl shadow-lg 
+               shadow-violet-900/40 backdrop-blur-sm border border-violet-400/30
+               transition-all duration-300 hover:scale-105 hover:shadow-violet-700/60
+               active:scale-95 group whitespace-nowrap"
+        title="派報Log">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
+             stroke="currentColor" stroke-width="1.8" 
+             class="w-5 h-5 group-hover:rotate-12 transition-transform">
+          <path stroke-linecap="round" stroke-linejoin="round" 
+                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-sm tracking-wide">派報Log</span>
+        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-60"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-violet-500"></span>
+        </span>
+      </button>
+
+      <div class="bg-slate-800/50 p-1.5 rounded-xl border border-slate-700/50 flex gap-2 shadow-lg backdrop-blur-sm">
         <input v-model="newFactoryName" @keyup.enter="addFactory" type="text" placeholder="輸入新廠區 (如: F6)..." 
                class="bg-slate-900/80 text-slate-200 text-sm px-4 py-2 rounded-lg outline-none border border-transparent focus:border-blue-500 placeholder-slate-600 font-mono w-48 transition-all" />
         <button @click="addFactory" 
                 class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-bold tracking-wide transition-all shadow-md active:scale-95 whitespace-nowrap">
             ＋ 新增廠區
         </button>
+      </div>
     </div>
   </header>
 
@@ -125,7 +154,7 @@
   </div>
 
 
-  <div class="relative my-16">
+  <div class="relative my-8">
     <div class="absolute inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-slate-800 shadow-sm"></div></div>
     <div class="relative flex justify-center"><span class="bg-[#0f172a] px-4"><svg class="h-6 w-6 text-slate-700 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" /></svg></span></div>
   </div>
@@ -213,38 +242,7 @@
     </div>
   </div>
 
-  <!-- 🔥 底部歷史烘烤派報按鈕列 -->
-  <div class="mt-12 mb-4 flex justify-end">
-    <button 
-      @click="openBakeHistory"
-      class="relative flex items-center gap-2 px-6 py-3 
-             bg-gradient-to-r from-violet-600 to-indigo-600 
-             hover:from-violet-500 hover:to-indigo-500
-             text-white font-bold rounded-2xl shadow-2xl 
-             shadow-violet-900/40 backdrop-blur-sm border border-violet-400/30
-             transition-all duration-300 hover:scale-105 hover:shadow-violet-700/60
-             active:scale-95 group"
-      title="查看歷史烘烤派報">
-      
-      <!-- 圖標 -->
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" 
-           stroke="currentColor" stroke-width="1.8" 
-           class="w-5 h-5 group-hover:rotate-12 transition-transform">
-        <path stroke-linecap="round" stroke-linejoin="round" 
-              d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      
-      <!-- 文字 -->
-      <span class="text-sm tracking-wide">歷史烘烤派報</span>
-      
-      <!-- 光點特效 -->
-      <span class="absolute -top-1 -right-1 flex h-3 w-3">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-60"></span>
-        <span class="relative inline-flex rounded-full h-3 w-3 bg-violet-500"></span>
-      </span>
-    </button>
-  </div>
-  
+
 </div>
 
 <script>
@@ -496,3 +494,5 @@ createApp({
 
 </body>
 </html>
+
+<!-- 10.11.99.135:8236 -->
