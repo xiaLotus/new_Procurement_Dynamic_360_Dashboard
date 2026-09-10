@@ -2048,3 +2048,5 @@ Greeting: Dear AlanYW, YenLiang, Yao, Otis, Zilong
 2026-09-08 20:16:08 INFO [app]: 移除 Mail 固定人員: purchase.to -= WL_Huang
 2026-09-08 20:18:09 INFO [app]: 新增 Mail 固定人員: purchase.to += yesy
 2026-09-08 20:18:13 INFO [app]: 移除 Mail 固定人員: purchase.to -= yesy
+2026-09-10 19:38:40 INFO [app]: 🔄 Log 系統已啟動（設定檔：D:\網頁\預計請購_20220530-w03上版\config.ini，輪轉週期：7 天，保留 52 份）
+2026-09-10 19:38:41 INFO [app]: 🔄 Log 系統已啟動（設定檔：D:\網頁\預計請購_20220530-w03上版\config.ini，輪轉週期：7 天，保留 52 份）
