@@ -42,6 +42,12 @@ GET  /photos/<filename>             提供照片檔案（公開；<img> 標籤�
     admin.json 內列出的工號才有「移除人員」權限，格式：{"admin": ["K18251", "C9228"]}
     每次請求都會重新讀取，修改後不用重啟、也不用重新登入。
 
+入職作業清單（onboarding）
+    每位人員都有固定 15 項入職作業（ONBOARDING_TEMPLATE），存於人員 JSON 的 onboarding 欄位：
+        {"id": 1, "name": "個人基本資料（入賴群）", "done": false, "note": "", "selfConfirmed": false}
+    API 回傳時一律以範本補齊（舊資料沒有此欄位、或之後新增項目，都會自動補上）。
+    權限：管理員可修改 done / note / selfConfirmed；本人只能修改 selfConfirmed；其他人送來的異動一律忽略。
+
 單位：
     單位.json 是所屬單位的唯一來源，格式 {"單位名稱": ["工號", ...]}。
     人員 JSON 不另存 unit，API 回傳時會即時從 單位.json 對照；
@@ -62,7 +68,7 @@ Log：
     動作說明會寫清楚後台抓了什麼、比對了什麼，例如：
       載入人員清單：自 contacts/ 讀取 N 筆，與 單位.json 比對所屬單位
       登入成功：驗證工號存在於 contacts/ 且已填中文姓名、比對 admin.json 判斷管理員
-      更新人員：逐欄位比對，只列有變動的欄位（舊值 → 新值）
+      更新人員：逐欄位比對，只列有變動的欄位（舊值 → 新值），入職項目逐項比對
     另外未預期錯誤會多一行完整 traceback。密碼永遠不會被寫進 log。
 
 啟動方式：
@@ -215,6 +221,46 @@ def _verify_token(token):
     }
 
 
+# ---------------------------------------------- 入職作業清單範本
+ONBOARDING_TEMPLATE = [
+    {"id": 1, "name": "個人基本資料（入賴群）"},
+    {"id": 2, "name": "開通 AD"},
+    {"id": 3, "name": "開通 Notes ID（含設定）"},
+    {"id": 4, "name": "MES 相關申請（含設定）"},
+    {"id": 5, "name": "PIP 拍照申請"},
+    {"id": 6, "name": "NDA 保密義務承諾書"},
+    {"id": 7, "name": "門禁開通"},
+    {"id": 8, "name": "無塵服申請"},
+    {"id": 9, "name": "停車證申請"},
+    {"id": 10, "name": "廠區介紹六六"},
+    {"id": 11, "name": "資安宣導"},
+    {"id": 12, "name": "配件領取（無塵袋〈大、小〉、安全帽）"},
+    {"id": 13, "name": "新人課程"},
+    {"id": 14, "name": "個人槽使用申請（工程師）"},
+    {"id": 15, "name": "外網權限（工程師）"},
+]
+
+
+def _normalize_onboarding(items):
+    """以範本為準補齊入職項目（依 id 對照），保留既有的 done / note / selfConfirmed。"""
+    existing = {}
+    if isinstance(items, list):
+        for item in items:
+            if isinstance(item, dict) and "id" in item:
+                existing[str(item["id"])] = item
+    result = []
+    for template in ONBOARDING_TEMPLATE:
+        old = existing.get(str(template["id"]), {})
+        result.append({
+            "id": template["id"],
+            "name": template["name"],
+            "done": bool(old.get("done")),
+            "note": str(old.get("note") or ""),
+            "selfConfirmed": bool(old.get("selfConfirmed")),
+        })
+    return result
+
+
 EMPTY_RECORD = {
     "empNo": "",
     "nameZh": "",
@@ -238,6 +284,7 @@ EMPTY_RECORD = {
     "interests": "",
     "skills": "",
     "photoUrl": "",
+    "onboarding": [],
     "lastModified": "",
 }
 
@@ -552,10 +599,11 @@ def _unit_map(units=None):
 
 
 def _with_unit(person, mapping=None):
-    """回傳附上 unit 欄位的副本（不寫回人員檔）。"""
+    """回傳附上 unit 欄位、且入職清單已用範本補齊的副本（不寫回人員檔）。"""
     mapping = _unit_map() if mapping is None else mapping
     result = dict(person)
     result["unit"] = mapping.get(str(person.get("empNo") or "").strip().upper(), "")
+    result["onboarding"] = _normalize_onboarding(person.get("onboarding"))
     return result
 
 
@@ -689,6 +737,9 @@ def create_contact():
     }
     if not isinstance(record.get("experiences"), list):
         record["experiences"] = []
+    # 入職清單：只有管理員送來的內容會採用，其他人一律用空白範本
+    is_admin = _is_admin((_auth_user() or {}).get("username"))
+    record["onboarding"] = _normalize_onboarding(payload.get("onboarding") if is_admin else None)
     record["lastModified"] = _now()
 
     save_person(record)
@@ -697,12 +748,13 @@ def create_contact():
 
     filled = {
         key: value for key, value in record.items()
-        if key != "lastModified" and value not in ("", [], {}, None)
+        if key not in ("lastModified", "onboarding") and value not in ("", [], {}, None)
         and value != EMPTY_RECORD.get(key)
     }
     _note(
         f"新增人員：{record.get('nameZh') or '未填姓名'}({emp_no})；"
-        f"單位={unit or '未指定'}（工號已寫入 單位.json）；寫入資料={_j(filled)}"
+        f"單位={unit or '未指定'}（工號已寫入 單位.json）；寫入資料={_j(filled)}；"
+        f"入職清單已依範本建立 {len(record['onboarding'])} 項"
     )
     return jsonify(_with_unit(record)), 201
 
@@ -789,9 +841,11 @@ def get_contact(emp_no):
         _note(f"讀取人員資料失敗：contacts/ 內查無工號 {emp_no}")
         return jsonify({"error": "查無此工號"}), 404
     result = _with_unit(person)
+    done = sum(1 for item in result["onboarding"] if item["done"])
     _note(
         f"讀取人員資料：{result.get('nameZh') or '未填姓名'}({result.get('empNo')})；"
-        f"單位={result.get('unit') or '未指定'}（比對 單位.json）"
+        f"單位={result.get('unit') or '未指定'}（比對 單位.json）；"
+        f"入職清單完成 {done}/{len(result['onboarding'])} 項"
     )
     return jsonify(result)
 
@@ -818,6 +872,23 @@ def update_contact(emp_no):
             _note(f"更新人員失敗：單位「{unit}」不存在於 單位.json")
             return jsonify({"error": f"單位「{unit}」不存在於 單位.json"}), 400
 
+    # 入職清單權限：管理員可改全部；本人只能改 selfConfirmed；其他人忽略
+    old_onboarding = _normalize_onboarding(person.get("onboarding"))
+    if "onboarding" in payload:
+        incoming = _normalize_onboarding(payload.pop("onboarding"))
+        me = _auth_user() or {}
+        is_admin = _is_admin(me.get("username"))
+        is_self = str(me.get("username") or "").strip().upper() == str(person.get("empNo") or "").strip().upper()
+        if is_admin:
+            payload["onboarding"] = incoming
+        elif is_self:
+            payload["onboarding"] = [
+                {**old, "selfConfirmed": new["selfConfirmed"]}
+                for old, new in zip(old_onboarding, incoming)
+            ]
+        else:
+            _note("入職清單異動已忽略：非管理員亦非本人")
+
     # 客戶端把 photoUrl 清空時，一併刪除檔案，避免留下孤兒照片
     if "photoUrl" in payload and not payload.get("photoUrl") and person.get("photoUrl"):
         _remove_photo_files(emp_no)
@@ -825,6 +896,7 @@ def update_contact(emp_no):
     # 以舊資料為底、只覆蓋有帶的欄位：部分更新不會把其他欄位洗掉
     record = {**person, **payload}
     record["empNo"] = person.get("empNo")
+    record["onboarding"] = _normalize_onboarding(record.get("onboarding"))
     record["lastModified"] = _now()
     save_person(record)
     if unit is not None:
@@ -834,10 +906,16 @@ def update_contact(emp_no):
     changes = [
         f"{key}: {_j(person.get(key))} → {_j(record.get(key))}"
         for key in sorted(set(person) | set(record))
-        if key not in ("lastModified", "empNo") and person.get(key) != record.get(key)
+        if key not in ("lastModified", "empNo", "onboarding") and person.get(key) != record.get(key)
     ]
     if unit is not None and unit != old_unit:
         changes.append(f"單位: {_j(old_unit)} → {_j(unit)}")
+    old_items = {item["id"]: item for item in old_onboarding}
+    for item in record["onboarding"]:
+        old = old_items.get(item["id"], {})
+        for field in ("done", "note", "selfConfirmed"):
+            if old.get(field) != item.get(field):
+                changes.append(f"入職[{item['name']}].{field}: {_j(old.get(field))} → {_j(item.get(field))}")
     if changes:
         _note(
             f"更新人員：{record.get('nameZh') or '未填姓名'}({record['empNo']})；"

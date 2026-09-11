@@ -108,6 +108,25 @@
     transition:border-color .15s, box-shadow .15s, background .15s;
   }
   .ipt:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(11,110,110,.12);background:#fff}
+  .ipt:disabled{background:#F3F6F6;color:var(--muted);cursor:not-allowed}
+
+  /* ---------- 入職作業清單 ---------- */
+  .onb-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+  .onb-row{
+    display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;
+    gap:10px;align-items:center;
+    padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:#FBFDFD;
+    transition:background .15s, border-color .15s;
+  }
+  .onb-row.done{background:#F5FBFA;border-color:#BFD8D6}
+  .onb-row.done .onb-name{color:var(--accent)}
+  .onb-check,.onb-self{display:flex;align-items:center;gap:8px;font-size:13.5px;cursor:pointer;min-width:0}
+  .onb-check input,.onb-self input{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+  .onb-check input:disabled,.onb-self input:disabled{cursor:not-allowed;opacity:.55}
+  .onb-check .onb-id{font-size:11px;color:var(--muted);width:18px;text-align:right;flex-shrink:0}
+  .onb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .onb-self{font-size:12px;color:var(--muted);white-space:nowrap}
+  .onb-self.on{color:var(--accent);font-weight:500}
 
   .btn-accent{
     background:var(--accent);color:#fff;border-radius:10px;
@@ -284,7 +303,7 @@
             全部
           </button>
           <button v-for="f in unitFilters" :key="f.name"
-                  class="unit-chip" :class="{ active: unitFilter === f.name }" :title="f.name"
+                  class="unit-chip mono" :class="{ active: unitFilter === f.name }" :title="f.name"
                   @click="unitFilter = unitFilter === f.name ? '' : f.name">
             {{ f.label }}
           </button>
@@ -321,8 +340,8 @@
               </div>
               <div class="min-w-0">
                 <div class="font-semibold text-[15px] truncate">{{ p.nameZh || '（未填姓名）' }}</div>
-                <div class="text-[11px] text-[var(--muted)] truncate" :title="p.unit || '未指定單位'">
-                  {{ unitShort(p.unit) || '未指定單位' }}
+                <div class="mono text-[11px] text-[var(--muted)] truncate" :title="p.unit || '未指定單位'">
+                  {{ unitCode(p.unit) || '未指定單位' }}
                 </div>
               </div>
             </div>
@@ -392,6 +411,7 @@
             <template v-else>
               {{ form.nameZh || '（未填姓名）' }}
               <span class="mono text-sm font-medium text-[var(--muted)] ml-1">#{{ form.empNo }}</span>
+              <span v-if="form.unit" class="mono text-sm font-medium text-[var(--muted)] ml-1" :title="form.unit">· {{ unitCode(form.unit) }}</span>
             </template>
           </div>
           <div class="text-xs text-[var(--muted)]">
@@ -544,6 +564,34 @@
               <label class="block"><span class="lbl">興趣</span><textarea class="ipt" rows="3" v-model="form.interests"></textarea></label>
             </div>
           </section>
+
+          <!-- ---------- 入職作業清單 ---------- -->
+          <section v-if="mode === 'edit'" class="sec-card md:col-span-2">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 class="sec-title !mb-0">入職作業清單</h2>
+              <span class="text-xs text-[var(--muted)]">
+                已完成 <span class="mono font-medium text-[var(--accent)]">{{ onboardingDone }}</span> / {{ form.onboarding.length }}
+                <template v-if="!canEditOnboarding">
+                  ・{{ isSelfRecord ? '僅管理員可勾選完成與備註，本人可勾「本人確認」' : '僅管理員可勾選' }}
+                </template>
+              </span>
+            </div>
+            <div class="onb-grid">
+              <div v-for="item in form.onboarding" :key="item.id" class="onb-row" :class="{ done: item.done }">
+                <label class="onb-check" :title="item.name">
+                  <input type="checkbox" v-model="item.done" :disabled="!canEditOnboarding">
+                  <span class="mono onb-id">{{ item.id }}</span>
+                  <span class="onb-name">{{ item.name }}</span>
+                </label>
+                <input class="ipt !py-1.5 !text-[13px]" v-model="item.note" placeholder="備註"
+                       :disabled="!canEditOnboarding">
+                <label class="onb-self" :class="{ on: item.selfConfirmed }" title="由本人確認已完成">
+                  <input type="checkbox" v-model="item.selfConfirmed" :disabled="!canEditOnboarding && !isSelfRecord">
+                  <span>本人確認</span>
+                </label>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
     </div>
@@ -670,20 +718,9 @@ createApp({
       );
     },
     unitFilters() {
-      // 按鈕用組別簡稱；簡稱撞名時（例如兩個「自動化維運二組」）前面補上廠區辨識
-      const counts = {};
-      for (const unit of this.units) {
-        const short = this.unitShort(unit);
-        counts[short] = (counts[short] || 0) + 1;
-      }
-      return this.units.map(unit => {
-        const parts = String(unit).trim().split(/\s+/);
-        const short = parts[parts.length - 1] || unit;
-        const label = counts[short] > 1 && parts.length > 1
-          ? `${parts[1].slice(0, 3)}·${short}`
-          : short;
-        return { name: unit, label };
-      });
+      // 篩選按鈕只顯示代碼：「BN30 工廠自動化技術部 1000 設備導入組」→「BN30-1000」，
+      // 沒有組別編號的（例：「BN60 南科廠自動化維運部」）→「BN60」；滑鼠停留顯示完整名稱
+      return this.units.map(unit => ({ name: unit, label: this.unitCode(unit) || unit }));
     },
     totalPages() {
       return Math.max(1, Math.ceil(this.filtered.length / this.pageSize));
@@ -715,6 +752,20 @@ createApp({
       }
       return output;
     },
+
+    // ---------- 入職作業清單 ----------
+    canEditOnboarding() {
+      return Boolean(this.user && this.user.isAdmin);
+    },
+    isSelfRecord() {
+      if (!this.user || !this.form.empNo) return false;
+      return String(this.user.username || '').trim().toUpperCase() ===
+             String(this.form.empNo).trim().toUpperCase();
+    },
+    onboardingDone() {
+      return (this.form.onboarding || []).filter(item => item.done).length;
+    },
+
     cropScale() {
       const cropper = this.cropper;
       if (!cropper.iw || !cropper.ih) return 1;
@@ -771,7 +822,8 @@ createApp({
         emgPhone: '', marriage: '', phone: '', mobile: '', address: '',
         eduTop: { school: '', major: '', period: '' },
         eduSecond: { school: '', major: '', period: '' },
-        experiences: [], interests: '', skills: '', photoUrl: '', lastModified: '',
+        experiences: [], interests: '', skills: '', photoUrl: '',
+        onboarding: [], lastModified: '',
       };
     },
     fixDate(value) {
@@ -782,6 +834,7 @@ createApp({
       record.eduTop = Object.assign({ school: '', major: '', period: '' }, record.eduTop || {});
       record.eduSecond = Object.assign({ school: '', major: '', period: '' }, record.eduSecond || {});
       record.experiences = Array.isArray(record.experiences) ? record.experiences : [];
+      record.onboarding = Array.isArray(record.onboarding) ? record.onboarding : [];
       record.unit = record.unit || '';
       record.hireDate = this.fixDate(record.hireDate);
       record.birthDate = this.fixDate(record.birthDate);
@@ -825,6 +878,15 @@ createApp({
       // 「BN40 工廠自動化系統部 2000 先進技術開發組」→ 只顯示最後一段「先進技術開發組」
       const parts = String(unit || '').trim().split(/\s+/);
       return parts[parts.length - 1] || '';
+    },
+    unitCode(unit) {
+      // 「BN30 工廠自動化技術部 1000 設備導入組」→「BN30-1000」；
+      // 沒有組別編號的（例：「BN60 南科廠自動化維運部」）→「BN60」
+      const parts = String(unit || '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return '';
+      const dept = parts[0];
+      const group = parts.length >= 3 && /^\d+$/.test(parts[2]) ? parts[2] : '';
+      return group ? `${dept}-${group}` : dept;
     },
     async fetchUnits() {
       try {
