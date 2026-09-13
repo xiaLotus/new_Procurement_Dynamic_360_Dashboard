@@ -39,8 +39,11 @@ GET  /photos/<filename>             提供照片檔案（公開；<img> 標籤�
     Session 金鑰自動產生並存於 .secret_key（請加入 .gitignore），或以環境變數 DIRECTORY_SECRET_KEY 指定。
 
 管理員
-    admin.json 內列出的工號才有「移除人員」權限，格式：{"admin": ["K18251", "C9228"]}
+    admin.json 內列出的工號才有「移除人員」與「管理員管理」權限，格式：{"admin": ["K18251", "C9228"]}
     每次請求都會重新讀取，修改後不用重啟、也不用重新登入。
+GET    /api/admins                  取得管理員清單（附姓名、單位；需登入）
+POST   /api/admins                  新增管理員 {"empNo": "..."}（僅管理員；工號必須已存在於 contacts/）
+DELETE /api/admins/<emp_no>         移除管理員（僅管理員；不能移除自己，也不能移除最後一位管理員）
 
 入職作業清單（onboarding）
     每位人員都有固定 15 項入職作業（ONBOARDING_TEMPLATE），存於人員 JSON 的 onboarding 欄位：
@@ -356,6 +359,25 @@ def _is_admin(username):
     return str(username or "").strip().upper() in _load_admins()
 
 
+_admin_lock = threading.Lock()
+
+
+def _read_admin_list():
+    """讀取 admin.json 原始工號清單（保留原大小寫與順序）；檔案不存在或格式錯誤回空 list。"""
+    try:
+        data = _read_json(ADMIN_FILE)
+    except (OSError, json.JSONDecodeError):
+        return []
+    names = data.get("admin") if isinstance(data, dict) else data
+    if not isinstance(names, list):
+        return []
+    return [str(value).strip() for value in names if str(value).strip()]
+
+
+def _write_admin_list(names):
+    _write_json(ADMIN_FILE, {"admin": names}, indent=4)
+
+
 def _auth_user():
     """取得本次請求的登入者：優先 Authorization: Bearer token，其次 session cookie。"""
     if not hasattr(g, "auth_user"):
@@ -394,7 +416,7 @@ def admin_required(view):
         username = (_auth_user() or {}).get("username")
         if not _is_admin(username):
             _note(f"被擋：非管理員（admin.json 內沒有 {username}）")
-            return jsonify({"error": "只有管理員可以移除人員", "code": "FORBIDDEN"}), 403
+            return jsonify({"error": "此操作僅限管理員", "code": "FORBIDDEN"}), 403
         return view(*args, **kwargs)
 
     return wrapped
@@ -599,10 +621,11 @@ def _unit_map(units=None):
 
 
 def _with_unit(person, mapping=None):
-    """回傳附上 unit 欄位、且入職清單已用範本補齊的副本（不寫回人員檔）。"""
+    """回傳附上 unit / isAdmin 欄位、且入職清單已用範本補齊的副本（不寫回人員檔）。"""
     mapping = _unit_map() if mapping is None else mapping
     result = dict(person)
     result["unit"] = mapping.get(str(person.get("empNo") or "").strip().upper(), "")
+    result["isAdmin"] = _is_admin(person.get("empNo"))     # 比對 admin.json，供前端標註皇冠
     result["onboarding"] = _normalize_onboarding(person.get("onboarding"))
     return result
 
@@ -627,6 +650,89 @@ def list_units():
     units = _load_units()
     _note(f"讀取單位清單：自 單位.json 取得 {len(units)} 個單位")
     return jsonify({"units": list(units.keys())})
+
+
+# ---------------------------------------------- 管理員管理（admin.json）
+@app.route("/api/admins", methods=["GET"])
+@login_required
+def list_admins():
+    names = _read_admin_list()
+    mapping = _unit_map()
+    result = []
+    for emp_no in names:
+        person = _find_person(emp_no) or {}
+        result.append({
+            "empNo": emp_no,
+            "nameZh": str(person.get("nameZh") or ""),
+            "title": str(person.get("title") or ""),
+            "photoUrl": str(person.get("photoUrl") or ""),
+            "unit": mapping.get(emp_no.upper(), ""),
+            "exists": bool(person),
+        })
+    _note(f"讀取管理員清單：自 admin.json 取得 {len(names)} 位，與 contacts/ 及 單位.json 比對姓名與單位")
+    return jsonify({"admins": result})
+
+
+@app.route("/api/admins", methods=["POST"])
+@admin_required
+def add_admin():
+    payload = request.get_json(force=True, silent=True)
+    if not isinstance(payload, dict):
+        _note("新增管理員失敗：請求內容不是 JSON 物件")
+        return jsonify({"error": "請求內容必須為 JSON 物件"}), 400
+
+    emp_no = str(payload.get("empNo") or "").strip()
+    if not emp_no:
+        _note("新增管理員失敗：未填工號")
+        return jsonify({"error": "請輸入工號"}), 400
+
+    person = _find_person(emp_no)
+    if person is None:
+        _note(f"新增管理員失敗：contacts/ 內查無工號 {emp_no}（必須先建立人員資料）")
+        return jsonify({"error": f"工號 {emp_no} 不在通訊錄內，請先建立人員資料"}), 404
+    emp_no = str(person.get("empNo") or emp_no)
+
+    with _admin_lock:
+        names = _read_admin_list()
+        if emp_no.upper() in {n.upper() for n in names}:
+            _note(f"新增管理員失敗：{emp_no} 已是管理員")
+            return jsonify({"error": f"{emp_no} 已經是管理員"}), 409
+        names.append(emp_no)
+        _write_admin_list(names)
+
+    _note(
+        f"新增管理員：{person.get('nameZh') or '未填姓名'}({emp_no})；"
+        f"驗證=工號存在於 contacts/；已寫入 admin.json（目前 {len(names)} 位）"
+    )
+    return jsonify({"ok": True, "admins": names}), 201
+
+
+@app.route("/api/admins/<emp_no>", methods=["DELETE"])
+@admin_required
+def remove_admin(emp_no):
+    emp_no = str(emp_no or "").strip()
+    me = str((_auth_user() or {}).get("username") or "").strip()
+    if emp_no.upper() == me.upper():
+        _note(f"移除管理員失敗：不能移除自己（{emp_no}）")
+        return jsonify({"error": "不能移除自己的管理員權限"}), 400
+
+    with _admin_lock:
+        names = _read_admin_list()
+        remaining = [n for n in names if n.upper() != emp_no.upper()]
+        if len(remaining) == len(names):
+            _note(f"移除管理員失敗：admin.json 內沒有 {emp_no}")
+            return jsonify({"error": f"{emp_no} 不是管理員"}), 404
+        if not remaining:
+            _note("移除管理員失敗：不能移除最後一位管理員")
+            return jsonify({"error": "至少要保留一位管理員"}), 400
+        _write_admin_list(remaining)
+
+    person = _find_person(emp_no) or {}
+    _note(
+        f"移除管理員：{person.get('nameZh') or '未填姓名'}({emp_no})；"
+        f"已自 admin.json 移除（剩餘 {len(remaining)} 位）"
+    )
+    return jsonify({"ok": True, "admins": remaining})
 
 
 # ---------------------------------------------- 前端頁面與照片
@@ -716,6 +822,7 @@ def create_contact():
         return jsonify({"error": f"工號 {emp_no} 已存在"}), 409
 
     unit = str(payload.pop("unit", "") or "").strip()
+    payload.pop("isAdmin", None)   # 由 admin.json 決定，不寫進人員檔
     units = _load_units()
     if units and not unit:
         _note(f"新增人員失敗：未選擇所屬單位（工號={emp_no}）")
@@ -872,6 +979,8 @@ def update_contact(emp_no):
             _note(f"更新人員失敗：單位「{unit}」不存在於 單位.json")
             return jsonify({"error": f"單位「{unit}」不存在於 單位.json"}), 400
 
+    payload.pop("isAdmin", None)   # 由 admin.json 決定，不寫進人員檔
+
     # 入職清單權限：管理員可改全部；本人只能改 selfConfirmed；其他人忽略
     old_onboarding = _normalize_onboarding(person.get("onboarding"))
     if "onboarding" in payload:
@@ -906,7 +1015,8 @@ def update_contact(emp_no):
     changes = [
         f"{key}: {_j(person.get(key))} → {_j(record.get(key))}"
         for key in sorted(set(person) | set(record))
-        if key not in ("lastModified", "empNo", "onboarding") and person.get(key) != record.get(key)
+        if key not in ("lastModified", "empNo", "onboarding", "isAdmin", "unit")
+        and person.get(key) != record.get(key)
     ]
     if unit is not None and unit != old_unit:
         changes.append(f"單位: {_j(old_unit)} → {_j(unit)}")

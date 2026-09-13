@@ -70,6 +70,18 @@
     background:var(--accent);border-color:var(--accent);color:#fff;
   }
   .field-label{font-size:10px;letter-spacing:.14em;color:var(--muted)}
+
+  /* ---------- 管理員皇冠 ---------- */
+  .crown{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:18px;height:18px;border-radius:9999px;flex-shrink:0;
+    background:#FFF4D6;color:#C98A00;border:1px solid #F5D98B;
+  }
+  .crown svg{width:11px;height:11px}
+  .crown-lg{width:22px;height:22px}
+  .crown-lg svg{width:13px;height:13px}
+  .badge-card.is-admin{border-color:#F0DCA4}
+  .badge-card.is-admin::before{background:#E0A100;opacity:1}
   .badge-card.entering{transition:none}
 
   /* ---------- 登入者 ---------- */
@@ -151,6 +163,22 @@
   .btn-danger:hover{opacity:.9}
   .btn-danger:active{transform:scale(.98)}
   .btn-danger:disabled{opacity:.42;cursor:not-allowed}
+
+  /* ---------- 管理員管理 ---------- */
+  .admin-row{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;
+  }
+  .admin-row.me{background:#F5FBFA;border-color:#BFD8D6}
+  .admin-row.missing{border-style:dashed;background:#FFFBEB;border-color:#F5D98B}
+  .pick-list{max-height:260px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+  .pick-item{
+    width:100%;display:flex;align-items:center;gap:10px;text-align:left;
+    padding:8px 12px;border-bottom:1px solid var(--line);transition:background .12s;
+  }
+  .pick-item:last-child{border-bottom:none}
+  .pick-item:hover{background:var(--accent-soft)}
+  .pick-item.picked{background:var(--accent-soft);color:var(--accent);font-weight:500}
 
   /* ---------- 自動儲存狀態 ---------- */
   .save-dot{width:7px;height:7px;border-radius:9999px;display:inline-block}
@@ -260,6 +288,13 @@
 
           <template v-else>
             <button v-if="user && user.isAdmin"
+                    class="btn-ghost flex items-center gap-1.5 !py-2"
+                    title="管理員管理" @click="openAdmins">
+              <span class="crown"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/></svg></span>
+              管理員
+            </button>
+
+            <button v-if="user && user.isAdmin"
                     class="btn-ghost flex items-center gap-1.5 !py-2 !text-red-600"
                     title="批次移除人員" @click="startSelection">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -290,6 +325,9 @@
           <div v-if="user" class="user-chip" :title="'登入帳號：' + user.username">
             <span class="user-avatar">{{ initialOf({ nameZh: user.name, nameEn: user.username }) }}</span>
             <span class="text-sm font-medium truncate max-w-[120px]">{{ user.name || user.username }}</span>
+            <span v-if="user.isAdmin" class="crown" title="管理員">
+              <svg fill="currentColor" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/></svg>
+            </span>
             <button class="user-logout" title="登出" aria-label="登出" @click="logout">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M10 17l5-5-5-5M15 12H3M21 4v16" stroke-linecap="round" stroke-linejoin="round"/>
@@ -322,7 +360,7 @@
           <button v-for="p in pagedList"
                   :key="p.empNo"
                   class="badge-card"
-                  :class="{ selecting: selectionMode, selected: isSelected(p.empNo) }"
+                  :class="{ selecting: selectionMode, selected: isSelected(p.empNo), 'is-admin': p.isAdmin }"
                   @click="selectionMode ? toggleSelection(p.empNo) : openEdit(p)">
 
             <span v-if="selectionMode" class="select-check">
@@ -339,7 +377,12 @@
                 {{ initialOf(p) }}
               </div>
               <div class="min-w-0">
-                <div class="font-semibold text-[15px] truncate">{{ p.nameZh || '（未填姓名）' }}</div>
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="font-semibold text-[15px] truncate">{{ p.nameZh || '（未填姓名）' }}</span>
+                  <span v-if="p.isAdmin" class="crown" title="管理員（admin.json）">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/></svg>
+                  </span>
+                </div>
                 <div class="mono text-[11px] text-[var(--muted)] truncate" :title="p.unit || '未指定單位'">
                   {{ unitCode(p.unit) || '未指定單位' }}
                 </div>
@@ -396,6 +439,87 @@
       </footer>
     </div>
 
+    <!-- ==================== 管理員管理頁 ==================== -->
+    <div v-else-if="view === 'admins'" key="admins" class="flex-1 min-h-0 flex flex-col">
+      <header class="shrink-0 px-8 py-4 flex items-center gap-4 border-b border-[var(--line)] bg-white/85 backdrop-blur">
+        <button class="btn-ghost flex items-center gap-1.5" @click="backToList">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          返回
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="text-lg font-bold flex items-center gap-2">
+            <span class="crown crown-lg"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/></svg></span>
+            管理員管理
+          </div>
+          <div class="text-xs text-[var(--muted)]">管理員可移除人員、勾選入職清單、管理管理員；名單存於 admin.json，修改後立即生效</div>
+        </div>
+        <span class="text-sm text-[var(--muted)]">目前 {{ admins.length }} 位</span>
+      </header>
+
+      <main class="flex-1 min-h-0 overflow-y-auto scroll-area px-8 py-6">
+        <div class="max-w-5xl mx-auto grid gap-5 md:grid-cols-2">
+
+          <section class="sec-card">
+            <h2 class="sec-title">目前管理員</h2>
+            <div v-if="adminsLoading" class="text-sm text-[var(--muted)] py-6 text-center">Loading…</div>
+            <div v-else class="space-y-2">
+              <div v-for="a in admins" :key="a.empNo" class="admin-row"
+                   :class="{ me: isMe(a.empNo), missing: !a.exists }">
+                <img v-if="a.photoUrl" :src="photoSrc(a)" alt=""
+                     class="w-10 h-10 rounded-full object-cover border border-[var(--line)] shrink-0">
+                <div v-else class="w-10 h-10 rounded-full bg-[var(--accent-soft)] text-[var(--accent)]
+                                   flex items-center justify-center font-bold shrink-0">
+                  {{ initialOf(a) }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="font-semibold text-[15px] truncate">
+                    {{ a.nameZh || (a.exists ? '（未填姓名）' : '（不在通訊錄內）') }}
+                    <span v-if="isMe(a.empNo)" class="text-[11px] font-normal text-[var(--accent)] ml-1">（我）</span>
+                  </div>
+                  <div class="mono text-[11px] text-[var(--muted)] truncate" :title="a.unit">
+                    {{ a.empNo }}<template v-if="a.unit"> · {{ unitCode(a.unit) }}</template><template v-if="a.title"> · {{ a.title }}</template>
+                  </div>
+                </div>
+                <button class="btn-ghost !py-1.5 text-sm !text-red-500"
+                        :disabled="adminBusy || isMe(a.empNo) || admins.length <= 1"
+                        :title="isMe(a.empNo) ? '不能移除自己' : (admins.length <= 1 ? '至少要保留一位管理員' : '移除管理員權限')"
+                        @click="removeAdmin(a)">移除</button>
+              </div>
+              <p v-if="!admins.length" class="text-sm text-[var(--muted)] py-4 text-center">目前沒有任何管理員</p>
+            </div>
+          </section>
+
+          <section class="sec-card">
+            <h2 class="sec-title">新增管理員</h2>
+            <p class="text-xs text-[var(--muted)] mb-3">只能從通訊錄內已建檔的人員中挑選</p>
+            <div class="relative mb-3">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]"
+                   fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3" stroke-linecap="round"/>
+              </svg>
+              <input v-model="adminKeyword" type="text" placeholder="搜尋工號、姓名…" class="ipt !pl-9">
+            </div>
+            <div class="pick-list">
+              <button v-for="p in adminCandidates" :key="p.empNo" class="pick-item"
+                      :class="{ picked: adminPick === p.empNo }" @click="adminPick = p.empNo">
+                <span class="mono text-[12px] text-[var(--muted)] w-16 shrink-0">{{ p.empNo }}</span>
+                <span class="truncate">{{ p.nameZh || '（未填姓名）' }}</span>
+                <span class="mono text-[11px] text-[var(--muted)] ml-auto shrink-0">{{ unitCode(p.unit) }}</span>
+              </button>
+              <p v-if="!adminCandidates.length" class="text-sm text-[var(--muted)] py-4 text-center">
+                {{ adminKeyword ? '找不到符合的人員' : '所有人員都已是管理員' }}
+              </p>
+            </div>
+            <button class="btn-accent w-full mt-3" :disabled="!adminPick || adminBusy" @click="addAdmin">
+              {{ adminBusy ? '處理中…' : (adminPick ? `將 ${adminPick} 設為管理員` : '請先選擇人員') }}
+            </button>
+          </section>
+        </div>
+      </main>
+    </div>
+
     <!-- ==================== 編輯／新增頁 ==================== -->
     <div v-else key="edit" class="flex-1 min-h-0 flex flex-col">
       <header class="shrink-0 px-8 py-4 flex items-center gap-4 border-b border-[var(--line)] bg-white/85 backdrop-blur">
@@ -410,6 +534,9 @@
             <template v-if="mode === 'create'">新增人員</template>
             <template v-else>
               {{ form.nameZh || '（未填姓名）' }}
+              <span v-if="form.isAdmin" class="crown crown-lg align-middle ml-1" title="管理員（admin.json）">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5L3 8z"/></svg>
+              </span>
               <span class="mono text-sm font-medium text-[var(--muted)] ml-1">#{{ form.empNo }}</span>
               <span v-if="form.unit" class="mono text-sm font-medium text-[var(--muted)] ml-1" :title="form.unit">· {{ unitCode(form.unit) }}</span>
             </template>
@@ -686,6 +813,12 @@ createApp({
       selectedEmpNos: [],
       deleting: false,
 
+      admins: [],
+      adminsLoading: false,
+      adminBusy: false,
+      adminKeyword: '',
+      adminPick: '',
+
       CROP_VIEW: 320,
       ZOOM_MAX: 3,
       cropper: {
@@ -751,6 +884,17 @@ createApp({
         previous = number;
       }
       return output;
+    },
+
+    // ---------- 管理員管理 ----------
+    adminCandidates() {
+      const existing = new Set(this.admins.map(a => String(a.empNo).toUpperCase()));
+      const keyword = this.adminKeyword.trim().toLowerCase();
+      return this.list
+        .filter(p => !existing.has(String(p.empNo).toUpperCase()))
+        .filter(p => !keyword ||
+          ['empNo', 'nameZh', 'nameEn', 'unit'].some(f => String(p[f] || '').toLowerCase().includes(keyword)))
+        .slice(0, 60);
     },
 
     // ---------- 入職作業清單 ----------
@@ -835,6 +979,7 @@ createApp({
       record.eduSecond = Object.assign({ school: '', major: '', period: '' }, record.eduSecond || {});
       record.experiences = Array.isArray(record.experiences) ? record.experiences : [];
       record.onboarding = Array.isArray(record.onboarding) ? record.onboarding : [];
+      record.isAdmin = Boolean(record.isAdmin);
       record.unit = record.unit || '';
       record.hireDate = this.fixDate(record.hireDate);
       record.birthDate = this.fixDate(record.birthDate);
@@ -1015,6 +1160,77 @@ createApp({
       } finally {
         this.deleting = false;
       }
+    },
+
+    // ---------- 管理員管理 ----------
+    isMe(empNo) {
+      return Boolean(this.user) &&
+        String(this.user.username || '').toUpperCase() === String(empNo || '').toUpperCase();
+    },
+    async openAdmins() {
+      this.adminKeyword = '';
+      this.adminPick = '';
+      this.view = 'admins';
+      await this.fetchAdmins();
+    },
+    async fetchAdmins() {
+      this.adminsLoading = true;
+      try {
+        const response = await apiFetch(`${API_BASE}/api/admins`);
+        if (!response.ok) throw new Error();
+        this.admins = (await response.json()).admins || [];
+      } catch (error) {
+        this.showToast('讀取管理員清單失敗');
+      } finally {
+        this.adminsLoading = false;
+      }
+    },
+    async addAdmin() {
+      if (!this.adminPick || this.adminBusy) return;
+      this.adminBusy = true;
+      try {
+        const response = await apiFetch(`${API_BASE}/api/admins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ empNo: this.adminPick }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || '新增失敗');
+        this.showToast(`${this.adminPick} 已設為管理員`);
+        this.adminPick = '';
+        this.adminKeyword = '';
+        await this.fetchAdmins();
+        this.syncAdminFlags();
+      } catch (error) {
+        this.showToast(error.message || '新增失敗');
+      } finally {
+        this.adminBusy = false;
+      }
+    },
+    async removeAdmin(admin) {
+      if (this.adminBusy) return;
+      const label = `${admin.nameZh || '未填姓名'}（${admin.empNo}）`;
+      if (!window.confirm(`確定要移除 ${label} 的管理員權限？`)) return;
+      this.adminBusy = true;
+      try {
+        const response = await apiFetch(`${API_BASE}/api/admins/${encodeURIComponent(admin.empNo)}`, {
+          method: 'DELETE',
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || '移除失敗');
+        this.showToast(`已移除 ${label} 的管理員權限`);
+        await this.fetchAdmins();
+        this.syncAdminFlags();
+      } catch (error) {
+        this.showToast(error.message || '移除失敗');
+      } finally {
+        this.adminBusy = false;
+      }
+    },
+    syncAdminFlags() {
+      // 依最新 admin 名單更新清單卡片上的皇冠，不必重抓整份人員清單
+      const set = new Set(this.admins.map(a => String(a.empNo).toUpperCase()));
+      this.list = this.list.map(p => ({ ...p, isAdmin: set.has(String(p.empNo).toUpperCase()) }));
     },
 
     openCreate() {
