@@ -1,0 +1,158 @@
+2026-09-17 19:00:58 | INFO     | [LOGIN] 成功 | empId=K18251 | role=leader | ip=127.0.0.1
+2026-09-17 19:22:18 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:22:18 | INFO     | [SECURITY] 由 CSV 建立範本 security_template.json,共 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K18251 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K25578 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K25715 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K25992 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26285 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26287 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26288 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26490 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26491 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26641 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26647 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26880 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26881 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K26882 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K27124 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K27125 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K27799 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K27800 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:30:49 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:30:49 | INFO     | [SECURITY] K77777 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K18251 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K25578 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K25715 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K25992 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26285 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26287 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26288 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26490 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26491 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26641 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26647 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26880 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26881 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K26882 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K27124 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K27125 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K27799 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K27800 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:31:07 | WARNING  | [SECURITY] 找不到 D:\網頁\KL_AMHS_Training_System\data\KL_Security_C.csv,範本為空
+2026-09-17 19:31:07 | INFO     | [SECURITY] K77777 無認證資料,已由 CSV 補入 0 項
+2026-09-17 19:35:28 | INFO     | [SECURITY] 使用模板檔: D:\網頁\KL_AMHS_Training_System\KL_(Security C).csv
+2026-09-17 19:35:31 | INFO     | [SECURITY] K18251 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K25578 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K25715 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K25992 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26285 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26287 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26288 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26490 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26491 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26641 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26647 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26880 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26881 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K26882 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K27124 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K27125 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K27799 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K27800 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:31 | INFO     | [SECURITY] K77777 無認證資料,已由 CSV 補入 186 項
+2026-09-17 19:35:41 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / E84交握狀態確認 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:35:44 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / E84交握狀態確認 更新 {'has': False} | ip=127.0.0.1
+2026-09-17 19:42:25 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / Automation Control 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:26 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / A3自動化By Pass設定 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:28 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / A3最小合理過帳時間維護 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:29 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / Rule Config Query 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:29 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / EIG Log Monitor 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:30 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / A3 Lot Basic Info Query 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:33 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / FC排貨系統 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:33 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / EMS-機台主檔維護 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:34 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / Configuration 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:34 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / A3單顆基板Boat顆數設定 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:35 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / Schedule Track-in/out Query 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:36 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / A3 Personal Output Analysis  Report 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:36 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / 機台Sch明細表 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:37 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / aEDC-A3 aEDC待完成表單查詢 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:37 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / RMS-A3 RMS Query By Schedule 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:38 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / ME Repair Histroy Query 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:39 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / MES CENTER WEB REPORT / aTrack  Center 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:47 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / 獨立功能 / F1 Dietrace補檔F1_Dietrace 
+(最新整合版 含 Delete Wafer) 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:48 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / 獨立功能 / F3 Dietrace補檔F3_Dietrace 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:48 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / 獨立功能 / F1 HS MultiLot (boat2d 比對查詢) 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:49 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 系統 / 獨立功能 / 2845 Atrack資料刪除程式  最新版 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:52 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / E84交握狀態確認 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:52 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / E84交握狀態確認 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:53 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / 平板操作 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:54 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / 平板操作 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:54 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / 平板操作 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:55 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT程式 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:56 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT程式 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:56 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT程式 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:57 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT程式 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:58 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT車 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:58 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT車 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:42:59 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT車 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:00 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT車 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:00 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / 平板操作 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:01 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / 平板操作 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:01 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT車 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:02 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / OHT Function / OHT程式 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:54 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / CIM報案系統 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:55 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / 報案系統分析網頁 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:55 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / GoTouch 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:55 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / EAP健康度 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:56 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / 自動搬運系統 Alarm 事件查詢系統 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:56 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / 中控室系統 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:57 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / 困難點會議 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:57 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / CIM Leading Index 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:43:58 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] 中控系統 / MFG巡檢 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:02 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3400 / 人機介面使用 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:02 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3400 / ASE PC程式 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:04 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3599 / 廠商PC程式 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:05 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3599 / 人機介面使用 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:05 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3599 / E84交握狀態確認 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:06 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3601 / E84交握狀態確認 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:07 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3610 / 人機介面使用 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:07 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3610 / E84交握狀態確認 更新 {'has': True} | ip=127.0.0.1
+2026-09-17 19:44:07 | INFO     | [PATCH:security] K18251(User-K18251) | [K18251] AMHS / 3610 / 廠商PC程式 更新 {'has': True} | ip=127.0.0.1
