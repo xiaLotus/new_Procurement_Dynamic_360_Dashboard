@@ -1,0 +1,1722 @@
+2026-09-17 16:11:03.034 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 16:11:03.062 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 16:11:03.443 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12721 筆)
+2026-09-17 16:11:03.449 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 16:11:25.391 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=29502
+2026-09-17 16:11:25.392 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 16:11:25.392 | INFO | ✅ [步驟 C] 等級 A 符合顯示條件，準備 POST...
+2026-09-17 16:11:25.505 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='your-external-website.com', port=443): Max retries exceeded with url: /api/display_endpoint (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001645CDD1730>: Failed to resolve 'your-external-website.com' ([Errno 11001] getaddrinfo failed)"))
+2026-09-17 16:11:25.517 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=OHT_WD7093C
+2026-09-17 16:11:25.517 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 16:11:25.517 | INFO | ✅ [步驟 C] 等級 B 符合顯示條件，準備 POST...
+2026-09-17 16:11:25.518 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='your-external-website.com', port=443): Max retries exceeded with url: /api/display_endpoint (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001645CDD1AF0>: Failed to resolve 'your-external-website.com' ([Errno 11001] getaddrinfo failed)"))
+2026-09-17 16:11:25.525 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=UNKNOWN_CODE_999
+2026-09-17 16:11:25.525 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 16:11:25.525 | INFO | ✅ [步驟 C] 等級 C 符合顯示條件，準備 POST...
+2026-09-17 16:11:25.526 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='your-external-website.com', port=443): Max retries exceeded with url: /api/display_endpoint (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001645E11FBB0>: Failed to resolve 'your-external-website.com' ([Errno 11001] getaddrinfo failed)"))
+2026-09-17 16:11:25.543 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=TEST_999
+2026-09-17 16:11:25.543 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 16:11:25.543 | INFO | ℹ️ [步驟 C] 資料已存庫，但等級為 'D'，不符合顯示條件，跳過 POST。
+2026-09-17 16:11:25.546 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 16:12:08.974 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 16:12:08.987 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 16:12:09.347 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12721 筆)
+2026-09-17 16:12:09.353 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 16:12:10.815 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=29502
+2026-09-17 16:12:10.815 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 16:12:10.816 | INFO | ✅ [步驟 C] 等級 A 符合顯示條件，準備 POST...
+2026-09-17 16:12:10.820 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='your-external-website.com', port=443): Max retries exceeded with url: /api/display_endpoint (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002E94E88C850>: Failed to resolve 'your-external-website.com' ([Errno 11001] getaddrinfo failed)"))
+2026-09-17 16:12:10.833 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=OHT_WD7093C
+2026-09-17 16:12:10.834 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 16:12:10.834 | INFO | ✅ [步驟 C] 等級 B 符合顯示條件，準備 POST...
+2026-09-17 16:12:10.835 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='your-external-website.com', port=443): Max retries exceeded with url: /api/display_endpoint (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002E94CEAA940>: Failed to resolve 'your-external-website.com' ([Errno 11001] getaddrinfo failed)"))
+2026-09-17 16:12:10.837 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=UNKNOWN_CODE_999
+2026-09-17 16:12:10.838 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 16:12:10.838 | INFO | ✅ [步驟 C] 等級 C 符合顯示條件，準備 POST...
+2026-09-17 16:12:10.839 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='your-external-website.com', port=443): Max retries exceeded with url: /api/display_endpoint (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000002E94E06F580>: Failed to resolve 'your-external-website.com' ([Errno 11001] getaddrinfo failed)"))
+2026-09-17 16:12:10.841 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=TEST_999
+2026-09-17 16:12:10.841 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 16:12:10.841 | INFO | ℹ️ [步驟 C] 資料已存庫，但等級為 'D'，不符合顯示條件，跳過 POST。
+2026-09-17 16:12:10.843 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 16:15:11.138 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 16:15:11.150 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 16:15:11.536 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12721 筆)
+2026-09-17 16:15:11.542 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 16:15:14.501 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=29502
+2026-09-17 16:15:14.501 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 16:15:14.502 | INFO | ✅ [步驟 C] 等級 A 符合顯示條件，準備 POST...
+2026-09-17 16:15:19.507 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=OHT_WD7093C
+2026-09-17 16:15:19.509 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 16:15:19.510 | INFO | ✅ [步驟 C] 等級 B 符合顯示條件，準備 POST...
+2026-09-17 16:15:24.520 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=UNKNOWN_CODE_999
+2026-09-17 16:15:24.521 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 16:15:24.521 | INFO | ✅ [步驟 C] 等級 C 符合顯示條件，準備 POST...
+2026-09-17 16:15:29.523 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=TEST_999
+2026-09-17 16:15:29.524 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 16:15:29.524 | INFO | ℹ️ [步驟 C] 資料已存庫，但等級為 'D'，不符合顯示條件，跳過 POST。
+2026-09-17 16:15:29.538 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 16:15:54.655 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='httpbin.org', port=443): Max retries exceeded with url: /post (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x000002DECC21E7C0>, 'Connection to httpbin.org timed out. (connect timeout=5)'))
+2026-09-17 16:15:59.517 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='httpbin.org', port=443): Max retries exceeded with url: /post (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x000002DECCB4D850>, 'Connection to httpbin.org timed out. (connect timeout=5)'))
+2026-09-17 16:16:04.529 | ERROR | ❌ [步驟 C] POST 到外部系統失敗: HTTPSConnectionPool(host='httpbin.org', port=443): Max retries exceeded with url: /post (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x000002DECBEBBA90>, 'Connection to httpbin.org timed out. (connect timeout=5)'))
+2026-09-17 16:18:08.050 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 16:18:08.063 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 16:18:08.432 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12721 筆)
+2026-09-17 16:18:08.439 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 16:18:09.373 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=29502
+2026-09-17 16:18:09.373 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 16:18:09.373 | INFO | ✅ [步驟 C] 等級 A 符合顯示條件，準備 POST...
+2026-09-17 16:18:09.378 | INFO | 📥 [Mock Endpoint] 成功接收到 POST 資料！AlarmCode: 29502, Match_Method: Not Found, Level: A
+2026-09-17 16:18:09.379 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:18:09.381 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=OHT_WD7093C
+2026-09-17 16:18:09.382 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 16:18:09.382 | INFO | ✅ [步驟 C] 等級 B 符合顯示條件，準備 POST...
+2026-09-17 16:18:09.383 | INFO | 📥 [Mock Endpoint] 成功接收到 POST 資料！AlarmCode: OHT_WD7093C, Match_Method: AlarmCode, Level: B
+2026-09-17 16:18:09.383 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:18:09.396 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=UNKNOWN_CODE_999
+2026-09-17 16:18:09.396 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 16:18:09.397 | INFO | ✅ [步驟 C] 等級 C 符合顯示條件，準備 POST...
+2026-09-17 16:18:09.398 | INFO | 📥 [Mock Endpoint] 成功接收到 POST 資料！AlarmCode: UNKNOWN_CODE_999, Match_Method: Not Found, Level: C
+2026-09-17 16:18:09.399 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:18:09.401 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=TEST_999
+2026-09-17 16:18:09.401 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 16:18:09.401 | INFO | ℹ️ [步驟 C] 資料已存庫，但等級為 'D'，不符合顯示條件，跳過 POST。
+2026-09-17 16:18:09.413 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 16:18:54.909 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 16:18:54.922 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 16:18:55.293 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12721 筆)
+2026-09-17 16:18:55.300 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 16:18:57.412 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=29502
+2026-09-17 16:18:57.412 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 16:18:57.413 | INFO | ✅ [步驟 C] 等級 A 符合顯示條件，準備 POST...
+2026-09-17 16:18:57.418 | INFO | 📥 [Mock Endpoint] 成功接收到 POST 資料！AlarmCode: 29502, Match_Method: Not Found, Level: A
+2026-09-17 16:18:57.419 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:18:57.421 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=OHT_WD7093C
+2026-09-17 16:18:57.421 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 16:18:57.421 | INFO | ✅ [步驟 C] 等級 B 符合顯示條件，準備 POST...
+2026-09-17 16:18:57.422 | INFO | 📥 [Mock Endpoint] 成功接收到 POST 資料！AlarmCode: OHT_WD7093C, Match_Method: AlarmCode, Level: B
+2026-09-17 16:18:57.423 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:18:57.436 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=UNKNOWN_CODE_999
+2026-09-17 16:18:57.437 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 16:18:57.437 | INFO | ✅ [步驟 C] 等級 C 符合顯示條件，準備 POST...
+2026-09-17 16:18:57.439 | INFO | 📥 [Mock Endpoint] 成功接收到 POST 資料！AlarmCode: UNKNOWN_CODE_999, Match_Method: Not Found, Level: C
+2026-09-17 16:18:57.439 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:18:57.441 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=TEST_999
+2026-09-17 16:18:57.442 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 16:18:57.442 | INFO | ℹ️ [步驟 C] 資料已存庫，但等級為 'D'，不符合顯示條件，跳過 POST。
+2026-09-17 16:18:57.456 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 16:39:41.481 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 16:39:41.494 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 16:39:41.871 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12721 筆)
+2026-09-17 16:39:41.878 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 16:39:46.361 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=29502
+2026-09-17 16:39:46.361 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 16:39:46.361 | INFO | ✅ [步驟 C] 等級 A 符合顯示條件，準備 POST...
+2026-09-17 16:39:46.366 | INFO | 📥 [Web UI] 接收到新警報: e4c6af95-84b6-4127-84ad-bef81ee53fd1, Level: A, Code: 29502
+2026-09-17 16:39:46.367 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:39:46.369 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=OHT_WD7093C
+2026-09-17 16:39:46.370 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 16:39:46.370 | INFO | ✅ [步驟 C] 等級 B 符合顯示條件，準備 POST...
+2026-09-17 16:39:46.371 | INFO | 📥 [Web UI] 接收到新警報: d6076643-9d0d-49d8-9d6d-d4283d6c3e8d, Level: B, Code: OHT_WD7093C
+2026-09-17 16:39:46.372 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:39:46.374 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=UNKNOWN_CODE_999
+2026-09-17 16:39:46.374 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 16:39:46.374 | INFO | ✅ [步驟 C] 等級 C 符合顯示條件，準備 POST...
+2026-09-17 16:39:46.375 | INFO | 📥 [Web UI] 接收到新警報: 91d2e2cd-579b-42bd-87b2-b8572eeec5c0, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 16:39:46.376 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:39:46.379 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=TEST_999
+2026-09-17 16:39:46.379 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 16:39:46.379 | INFO | ℹ️ [步驟 C] 資料已存庫，但等級為 'D'，不符合顯示條件，跳過 POST。
+2026-09-17 16:39:46.381 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 16:39:53.462 | INFO | 🗑️ [Web UI] 已確認並移除警報: 91d2e2cd-579b-42bd-87b2-b8572eeec5c0
+2026-09-17 16:39:54.413 | INFO | 🗑️ [Web UI] 已確認並移除警報: d6076643-9d0d-49d8-9d6d-d4283d6c3e8d
+2026-09-17 16:39:55.111 | INFO | 🗑️ [Web UI] 已確認並移除警報: e4c6af95-84b6-4127-84ad-bef81ee53fd1
+2026-09-17 16:45:11.013 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=29502
+2026-09-17 16:45:11.013 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 16:45:11.013 | INFO | ✅ [步驟 C] 等級 A 符合顯示條件，準備 POST...
+2026-09-17 16:45:11.015 | INFO | 📥 [Web UI] 接收到新警報: d036232f-bd66-4ea6-8f37-af083d966b85, Level: A, Code: 29502
+2026-09-17 16:45:11.016 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:45:11.018 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=OHT_WD7093C
+2026-09-17 16:45:11.018 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 16:45:11.019 | INFO | ✅ [步驟 C] 等級 B 符合顯示條件，準備 POST...
+2026-09-17 16:45:11.020 | INFO | 📥 [Web UI] 接收到新警報: d6510573-f607-4376-b959-b57844b58c17, Level: B, Code: OHT_WD7093C
+2026-09-17 16:45:11.020 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:45:11.024 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=UNKNOWN_CODE_999
+2026-09-17 16:45:11.025 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 16:45:11.025 | INFO | ✅ [步驟 C] 等級 C 符合顯示條件，準備 POST...
+2026-09-17 16:45:11.027 | INFO | 📥 [Web UI] 接收到新警報: c5c1a61d-6b07-4b32-8e1d-6c46c990792a, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 16:45:11.027 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:45:11.030 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=TEST_999
+2026-09-17 16:45:11.031 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 16:45:11.031 | INFO | ℹ️ [步驟 C] 資料已存庫，但等級為 'D'，不符合顯示條件，跳過 POST。
+2026-09-17 16:45:11.033 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 16:45:15.576 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=29502
+2026-09-17 16:45:15.576 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 16:45:15.577 | INFO | ✅ [步驟 C] 等級 A 符合顯示條件，準備 POST...
+2026-09-17 16:45:15.578 | INFO | 📥 [Web UI] 接收到新警報: 5f19b0bc-1ce1-439d-9fe7-e7150f1a7d84, Level: A, Code: 29502
+2026-09-17 16:45:15.579 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:45:15.582 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=OHT_WD7093C
+2026-09-17 16:45:15.583 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 16:45:15.583 | INFO | ✅ [步驟 C] 等級 B 符合顯示條件，準備 POST...
+2026-09-17 16:45:15.584 | INFO | 📥 [Web UI] 接收到新警報: c6f20734-b6a2-4a79-a178-c8b984695623, Level: B, Code: OHT_WD7093C
+2026-09-17 16:45:15.585 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:45:15.587 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=UNKNOWN_CODE_999
+2026-09-17 16:45:15.587 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 16:45:15.588 | INFO | ✅ [步驟 C] 等級 C 符合顯示條件，準備 POST...
+2026-09-17 16:45:15.589 | INFO | 📥 [Web UI] 接收到新警報: 112b7e9f-0a63-4cd7-beaa-f013db27cc63, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 16:45:15.589 | SUCCESS | ✅ [步驟 C] POST 成功，狀態碼: 200
+2026-09-17 16:45:15.603 | SUCCESS | ✅ [步驟 A] 已寫入資料：AlarmCode=TEST_999
+2026-09-17 16:45:15.603 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 16:45:15.603 | INFO | ℹ️ [步驟 C] 資料已存庫，但等級為 'D'，不符合顯示條件，跳過 POST。
+2026-09-17 16:45:15.606 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 16:46:26.949 | INFO | 🗑️ [Web UI] 已確認並移除警報: 112b7e9f-0a63-4cd7-beaa-f013db27cc63
+2026-09-17 16:46:28.557 | INFO | 🗑️ [Web UI] 已確認並移除警報: c6f20734-b6a2-4a79-a178-c8b984695623
+2026-09-17 16:46:29.342 | INFO | 🗑️ [Web UI] 已確認並移除警報: 5f19b0bc-1ce1-439d-9fe7-e7150f1a7d84
+2026-09-17 16:46:30.020 | INFO | 🗑️ [Web UI] 已確認並移除警報: c5c1a61d-6b07-4b32-8e1d-6c46c990792a
+2026-09-17 16:46:30.728 | INFO | 🗑️ [Web UI] 已確認並移除警報: d6510573-f607-4376-b959-b57844b58c17
+2026-09-17 16:46:34.828 | INFO | 🗑️ [Web UI] 已確認並移除警報: d036232f-bd66-4ea6-8f37-af083d966b85
+2026-09-17 20:25:17.135 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 20:25:17.159 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 20:25:17.753 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12609 筆)
+2026-09-17 20:25:17.763 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 20:25:26.167 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:25:26.167 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:25:26.168 | INFO | 📥 [Web UI] 接收到新警報: 4a6baf37-7bf3-42e6-8dde-8f6709d18b95, Level: A, Code: 29502
+2026-09-17 20:25:26.168 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=4a6baf37-7bf3-42e6-8dde-8f6709d18b95)
+2026-09-17 20:25:28.224 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:25:28.225 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:25:28.225 | INFO | 📥 [Web UI] 接收到新警報: 49aecce3-2cfd-4c80-8a45-8e2189781016, Level: B, Code: OHT_WD7093C
+2026-09-17 20:25:28.225 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=49aecce3-2cfd-4c80-8a45-8e2189781016)
+2026-09-17 20:25:30.260 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:25:30.260 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:25:30.261 | INFO | 📥 [Web UI] 接收到新警報: c385003e-b2c8-48e2-b014-a09dfc16cdec, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:25:30.261 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=c385003e-b2c8-48e2-b014-a09dfc16cdec)
+2026-09-17 20:25:30.871 | WARNING | 🔒 [Web UI] 登入失敗: K18251
+2026-09-17 20:25:32.317 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=TEST_999 (DB 寫入目前停用)
+2026-09-17 20:25:32.317 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 20:25:32.317 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:25:34.358 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 20:28:53.410 | WARNING | 🔒 [Web UI] 登入失敗: K18251
+2026-09-17 20:29:42.419 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 20:29:42.432 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 20:29:42.914 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12609 筆)
+2026-09-17 20:29:42.924 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 20:29:46.268 | WARNING | 🔒 [Web UI] 登入失敗：K18251 密碼錯誤
+2026-09-17 20:31:28.628 | WARNING | 🔒 [Web UI] 登入失敗：K18251 密碼錯誤
+2026-09-17 20:31:34.597 | WARNING | 🔒 [Web UI] 登入失敗：K18251 密碼錯誤
+2026-09-17 20:32:40.167 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 20:32:40.182 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 20:32:40.730 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12609 筆)
+2026-09-17 20:32:40.741 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 20:32:42.859 | INFO | 🔑 [Web UI] 登入：K18251
+2026-09-17 20:32:48.200 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:32:48.201 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:32:48.201 | INFO | 📥 [Web UI] 接收到新警報: 4b784539-546f-4d2d-bee8-743448e07820, Level: A, Code: 29502
+2026-09-17 20:32:48.201 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=4b784539-546f-4d2d-bee8-743448e07820)
+2026-09-17 20:32:50.272 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:32:50.273 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:32:50.273 | INFO | 📥 [Web UI] 接收到新警報: f043e6f3-1f14-45f6-a95c-3549e3dfcdbc, Level: B, Code: OHT_WD7093C
+2026-09-17 20:32:50.273 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=f043e6f3-1f14-45f6-a95c-3549e3dfcdbc)
+2026-09-17 20:32:52.325 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:32:52.325 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:32:52.325 | INFO | 📥 [Web UI] 接收到新警報: 21d83642-3db5-4358-9711-3b4e71fa574c, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:32:52.325 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=21d83642-3db5-4358-9711-3b4e71fa574c)
+2026-09-17 20:32:54.392 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=TEST_999 (DB 寫入目前停用)
+2026-09-17 20:32:54.393 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 20:32:54.393 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:32:56.452 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 20:32:58.696 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:32:58.696 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:32:58.698 | INFO | 📥 [Web UI] 接收到新警報: a378f6b4-8179-4e9d-8a07-5faf15736e44, Level: A, Code: 29502
+2026-09-17 20:32:58.698 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=a378f6b4-8179-4e9d-8a07-5faf15736e44)
+2026-09-17 20:33:00.775 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:33:00.776 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:33:00.776 | INFO | 📥 [Web UI] 接收到新警報: 0212c9eb-ff73-407b-92fa-2f4301386211, Level: B, Code: OHT_WD7093C
+2026-09-17 20:33:00.776 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=0212c9eb-ff73-407b-92fa-2f4301386211)
+2026-09-17 20:33:02.828 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:33:02.828 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:33:02.828 | INFO | 📥 [Web UI] 接收到新警報: 01281408-c866-40de-b6c1-155ce54cf9ec, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:33:02.828 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=01281408-c866-40de-b6c1-155ce54cf9ec)
+2026-09-17 20:33:04.898 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=TEST_999 (DB 寫入目前停用)
+2026-09-17 20:33:04.899 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 20:33:04.899 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:33:06.953 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 20:39:05.206 | INFO | 🔑 [Web UI] 登入：K18251
+2026-09-17 20:39:24.426 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: a378f6b4-8179-4e9d-8a07-5faf15736e44
+2026-09-17 20:42:13.862 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:42:13.864 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:42:13.865 | INFO | 📥 [Web UI] 接收到新警報: 12ba3392-2964-481f-9af6-3436ce6da766, Level: A, Code: 29502
+2026-09-17 20:42:13.866 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=12ba3392-2964-481f-9af6-3436ce6da766)
+2026-09-17 20:42:15.947 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:42:15.948 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:42:15.949 | INFO | 📥 [Web UI] 接收到新警報: b18e9b25-bf82-4162-88bc-a2d41533e836, Level: B, Code: OHT_WD7093C
+2026-09-17 20:42:15.949 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=b18e9b25-bf82-4162-88bc-a2d41533e836)
+2026-09-17 20:42:18.000 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:42:18.000 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:42:18.001 | INFO | 📥 [Web UI] 接收到新警報: 34cc4597-0321-480d-9879-1e0aa59debf0, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:42:18.003 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=34cc4597-0321-480d-9879-1e0aa59debf0)
+2026-09-17 20:42:20.069 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=TEST_999 (DB 寫入目前停用)
+2026-09-17 20:42:20.069 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=TEST_999
+2026-09-17 20:42:20.069 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:42:22.116 | WARNING | ⚠️ 缺少必要欄位
+2026-09-17 20:44:30.131 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: 12ba3392-2964-481f-9af6-3436ce6da766
+2026-09-17 20:44:30.968 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: 4b784539-546f-4d2d-bee8-743448e07820
+2026-09-17 20:44:31.648 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: 0212c9eb-ff73-407b-92fa-2f4301386211
+2026-09-17 20:44:32.158 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: b18e9b25-bf82-4162-88bc-a2d41533e836
+2026-09-17 20:44:33.182 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: f043e6f3-1f14-45f6-a95c-3549e3dfcdbc
+2026-09-17 20:44:33.958 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: 01281408-c866-40de-b6c1-155ce54cf9ec
+2026-09-17 20:44:35.183 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: 34cc4597-0321-480d-9879-1e0aa59debf0
+2026-09-17 20:44:36.148 | INFO | 🗑️ [Web UI] K18251 已確認並移除警報: 21d83642-3db5-4358-9711-3b4e71fa574c
+2026-09-17 20:44:40.609 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:40.610 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 20:44:40.610 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:40.812 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:40.813 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:40.813 | INFO | 📥 [Web UI] 接收到新警報: bb8cb665-68b0-46ec-a69c-f1d40f72ddec, Level: C, Code: DRYA0146
+2026-09-17 20:44:40.813 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=bb8cb665-68b0-46ec-a69c-f1d40f72ddec)
+2026-09-17 20:44:41.015 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:41.015 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:41.016 | INFO | 📥 [Web UI] 接收到新警報: 1130f6d4-0af8-4259-b3bd-4c9d47789a63, Level: B, Code: 29502
+2026-09-17 20:44:41.016 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=1130f6d4-0af8-4259-b3bd-4c9d47789a63)
+2026-09-17 20:44:41.186 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:41.186 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 20:44:41.186 | INFO | 📥 [Web UI] 接收到新警報: b7a49804-89bf-4487-815d-cd3d830ffa28, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:44:41.187 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=b7a49804-89bf-4487-815d-cd3d830ffa28)
+2026-09-17 20:44:41.419 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:41.419 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:41.421 | INFO | 📥 [Web UI] 接收到新警報: 710fe9b0-b082-48bb-bad0-567825ddbe0a, Level: B, Code: DRYA0146
+2026-09-17 20:44:41.421 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=710fe9b0-b082-48bb-bad0-567825ddbe0a)
+2026-09-17 20:44:41.621 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:41.621 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:41.621 | INFO | 📥 [Web UI] 接收到新警報: c8b68af3-bbd1-4539-9cc7-69a1ccf320f9, Level: C, Code: OHT_WD7093C
+2026-09-17 20:44:41.623 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=c8b68af3-bbd1-4539-9cc7-69a1ccf320f9)
+2026-09-17 20:44:41.841 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:41.841 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:41.842 | INFO | 📥 [Web UI] 接收到新警報: 11afe77b-6b25-457a-8fde-d27cce629319, Level: A, Code: STRESS_NOCODE
+2026-09-17 20:44:41.842 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=11afe77b-6b25-457a-8fde-d27cce629319)
+2026-09-17 20:44:42.028 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:42.028 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:42.028 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:42.184 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:42.185 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:42.185 | INFO | 📥 [Web UI] 接收到新警報: 316e459a-2678-485d-a30b-a0388aded170, Level: C, Code: DRYA0146
+2026-09-17 20:44:42.185 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=316e459a-2678-485d-a30b-a0388aded170)
+2026-09-17 20:44:42.434 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:42.435 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:42.435 | INFO | 📥 [Web UI] 接收到新警報: 5cbf48d5-a166-472a-8bab-e5126c1cfecd, Level: C, Code: LIFT_4271
+2026-09-17 20:44:42.436 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=5cbf48d5-a166-472a-8bab-e5126c1cfecd)
+2026-09-17 20:44:42.619 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:42.619 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:42.619 | INFO | 📥 [Web UI] 接收到新警報: 8f6e3a86-5f83-46d1-a6cc-901341c1024a, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:44:42.619 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=8f6e3a86-5f83-46d1-a6cc-901341c1024a)
+2026-09-17 20:44:42.807 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:42.807 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 20:44:42.808 | INFO | 📥 [Web UI] 接收到新警報: d71b9f7e-232a-414d-a744-b73f56e90adf, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:44:42.808 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=d71b9f7e-232a-414d-a744-b73f56e90adf)
+2026-09-17 20:44:43.041 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:43.041 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:43.041 | INFO | 📥 [Web UI] 接收到新警報: 74875553-7a48-41bb-bd3e-c948b7b6af4e, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 20:44:43.041 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=74875553-7a48-41bb-bd3e-c948b7b6af4e)
+2026-09-17 20:44:43.211 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:43.211 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:43.211 | INFO | 📥 [Web UI] 接收到新警報: df87f2ea-653d-4e89-8e10-2ae7f88aac5c, Level: C, Code: LIFT_4271
+2026-09-17 20:44:43.211 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=df87f2ea-653d-4e89-8e10-2ae7f88aac5c)
+2026-09-17 20:44:43.400 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:43.400 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 20:44:43.401 | INFO | 📥 [Web UI] 接收到新警報: 7845b89c-0fd9-488d-beff-94221666c851, Level: C, Code: 29502
+2026-09-17 20:44:43.401 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=7845b89c-0fd9-488d-beff-94221666c851)
+2026-09-17 20:44:43.618 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:43.618 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:43.619 | INFO | 📥 [Web UI] 接收到新警報: a109ef2c-ffc1-4e05-a0fb-92029b9ae308, Level: A, Code: LIFT_4271
+2026-09-17 20:44:43.619 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=a109ef2c-ffc1-4e05-a0fb-92029b9ae308)
+2026-09-17 20:44:43.820 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:43.820 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 20:44:43.821 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:44.007 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:44.007 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:44.007 | INFO | 📥 [Web UI] 接收到新警報: d369ee2b-40a6-41b4-90a7-2a56c6db356b, Level: B, Code: DRYA0146
+2026-09-17 20:44:44.008 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=d369ee2b-40a6-41b4-90a7-2a56c6db356b)
+2026-09-17 20:44:44.211 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:44.211 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:44.211 | INFO | 📥 [Web UI] 接收到新警報: 72245c95-6024-4672-8357-a1a844c338e3, Level: C, Code: LIFT_4272
+2026-09-17 20:44:44.211 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=72245c95-6024-4672-8357-a1a844c338e3)
+2026-09-17 20:44:44.413 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:44.414 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:44.414 | INFO | 📥 [Web UI] 接收到新警報: 1052b1fe-b6e0-4dae-9f45-dce786e5fe02, Level: B, Code: UNKNOWN_CODE_999
+2026-09-17 20:44:44.415 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=1052b1fe-b6e0-4dae-9f45-dce786e5fe02)
+2026-09-17 20:44:44.585 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:44.585 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:44.586 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:44.833 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:44.833 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 20:44:44.834 | INFO | 📥 [Web UI] 接收到新警報: e28ec24c-b82d-4934-b1aa-67cde5bd337b, Level: B, Code: 29502
+2026-09-17 20:44:44.834 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=e28ec24c-b82d-4934-b1aa-67cde5bd337b)
+2026-09-17 20:44:45.005 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:45.005 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:45.006 | INFO | 📥 [Web UI] 接收到新警報: e2f04121-32d7-4512-a0f9-2353940db4b2, Level: C, Code: LIFT_4271
+2026-09-17 20:44:45.006 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=e2f04121-32d7-4512-a0f9-2353940db4b2)
+2026-09-17 20:44:45.208 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:45.209 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:45.209 | INFO | 📥 [Web UI] 接收到新警報: edd1c9ed-1d98-44dc-a059-2b15b6114b46, Level: C, Code: DRYA0146
+2026-09-17 20:44:45.210 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=edd1c9ed-1d98-44dc-a059-2b15b6114b46)
+2026-09-17 20:44:45.424 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:45.425 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:45.425 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:45.641 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:45.641 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 20:44:45.641 | INFO | 📥 [Web UI] 接收到新警報: bf68e4a9-70b9-4343-841a-6477fcd9ad30, Level: B, Code: 29502
+2026-09-17 20:44:45.641 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=bf68e4a9-70b9-4343-841a-6477fcd9ad30)
+2026-09-17 20:44:45.811 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:45.811 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 20:44:45.811 | INFO | 📥 [Web UI] 接收到新警報: 87659e3f-fbd8-4fce-9b88-8fe2a8159c2d, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:44:45.811 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=87659e3f-fbd8-4fce-9b88-8fe2a8159c2d)
+2026-09-17 20:44:45.997 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:45.997 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:45.998 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:46.214 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:46.214 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:46.215 | INFO | 📥 [Web UI] 接收到新警報: 2bf90b3a-fbf6-4e31-af65-156af422304f, Level: A, Code: LIFT_4271
+2026-09-17 20:44:46.215 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=2bf90b3a-fbf6-4e31-af65-156af422304f)
+2026-09-17 20:44:46.401 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:46.402 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 20:44:46.402 | INFO | 📥 [Web UI] 接收到新警報: 637112a9-88ae-4efd-bf51-4bf59d834e12, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:44:46.402 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=637112a9-88ae-4efd-bf51-4bf59d834e12)
+2026-09-17 20:44:46.606 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:46.606 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:46.606 | INFO | 📥 [Web UI] 接收到新警報: f2a5bb67-d688-4e2e-8a13-fb1879465b3e, Level: C, Code: LIFT_4272
+2026-09-17 20:44:46.607 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=f2a5bb67-d688-4e2e-8a13-fb1879465b3e)
+2026-09-17 20:44:46.794 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:46.794 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:46.795 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:46.998 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:46.998 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:46.999 | INFO | 📥 [Web UI] 接收到新警報: e6f8c1c9-a40a-4388-a7b6-316d73bbedae, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:44:46.999 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=e6f8c1c9-a40a-4388-a7b6-316d73bbedae)
+2026-09-17 20:44:47.186 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:47.186 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:47.186 | INFO | 📥 [Web UI] 接收到新警報: 5643fa87-8c8a-4464-be9c-c2155cab71de, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:44:47.187 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=5643fa87-8c8a-4464-be9c-c2155cab71de)
+2026-09-17 20:44:47.389 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:47.390 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:47.390 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:47.576 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:47.578 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:47.578 | INFO | 📥 [Web UI] 接收到新警報: 987ed749-6fd6-455e-a015-9de00f730dbc, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:44:47.578 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=987ed749-6fd6-455e-a015-9de00f730dbc)
+2026-09-17 20:44:47.766 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:47.766 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:47.766 | INFO | 📥 [Web UI] 接收到新警報: fddc63ee-6805-4a53-909a-2226c0e4c32a, Level: B, Code: 29502
+2026-09-17 20:44:47.767 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=fddc63ee-6805-4a53-909a-2226c0e4c32a)
+2026-09-17 20:44:47.985 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:47.985 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:47.986 | INFO | 📥 [Web UI] 接收到新警報: 145b32c8-81d7-4621-9e4d-d4e7f6c01a84, Level: A, Code: DRYA0146
+2026-09-17 20:44:47.986 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=145b32c8-81d7-4621-9e4d-d4e7f6c01a84)
+2026-09-17 20:44:48.187 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:48.187 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:48.188 | INFO | 📥 [Web UI] 接收到新警報: a53ba193-c9d2-4ecf-b54a-42366518337d, Level: C, Code: DRYA0146
+2026-09-17 20:44:48.188 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a53ba193-c9d2-4ecf-b54a-42366518337d)
+2026-09-17 20:44:48.391 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:48.391 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:48.391 | INFO | 📥 [Web UI] 接收到新警報: 2e107db8-6892-4fbd-bbfa-0daf42ef81e5, Level: B, Code: LIFT_4272
+2026-09-17 20:44:48.391 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=2e107db8-6892-4fbd-bbfa-0daf42ef81e5)
+2026-09-17 20:44:48.596 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:48.596 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:48.597 | INFO | 📥 [Web UI] 接收到新警報: 40a5f447-5965-4a71-9c72-ec391d87b49c, Level: B, Code: DRYA0146
+2026-09-17 20:44:48.597 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=40a5f447-5965-4a71-9c72-ec391d87b49c)
+2026-09-17 20:44:48.782 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:48.783 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:48.783 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:48.971 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:48.972 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:48.972 | INFO | 📥 [Web UI] 接收到新警報: 510c465b-5c51-4144-8ae8-5547e676e163, Level: B, Code: DRYA0146
+2026-09-17 20:44:48.972 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=510c465b-5c51-4144-8ae8-5547e676e163)
+2026-09-17 20:44:49.175 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:49.175 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:49.176 | INFO | 📥 [Web UI] 接收到新警報: b09abfc5-9780-4288-9d26-cbf50eeed0f6, Level: B, Code: OHT_WD7093C
+2026-09-17 20:44:49.176 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=b09abfc5-9780-4288-9d26-cbf50eeed0f6)
+2026-09-17 20:44:49.393 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:49.394 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:49.394 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:49.580 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:49.581 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:49.581 | INFO | 📥 [Web UI] 接收到新警報: e3a07007-3b6d-435e-8f21-ffc80f56576d, Level: C, Code: OHT_WD7093C
+2026-09-17 20:44:49.583 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=e3a07007-3b6d-435e-8f21-ffc80f56576d)
+2026-09-17 20:44:49.796 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:49.796 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:49.797 | INFO | 📥 [Web UI] 接收到新警報: 18258cc2-a211-47ab-b085-a4bea4584b8d, Level: C, Code: DRYA0146
+2026-09-17 20:44:49.797 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=18258cc2-a211-47ab-b085-a4bea4584b8d)
+2026-09-17 20:44:50.029 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:50.031 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:50.031 | INFO | 📥 [Web UI] 接收到新警報: 96b72dc9-9618-4cbf-9f6f-043b4d9d455d, Level: B, Code: LIFT_4271
+2026-09-17 20:44:50.032 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=96b72dc9-9618-4cbf-9f6f-043b4d9d455d)
+2026-09-17 20:44:50.202 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:50.202 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:50.203 | INFO | 📥 [Web UI] 接收到新警報: 73daebfc-4ae3-48d1-a1ca-cc7796e8556c, Level: B, Code: DRYA0146
+2026-09-17 20:44:50.203 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=73daebfc-4ae3-48d1-a1ca-cc7796e8556c)
+2026-09-17 20:44:50.419 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:50.419 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:50.419 | INFO | 📥 [Web UI] 接收到新警報: d5fe5e6a-71b4-46e0-8488-bc66c0f972c5, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:44:50.421 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=d5fe5e6a-71b4-46e0-8488-bc66c0f972c5)
+2026-09-17 20:44:50.607 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:50.607 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:50.608 | INFO | 📥 [Web UI] 接收到新警報: 99af9e9d-e977-411c-b754-4dac7e3affb0, Level: B, Code: DRYA0146
+2026-09-17 20:44:50.608 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=99af9e9d-e977-411c-b754-4dac7e3affb0)
+2026-09-17 20:44:50.827 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:50.827 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:50.828 | INFO | 📥 [Web UI] 接收到新警報: 09b01dea-c7c7-4458-8ecf-31a077909722, Level: A, Code: DRYA0146
+2026-09-17 20:44:50.828 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=09b01dea-c7c7-4458-8ecf-31a077909722)
+2026-09-17 20:44:51.014 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:51.015 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:51.015 | INFO | 📥 [Web UI] 接收到新警報: 84f8d1e7-88ca-470d-be50-36e7b2cd838d, Level: A, Code: OHT_WD7093C
+2026-09-17 20:44:51.016 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=84f8d1e7-88ca-470d-be50-36e7b2cd838d)
+2026-09-17 20:44:51.215 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:51.215 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:51.216 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:51.417 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:51.417 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:51.417 | INFO | 📥 [Web UI] 接收到新警報: 50b88081-216e-4669-878f-a2fa696c497d, Level: C, Code: DRYA0146
+2026-09-17 20:44:51.418 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=50b88081-216e-4669-878f-a2fa696c497d)
+2026-09-17 20:44:51.604 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:51.605 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:51.605 | INFO | 📥 [Web UI] 接收到新警報: c6d02861-f00e-4242-b454-2b6e7ebde31c, Level: C, Code: 29502
+2026-09-17 20:44:51.606 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=c6d02861-f00e-4242-b454-2b6e7ebde31c)
+2026-09-17 20:44:51.806 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:44:51.807 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:44:51.807 | INFO | 📥 [Web UI] 接收到新警報: 914e0a11-1cb9-4363-aa70-1ea72a4ff9fe, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:44:51.807 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=914e0a11-1cb9-4363-aa70-1ea72a4ff9fe)
+2026-09-17 20:44:52.008 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:52.009 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:52.009 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:52.210 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:52.210 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:52.211 | INFO | 📥 [Web UI] 接收到新警報: 9cec522b-5655-49b5-8b78-814ece00bc44, Level: B, Code: LIFT_4272
+2026-09-17 20:44:52.211 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=9cec522b-5655-49b5-8b78-814ece00bc44)
+2026-09-17 20:44:52.428 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:52.428 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:52.429 | INFO | 📥 [Web UI] 接收到新警報: 3a864998-cc8a-44a6-ac6c-b7206589ba72, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:44:52.429 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=3a864998-cc8a-44a6-ac6c-b7206589ba72)
+2026-09-17 20:44:52.646 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:52.646 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:52.647 | INFO | 📥 [Web UI] 接收到新警報: afb8d10b-79fe-40be-a468-229625cdaf1d, Level: B, Code: OHT_WD7093C
+2026-09-17 20:44:52.647 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=afb8d10b-79fe-40be-a468-229625cdaf1d)
+2026-09-17 20:44:52.815 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:52.816 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:52.816 | INFO | 📥 [Web UI] 接收到新警報: 4b66ada4-132d-463a-9a7c-0e68b436be2a, Level: B, Code: LIFT_4271
+2026-09-17 20:44:52.817 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=4b66ada4-132d-463a-9a7c-0e68b436be2a)
+2026-09-17 20:44:53.005 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:53.005 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:53.006 | INFO | 📥 [Web UI] 接收到新警報: f1a05556-f089-485a-a211-4f73d5993f38, Level: A, Code: LIFT_4271
+2026-09-17 20:44:53.006 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=f1a05556-f089-485a-a211-4f73d5993f38)
+2026-09-17 20:44:53.192 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:53.193 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:53.193 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:53.424 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:53.425 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:53.425 | INFO | 📥 [Web UI] 接收到新警報: c706245a-36b3-455d-bfb3-41c15d86236e, Level: C, Code: 29502
+2026-09-17 20:44:53.425 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=c706245a-36b3-455d-bfb3-41c15d86236e)
+2026-09-17 20:44:53.611 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:53.611 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:53.611 | INFO | 📥 [Web UI] 接收到新警報: 0efb6659-c13b-4ffa-8df9-616d83f28bb9, Level: C, Code: 29502
+2026-09-17 20:44:53.612 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=0efb6659-c13b-4ffa-8df9-616d83f28bb9)
+2026-09-17 20:44:53.860 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:53.860 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:53.861 | INFO | 📥 [Web UI] 接收到新警報: 44b800b5-51ce-4c5d-a8b9-4780b133d4cb, Level: A, Code: LIFT_4271
+2026-09-17 20:44:53.862 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=44b800b5-51ce-4c5d-a8b9-4780b133d4cb)
+2026-09-17 20:44:53.999 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:53.999 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:54.001 | INFO | 📥 [Web UI] 接收到新警報: 44a26c82-9225-4a54-86ca-4c5bf163f101, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:44:54.001 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=44a26c82-9225-4a54-86ca-4c5bf163f101)
+2026-09-17 20:44:54.185 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:54.186 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:54.186 | INFO | 📥 [Web UI] 接收到新警報: fe4ccdbd-980a-4d86-8e0c-91c0c9442f0c, Level: C, Code: 29502
+2026-09-17 20:44:54.187 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=fe4ccdbd-980a-4d86-8e0c-91c0c9442f0c)
+2026-09-17 20:44:54.404 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:54.405 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:54.405 | INFO | 📥 [Web UI] 接收到新警報: 50f9ccf2-af04-447c-ad91-1f2916680d72, Level: A, Code: LIFT_4271
+2026-09-17 20:44:54.406 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=50f9ccf2-af04-447c-ad91-1f2916680d72)
+2026-09-17 20:44:54.621 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:54.621 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:54.622 | INFO | 📥 [Web UI] 接收到新警報: 616d7cf7-c079-450f-a4f3-a5245ea90cd5, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:44:54.622 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=616d7cf7-c079-450f-a4f3-a5245ea90cd5)
+2026-09-17 20:44:54.821 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:54.821 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:54.823 | INFO | 📥 [Web UI] 接收到新警報: 07a60243-743b-4964-a78d-6189ff08ef07, Level: C, Code: DRYA0146
+2026-09-17 20:44:54.823 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=07a60243-743b-4964-a78d-6189ff08ef07)
+2026-09-17 20:44:55.009 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:55.009 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:55.011 | INFO | 📥 [Web UI] 接收到新警報: ee6bd618-7ac6-4219-950d-ec89e47faa7d, Level: C, Code: DRYA0146
+2026-09-17 20:44:55.011 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=ee6bd618-7ac6-4219-950d-ec89e47faa7d)
+2026-09-17 20:44:55.198 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:55.199 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:55.199 | INFO | 📥 [Web UI] 接收到新警報: 0ed59860-84fb-43fa-91cb-a4c8f73a37aa, Level: B, Code: LIFT_4271
+2026-09-17 20:44:55.199 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=0ed59860-84fb-43fa-91cb-a4c8f73a37aa)
+2026-09-17 20:44:55.401 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:55.401 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:55.403 | INFO | 📥 [Web UI] 接收到新警報: 0abe4a1a-e291-4658-a992-5dd5e2f4dfec, Level: C, Code: 29502
+2026-09-17 20:44:55.403 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=0abe4a1a-e291-4658-a992-5dd5e2f4dfec)
+2026-09-17 20:44:55.601 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:55.601 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:55.602 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:55.788 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:55.788 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:55.788 | INFO | 📥 [Web UI] 接收到新警報: 3ee3d2c2-4a80-4071-9ebd-02a022992484, Level: A, Code: LIFT_4271
+2026-09-17 20:44:55.790 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=3ee3d2c2-4a80-4071-9ebd-02a022992484)
+2026-09-17 20:44:55.993 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:55.993 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:55.994 | INFO | 📥 [Web UI] 接收到新警報: 668d3bf7-dbc1-4393-a079-0f70d7bb3adf, Level: C, Code: OHT_WD7093C
+2026-09-17 20:44:55.994 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=668d3bf7-dbc1-4393-a079-0f70d7bb3adf)
+2026-09-17 20:44:56.195 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:56.196 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:56.196 | INFO | 📥 [Web UI] 接收到新警報: 1cd951c5-097f-41ed-a4c2-ff5a7372816b, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:44:56.196 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=1cd951c5-097f-41ed-a4c2-ff5a7372816b)
+2026-09-17 20:44:56.395 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:56.396 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:56.396 | INFO | 📥 [Web UI] 接收到新警報: caca2759-71e3-4d11-874d-99fbd066754a, Level: A, Code: STRESS_NOCODE
+2026-09-17 20:44:56.397 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=caca2759-71e3-4d11-874d-99fbd066754a)
+2026-09-17 20:44:56.628 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:56.628 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:56.629 | INFO | 📥 [Web UI] 接收到新警報: dd6edbc7-fe38-49b1-b1fb-95db90c5bd81, Level: C, Code: OHT_WD7093C
+2026-09-17 20:44:56.629 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=dd6edbc7-fe38-49b1-b1fb-95db90c5bd81)
+2026-09-17 20:44:56.816 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:56.816 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:56.816 | INFO | 📥 [Web UI] 接收到新警報: 9c9f7e35-29b4-42e6-8049-942fb7289863, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:44:56.817 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=9c9f7e35-29b4-42e6-8049-942fb7289863)
+2026-09-17 20:44:57.035 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:57.035 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:57.036 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:57.189 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:57.189 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:57.191 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:57.409 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:57.410 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:57.410 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:57.627 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:57.628 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:57.628 | INFO | 📥 [Web UI] 接收到新警報: 4c288564-bd6b-45fd-b887-d8f31a2c0ac2, Level: B, Code: LIFT_4272
+2026-09-17 20:44:57.629 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=4c288564-bd6b-45fd-b887-d8f31a2c0ac2)
+2026-09-17 20:44:57.814 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:44:57.814 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:44:57.814 | INFO | 📥 [Web UI] 接收到新警報: e1253957-57be-4dbb-a1d0-e175289b70f0, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:44:57.814 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=e1253957-57be-4dbb-a1d0-e175289b70f0)
+2026-09-17 20:44:57.999 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:58.000 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:58.000 | INFO | 📥 [Web UI] 接收到新警報: dc9cb549-6df1-4ec9-b923-21b4dd54513f, Level: B, Code: LIFT_4272
+2026-09-17 20:44:58.000 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=dc9cb549-6df1-4ec9-b923-21b4dd54513f)
+2026-09-17 20:44:58.218 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:44:58.219 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:44:58.219 | INFO | 📥 [Web UI] 接收到新警報: a614a5c9-bce7-4729-8649-f371702f269f, Level: C, Code: DRYA0146
+2026-09-17 20:44:58.219 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a614a5c9-bce7-4729-8649-f371702f269f)
+2026-09-17 20:44:58.407 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:58.408 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:58.408 | INFO | 📥 [Web UI] 接收到新警報: 04b3037a-338d-4b59-b3df-9a01adb4acc0, Level: B, Code: 29502
+2026-09-17 20:44:58.409 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=04b3037a-338d-4b59-b3df-9a01adb4acc0)
+2026-09-17 20:44:58.607 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:58.607 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:58.608 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:58.811 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:58.812 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:58.812 | INFO | 📥 [Web UI] 接收到新警報: 93f25bef-da67-4bea-ad54-1ddb83daaf84, Level: B, Code: OHT_WD7093C
+2026-09-17 20:44:58.813 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=93f25bef-da67-4bea-ad54-1ddb83daaf84)
+2026-09-17 20:44:58.999 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:59.001 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:59.001 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:59.233 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:44:59.233 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:44:59.234 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:44:59.418 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:59.418 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:59.419 | INFO | 📥 [Web UI] 接收到新警報: 0ad2a937-44be-44d5-a722-cae5401538fa, Level: B, Code: 29502
+2026-09-17 20:44:59.419 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=0ad2a937-44be-44d5-a722-cae5401538fa)
+2026-09-17 20:44:59.605 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:44:59.606 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:44:59.606 | INFO | 📥 [Web UI] 接收到新警報: 4aea4557-5e7b-43bd-9172-4b1569fe1bd9, Level: B, Code: 29502
+2026-09-17 20:44:59.607 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=4aea4557-5e7b-43bd-9172-4b1569fe1bd9)
+2026-09-17 20:44:59.778 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:44:59.778 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:44:59.778 | INFO | 📥 [Web UI] 接收到新警報: 2eb12b39-7e2a-4a1a-9891-cafa64942b9e, Level: C, Code: LIFT_4271
+2026-09-17 20:44:59.779 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=2eb12b39-7e2a-4a1a-9891-cafa64942b9e)
+2026-09-17 20:44:59.996 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:44:59.997 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:44:59.997 | INFO | 📥 [Web UI] 接收到新警報: 29f66078-1983-4d6c-9653-c5df3d856525, Level: A, Code: OHT_WD7093C
+2026-09-17 20:44:59.998 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=29f66078-1983-4d6c-9653-c5df3d856525)
+2026-09-17 20:45:00.184 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:00.185 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:00.185 | INFO | 📥 [Web UI] 接收到新警報: d71e38a6-98a7-4e63-b765-1e50594bffab, Level: B, Code: LIFT_4271
+2026-09-17 20:45:00.185 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=d71e38a6-98a7-4e63-b765-1e50594bffab)
+2026-09-17 20:45:00.389 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:00.389 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:00.390 | INFO | 📥 [Web UI] 接收到新警報: 1f922824-c4f0-4c82-b0b2-6c5b671f1a6f, Level: B, Code: LIFT_4272
+2026-09-17 20:45:00.390 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=1f922824-c4f0-4c82-b0b2-6c5b671f1a6f)
+2026-09-17 20:45:00.591 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:00.591 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:00.591 | INFO | 📥 [Web UI] 接收到新警報: bc2c9bd5-a341-469c-b125-aac92262b5f4, Level: B, Code: 29502
+2026-09-17 20:45:00.593 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=bc2c9bd5-a341-469c-b125-aac92262b5f4)
+2026-09-17 20:45:00.794 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:00.794 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:00.795 | INFO | 📥 [Web UI] 接收到新警報: 6814d006-98b5-484d-ac79-aaa6aad34d0f, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:00.795 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=6814d006-98b5-484d-ac79-aaa6aad34d0f)
+2026-09-17 20:45:00.996 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:00.996 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:00.997 | INFO | 📥 [Web UI] 接收到新警報: 47e013f4-e9c1-4b6c-88a0-0956b9b66d2a, Level: A, Code: DRYA0146
+2026-09-17 20:45:00.997 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=47e013f4-e9c1-4b6c-88a0-0956b9b66d2a)
+2026-09-17 20:45:01.213 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:01.213 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:01.214 | INFO | 📥 [Web UI] 接收到新警報: 3802d0ef-2e5a-4771-ba28-20168b989740, Level: A, Code: LIFT_4271
+2026-09-17 20:45:01.214 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=3802d0ef-2e5a-4771-ba28-20168b989740)
+2026-09-17 20:45:01.413 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:01.414 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:01.414 | INFO | 📥 [Web UI] 接收到新警報: 05352c4a-b2cc-4a69-8870-0a370a8bbbf4, Level: B, Code: OHT_WD7093C
+2026-09-17 20:45:01.414 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=05352c4a-b2cc-4a69-8870-0a370a8bbbf4)
+2026-09-17 20:45:01.616 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:01.616 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:01.617 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:01.804 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:01.805 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:01.805 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:01.995 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:01.995 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:01.996 | INFO | 📥 [Web UI] 接收到新警報: 7ff072b3-00c3-49e4-8094-bb75dbcd9c89, Level: C, Code: LIFT_4271
+2026-09-17 20:45:01.996 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=7ff072b3-00c3-49e4-8094-bb75dbcd9c89)
+2026-09-17 20:45:02.198 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:02.198 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:02.199 | INFO | 📥 [Web UI] 接收到新警報: 55d8d9a4-5fb9-487a-9a36-2053b646501c, Level: C, Code: LIFT_4272
+2026-09-17 20:45:02.199 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=55d8d9a4-5fb9-487a-9a36-2053b646501c)
+2026-09-17 20:45:02.386 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:02.387 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:02.388 | INFO | 📥 [Web UI] 接收到新警報: b8de9aa6-8552-4a0f-bdc3-7b287fafe181, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:02.388 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=b8de9aa6-8552-4a0f-bdc3-7b287fafe181)
+2026-09-17 20:45:02.590 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:02.590 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:02.591 | INFO | 📥 [Web UI] 接收到新警報: 62fd7248-cb0e-4cb9-9df2-8a3bf05c2f16, Level: C, Code: LIFT_4271
+2026-09-17 20:45:02.591 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=62fd7248-cb0e-4cb9-9df2-8a3bf05c2f16)
+2026-09-17 20:45:02.778 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:02.778 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:02.779 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:02.965 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:02.965 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:02.966 | INFO | 📥 [Web UI] 接收到新警報: 7a711f81-5824-4b18-9d04-5e0bb1d4fceb, Level: B, Code: OHT_WD7093C
+2026-09-17 20:45:02.966 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=7a711f81-5824-4b18-9d04-5e0bb1d4fceb)
+2026-09-17 20:45:03.200 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:03.200 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:03.200 | INFO | 📥 [Web UI] 接收到新警報: 0585d91b-0343-4d3a-aed5-e7371f419c61, Level: C, Code: DRYA0146
+2026-09-17 20:45:03.200 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=0585d91b-0343-4d3a-aed5-e7371f419c61)
+2026-09-17 20:45:03.385 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:03.385 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:03.385 | INFO | 📥 [Web UI] 接收到新警報: 648253ce-8679-427c-9157-0c03634fcb76, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:03.386 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=648253ce-8679-427c-9157-0c03634fcb76)
+2026-09-17 20:45:03.618 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:03.619 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:03.619 | INFO | 📥 [Web UI] 接收到新警報: 2bb95eed-eb1c-43a3-99c8-93b46524e2a3, Level: A, Code: STRESS_NOCODE
+2026-09-17 20:45:03.620 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=2bb95eed-eb1c-43a3-99c8-93b46524e2a3)
+2026-09-17 20:45:03.804 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:03.805 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:03.806 | INFO | 📥 [Web UI] 接收到新警報: a970db05-c0e4-47a2-bb55-4c430fafaddc, Level: C, Code: LIFT_4272
+2026-09-17 20:45:03.806 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a970db05-c0e4-47a2-bb55-4c430fafaddc)
+2026-09-17 20:45:04.022 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:04.023 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:04.024 | INFO | 📥 [Web UI] 接收到新警報: d94d414b-8214-4647-b977-fd9464baf196, Level: A, Code: LIFT_4271
+2026-09-17 20:45:04.024 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=d94d414b-8214-4647-b977-fd9464baf196)
+2026-09-17 20:45:04.194 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:04.194 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:04.195 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:04.411 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:04.412 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:04.412 | INFO | 📥 [Web UI] 接收到新警報: 63d94304-cb53-4bda-86e8-c1d39affa9e2, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:04.413 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=63d94304-cb53-4bda-86e8-c1d39affa9e2)
+2026-09-17 20:45:04.628 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:04.628 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:04.629 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:04.799 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:04.800 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:04.800 | INFO | 📥 [Web UI] 接收到新警報: da3fd446-01f5-4b78-89a1-c39811b24349, Level: B, Code: 29502
+2026-09-17 20:45:04.801 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=da3fd446-01f5-4b78-89a1-c39811b24349)
+2026-09-17 20:45:05.019 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:05.019 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:05.019 | INFO | 📥 [Web UI] 接收到新警報: 9dccfcff-d250-4faa-ada3-ccdd64aeff2f, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:05.019 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=9dccfcff-d250-4faa-ada3-ccdd64aeff2f)
+2026-09-17 20:45:05.219 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:05.219 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:05.221 | INFO | 📥 [Web UI] 接收到新警報: a9cde3bc-e0c9-4e8d-a872-04f044f8698a, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:05.221 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a9cde3bc-e0c9-4e8d-a872-04f044f8698a)
+2026-09-17 20:45:05.406 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:05.406 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:05.407 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:05.627 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:05.627 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:05.628 | INFO | 📥 [Web UI] 接收到新警報: 5b2552c4-2b80-4a0b-9caf-7a3fab8d7760, Level: B, Code: LIFT_4271
+2026-09-17 20:45:05.628 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=5b2552c4-2b80-4a0b-9caf-7a3fab8d7760)
+2026-09-17 20:45:05.811 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:05.811 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:05.812 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:06.031 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:06.031 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:06.031 | INFO | 📥 [Web UI] 接收到新警報: 965dd21d-7157-4907-abe6-38aafd94ac10, Level: A, Code: STRESS_NOCODE
+2026-09-17 20:45:06.032 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=965dd21d-7157-4907-abe6-38aafd94ac10)
+2026-09-17 20:45:06.217 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:06.217 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:06.217 | INFO | 📥 [Web UI] 接收到新警報: 4d964813-ea4c-40e0-8ecb-f5d1090d8ab4, Level: C, Code: DRYA0146
+2026-09-17 20:45:06.218 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=4d964813-ea4c-40e0-8ecb-f5d1090d8ab4)
+2026-09-17 20:45:06.421 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:06.421 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:06.422 | INFO | 📥 [Web UI] 接收到新警報: 8c71778f-28fc-41b4-ae84-40fdb96ef8a5, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:06.422 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=8c71778f-28fc-41b4-ae84-40fdb96ef8a5)
+2026-09-17 20:45:06.606 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:06.606 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:06.607 | INFO | 📥 [Web UI] 接收到新警報: c3fb9231-a15a-420e-9e04-35d1f7c0a0df, Level: B, Code: LIFT_4271
+2026-09-17 20:45:06.607 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=c3fb9231-a15a-420e-9e04-35d1f7c0a0df)
+2026-09-17 20:45:06.792 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:06.793 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:06.793 | INFO | 📥 [Web UI] 接收到新警報: 76bd1210-6dfc-4a6c-9973-c5896cb8b7a5, Level: B, Code: LIFT_4272
+2026-09-17 20:45:06.794 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=76bd1210-6dfc-4a6c-9973-c5896cb8b7a5)
+2026-09-17 20:45:07.011 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:07.011 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:07.012 | INFO | 📥 [Web UI] 接收到新警報: dd1a3424-875b-4f72-8c85-b7f8dfcd40ad, Level: B, Code: LIFT_4272
+2026-09-17 20:45:07.012 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=dd1a3424-875b-4f72-8c85-b7f8dfcd40ad)
+2026-09-17 20:45:07.231 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:07.231 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:07.233 | INFO | 📥 [Web UI] 接收到新警報: 5c8d363e-de16-4832-90ee-38342e8735d1, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:07.233 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=5c8d363e-de16-4832-90ee-38342e8735d1)
+2026-09-17 20:45:07.448 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:07.449 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:07.449 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:07.619 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:07.619 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:07.621 | INFO | 📥 [Web UI] 接收到新警報: a4acf5ac-2e94-4d88-842e-894ab235d86a, Level: B, Code: 29502
+2026-09-17 20:45:07.621 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=a4acf5ac-2e94-4d88-842e-894ab235d86a)
+2026-09-17 20:45:07.806 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:07.807 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:07.807 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:08.023 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:08.024 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:08.025 | INFO | 📥 [Web UI] 接收到新警報: e14f7945-e8ae-4dd0-a6c6-00669c940dfc, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:08.025 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=e14f7945-e8ae-4dd0-a6c6-00669c940dfc)
+2026-09-17 20:45:08.223 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:08.224 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:08.225 | INFO | 📥 [Web UI] 接收到新警報: 10d2b04e-9e73-459c-bb14-f91614b448ca, Level: C, Code: DRYA0146
+2026-09-17 20:45:08.225 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=10d2b04e-9e73-459c-bb14-f91614b448ca)
+2026-09-17 20:45:08.397 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:08.398 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:08.398 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:08.615 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:08.615 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:08.616 | INFO | 📥 [Web UI] 接收到新警報: fc117d19-2e12-4e9d-aeb2-02661058b929, Level: B, Code: DRYA0146
+2026-09-17 20:45:08.616 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=fc117d19-2e12-4e9d-aeb2-02661058b929)
+2026-09-17 20:45:08.816 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:08.816 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:08.817 | INFO | 📥 [Web UI] 接收到新警報: e5d7125f-eacd-4b51-b3e4-bb47c0f6a0a4, Level: B, Code: 29502
+2026-09-17 20:45:08.817 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=e5d7125f-eacd-4b51-b3e4-bb47c0f6a0a4)
+2026-09-17 20:45:09.020 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:09.021 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:09.021 | INFO | 📥 [Web UI] 接收到新警報: 786338d1-51b4-4d72-a752-c80e3584d278, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:09.021 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=786338d1-51b4-4d72-a752-c80e3584d278)
+2026-09-17 20:45:09.207 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:09.207 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:09.207 | INFO | 📥 [Web UI] 接收到新警報: a3417368-b4b2-432d-b11a-93090289ac5a, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:09.207 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=a3417368-b4b2-432d-b11a-93090289ac5a)
+2026-09-17 20:45:09.425 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:09.425 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:09.426 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:09.597 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:09.597 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:09.598 | INFO | 📥 [Web UI] 接收到新警報: f0b57fff-4525-48cd-a5ce-d72c605873fa, Level: C, Code: DRYA0146
+2026-09-17 20:45:09.598 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=f0b57fff-4525-48cd-a5ce-d72c605873fa)
+2026-09-17 20:45:09.813 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:09.814 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:09.814 | INFO | 📥 [Web UI] 接收到新警報: 00faaad4-ff36-4314-9996-f8325d790ad2, Level: B, Code: 29502
+2026-09-17 20:45:09.815 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=00faaad4-ff36-4314-9996-f8325d790ad2)
+2026-09-17 20:45:09.999 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:10.000 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:10.000 | INFO | 📥 [Web UI] 接收到新警報: 21567e71-f739-4aea-95c1-c9aaee2e6c7b, Level: B, Code: DRYA0146
+2026-09-17 20:45:10.001 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=21567e71-f739-4aea-95c1-c9aaee2e6c7b)
+2026-09-17 20:45:10.201 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:10.201 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:10.202 | INFO | 📥 [Web UI] 接收到新警報: e9db64e5-b0bc-4a2e-b70f-3df8ec557938, Level: C, Code: DRYA0146
+2026-09-17 20:45:10.202 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=e9db64e5-b0bc-4a2e-b70f-3df8ec557938)
+2026-09-17 20:45:10.387 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:10.388 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:10.388 | INFO | 📥 [Web UI] 接收到新警報: a7d0fe7c-e6d8-418b-a387-77feaa4bef7f, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:10.389 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=a7d0fe7c-e6d8-418b-a387-77feaa4bef7f)
+2026-09-17 20:45:10.605 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:10.606 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:10.606 | INFO | 📥 [Web UI] 接收到新警報: d7476cda-d6ae-4cfa-b69a-3ebc84704e19, Level: C, Code: LIFT_4272
+2026-09-17 20:45:10.607 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=d7476cda-d6ae-4cfa-b69a-3ebc84704e19)
+2026-09-17 20:45:10.824 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:10.826 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:10.826 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:11.025 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:11.025 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:11.026 | INFO | 📥 [Web UI] 接收到新警報: 990a3795-dad7-4987-83a3-0afe7eb57118, Level: C, Code: LIFT_4271
+2026-09-17 20:45:11.026 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=990a3795-dad7-4987-83a3-0afe7eb57118)
+2026-09-17 20:45:11.230 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:11.231 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:11.231 | INFO | 📥 [Web UI] 接收到新警報: f48fdf21-a269-4485-9b34-9dfccc4c7ff5, Level: B, Code: 29502
+2026-09-17 20:45:11.231 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=f48fdf21-a269-4485-9b34-9dfccc4c7ff5)
+2026-09-17 20:45:11.416 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:11.417 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:11.417 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:11.601 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:11.601 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:11.601 | INFO | 📥 [Web UI] 接收到新警報: 9a1ab1e4-197e-47f9-8bb7-25262a8bcb40, Level: B, Code: LIFT_4271
+2026-09-17 20:45:11.602 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=9a1ab1e4-197e-47f9-8bb7-25262a8bcb40)
+2026-09-17 20:45:11.801 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:11.802 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:11.802 | INFO | 📥 [Web UI] 接收到新警報: 29850f84-dedd-4b1b-ba18-35db94834623, Level: C, Code: 29502
+2026-09-17 20:45:11.802 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=29850f84-dedd-4b1b-ba18-35db94834623)
+2026-09-17 20:45:12.001 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:12.002 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:12.002 | INFO | 📥 [Web UI] 接收到新警報: ee347f45-7b4e-4913-999a-65534cb2283e, Level: C, Code: DRYA0146
+2026-09-17 20:45:12.002 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=ee347f45-7b4e-4913-999a-65534cb2283e)
+2026-09-17 20:45:12.201 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:12.201 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:12.202 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:12.402 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:12.402 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:12.403 | INFO | 📥 [Web UI] 接收到新警報: a19cc0c2-e7a7-44ac-aca3-e032443c2662, Level: C, Code: 29502
+2026-09-17 20:45:12.403 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a19cc0c2-e7a7-44ac-aca3-e032443c2662)
+2026-09-17 20:45:12.606 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:12.606 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:12.607 | INFO | 📥 [Web UI] 接收到新警報: 79d7c67c-2623-4904-bcb3-e0d94486d6a3, Level: B, Code: LIFT_4271
+2026-09-17 20:45:12.607 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=79d7c67c-2623-4904-bcb3-e0d94486d6a3)
+2026-09-17 20:45:12.789 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:12.791 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:12.791 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:13.006 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:13.007 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:13.008 | INFO | 📥 [Web UI] 接收到新警報: a90b4e49-77dc-43da-b74d-bb0deb408b9e, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:13.008 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a90b4e49-77dc-43da-b74d-bb0deb408b9e)
+2026-09-17 20:45:13.223 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:13.223 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:13.224 | INFO | 📥 [Web UI] 接收到新警報: c64ab5e8-e901-4d3c-8c46-3e2e56569395, Level: B, Code: LIFT_4271
+2026-09-17 20:45:13.224 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=c64ab5e8-e901-4d3c-8c46-3e2e56569395)
+2026-09-17 20:45:13.426 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:13.426 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:13.426 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:13.582 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:13.584 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:13.584 | INFO | 📥 [Web UI] 接收到新警報: cf64196d-1894-490f-a784-81ae413b6e4d, Level: B, Code: 29502
+2026-09-17 20:45:13.585 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=cf64196d-1894-490f-a784-81ae413b6e4d)
+2026-09-17 20:45:13.801 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:13.801 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:13.802 | INFO | 📥 [Web UI] 接收到新警報: b15f0bd9-faf7-4d86-8c3c-d9047834db9f, Level: A, Code: STRESS_NOCODE
+2026-09-17 20:45:13.802 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=b15f0bd9-faf7-4d86-8c3c-d9047834db9f)
+2026-09-17 20:45:14.016 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:14.017 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:14.018 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:14.207 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:14.207 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:14.208 | INFO | 📥 [Web UI] 接收到新警報: 5840f999-d485-42b2-bc2a-4fb6c945da6d, Level: C, Code: DRYA0146
+2026-09-17 20:45:14.208 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=5840f999-d485-42b2-bc2a-4fb6c945da6d)
+2026-09-17 20:45:14.407 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:14.408 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:14.408 | INFO | 📥 [Web UI] 接收到新警報: 47158c6c-66e0-4d58-979f-ecb6d7a7f6d4, Level: B, Code: LIFT_4271
+2026-09-17 20:45:14.409 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=47158c6c-66e0-4d58-979f-ecb6d7a7f6d4)
+2026-09-17 20:45:14.608 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:14.609 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:14.609 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:14.810 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:14.810 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:14.810 | INFO | 📥 [Web UI] 接收到新警報: cfa4a5a3-859c-4f36-90e8-ec409649eede, Level: B, Code: LIFT_4272
+2026-09-17 20:45:14.812 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=cfa4a5a3-859c-4f36-90e8-ec409649eede)
+2026-09-17 20:45:15.029 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:15.029 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:15.031 | INFO | 📥 [Web UI] 接收到新警報: 27257518-bfe8-4f69-a606-165e53f3aa4c, Level: C, Code: LIFT_4271
+2026-09-17 20:45:15.031 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=27257518-bfe8-4f69-a606-165e53f3aa4c)
+2026-09-17 20:45:15.231 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:15.231 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:15.232 | INFO | 📥 [Web UI] 接收到新警報: a7ee890d-ba3d-4958-868e-c0d376fb7737, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:15.232 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=a7ee890d-ba3d-4958-868e-c0d376fb7737)
+2026-09-17 20:45:15.403 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:15.403 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:15.404 | INFO | 📥 [Web UI] 接收到新警報: 1537c250-31c7-44f0-8139-bfd91b2d7eee, Level: A, Code: OHT_WD7093C
+2026-09-17 20:45:15.404 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=1537c250-31c7-44f0-8139-bfd91b2d7eee)
+2026-09-17 20:45:15.593 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:15.594 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:15.594 | INFO | 📥 [Web UI] 接收到新警報: 593d76cb-e367-4a66-be18-1d2f06454b5a, Level: C, Code: DRYA0146
+2026-09-17 20:45:15.595 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=593d76cb-e367-4a66-be18-1d2f06454b5a)
+2026-09-17 20:45:15.795 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:15.796 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:15.796 | INFO | 📥 [Web UI] 接收到新警報: c88d210b-3ea0-4c88-a3ca-1c3e150b5e64, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:15.797 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=c88d210b-3ea0-4c88-a3ca-1c3e150b5e64)
+2026-09-17 20:45:16.027 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:16.028 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:16.029 | INFO | 📥 [Web UI] 接收到新警報: 4fd0dd46-2cb2-4b84-b436-364e3ff427ec, Level: A, Code: OHT_WD7093C
+2026-09-17 20:45:16.029 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=4fd0dd46-2cb2-4b84-b436-364e3ff427ec)
+2026-09-17 20:45:16.215 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:16.216 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:16.217 | INFO | 📥 [Web UI] 接收到新警報: 9e952b01-cfba-4f56-8821-96cc9472af50, Level: A, Code: LIFT_4272
+2026-09-17 20:45:16.217 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=9e952b01-cfba-4f56-8821-96cc9472af50)
+2026-09-17 20:45:16.431 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:16.431 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:16.432 | INFO | 📥 [Web UI] 接收到新警報: daef3c45-7aa4-449d-b989-80602f96451e, Level: A, Code: LIFT_4272
+2026-09-17 20:45:16.432 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=daef3c45-7aa4-449d-b989-80602f96451e)
+2026-09-17 20:45:16.586 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:16.587 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:16.587 | INFO | 📥 [Web UI] 接收到新警報: 3b9f8af0-ee49-4fc2-912a-330afe5bd647, Level: C, Code: LIFT_4271
+2026-09-17 20:45:16.588 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=3b9f8af0-ee49-4fc2-912a-330afe5bd647)
+2026-09-17 20:45:16.791 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:16.791 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:16.791 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:17.055 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:17.056 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:17.056 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:17.211 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:17.211 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:17.211 | INFO | 📥 [Web UI] 接收到新警報: 28a40587-3e42-461d-84dc-dc4811c69ac1, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:17.212 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=28a40587-3e42-461d-84dc-dc4811c69ac1)
+2026-09-17 20:45:17.428 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:17.429 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:17.429 | INFO | 📥 [Web UI] 接收到新警報: ca06cf65-2a76-4e6d-ba2f-c9c538077530, Level: B, Code: DRYA0146
+2026-09-17 20:45:17.429 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=ca06cf65-2a76-4e6d-ba2f-c9c538077530)
+2026-09-17 20:45:17.632 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:17.633 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:17.634 | INFO | 📥 [Web UI] 接收到新警報: 9f193c52-16ed-4505-bba7-3b081e8ac718, Level: C, Code: 29502
+2026-09-17 20:45:17.634 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=9f193c52-16ed-4505-bba7-3b081e8ac718)
+2026-09-17 20:45:17.806 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:17.807 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:17.807 | INFO | 📥 [Web UI] 接收到新警報: 323741b6-d992-4d0c-a9ce-755ad23bc69f, Level: B, Code: DRYA0146
+2026-09-17 20:45:17.808 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=323741b6-d992-4d0c-a9ce-755ad23bc69f)
+2026-09-17 20:45:17.992 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:17.993 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:17.993 | INFO | 📥 [Web UI] 接收到新警報: 1cd0aa1a-331b-419e-a452-09c86c298776, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:17.994 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=1cd0aa1a-331b-419e-a452-09c86c298776)
+2026-09-17 20:45:18.195 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:18.195 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:18.196 | INFO | 📥 [Web UI] 接收到新警報: 81f58788-72d1-4ef6-b277-f96b034430eb, Level: B, Code: DRYA0146
+2026-09-17 20:45:18.196 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=81f58788-72d1-4ef6-b277-f96b034430eb)
+2026-09-17 20:45:18.397 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:18.398 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:18.398 | INFO | 📥 [Web UI] 接收到新警報: fbc7d533-5a80-49b3-9d69-b0b1f344941d, Level: A, Code: DRYA0146
+2026-09-17 20:45:18.399 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=fbc7d533-5a80-49b3-9d69-b0b1f344941d)
+2026-09-17 20:45:18.629 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:18.630 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:18.630 | INFO | 📥 [Web UI] 接收到新警報: 4f36f005-3de6-4ca9-8d9e-d9c175935110, Level: B, Code: LIFT_4271
+2026-09-17 20:45:18.630 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=4f36f005-3de6-4ca9-8d9e-d9c175935110)
+2026-09-17 20:45:18.801 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:18.801 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:18.801 | INFO | 📥 [Web UI] 接收到新警報: 778ea7ea-0daa-4265-9d65-afadd7631a4e, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:18.801 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=778ea7ea-0daa-4265-9d65-afadd7631a4e)
+2026-09-17 20:45:19.063 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:19.064 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:19.065 | INFO | 📥 [Web UI] 接收到新警報: 74ddaa04-61a4-4f0e-b435-740adde64acb, Level: B, Code: LIFT_4272
+2026-09-17 20:45:19.065 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=74ddaa04-61a4-4f0e-b435-740adde64acb)
+2026-09-17 20:45:19.219 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:19.219 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:19.219 | INFO | 📥 [Web UI] 接收到新警報: ad62acba-658a-4c7f-a003-db0ddfd0c588, Level: A, Code: DRYA0146
+2026-09-17 20:45:19.221 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=ad62acba-658a-4c7f-a003-db0ddfd0c588)
+2026-09-17 20:45:19.424 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:19.424 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:19.425 | INFO | 📥 [Web UI] 接收到新警報: 9c46b95d-6aec-479a-9025-836d0eae6a7f, Level: C, Code: LIFT_4272
+2026-09-17 20:45:19.425 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=9c46b95d-6aec-479a-9025-836d0eae6a7f)
+2026-09-17 20:45:19.594 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:19.594 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:19.595 | INFO | 📥 [Web UI] 接收到新警報: 1ae8ac29-174a-4fd6-98ca-0c39253ea554, Level: A, Code: LIFT_4271
+2026-09-17 20:45:19.595 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=1ae8ac29-174a-4fd6-98ca-0c39253ea554)
+2026-09-17 20:45:19.800 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:19.800 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:19.801 | INFO | 📥 [Web UI] 接收到新警報: cb73006c-82bb-4b04-9eec-6816cf4a0f26, Level: B, Code: OHT_WD7093C
+2026-09-17 20:45:19.801 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=cb73006c-82bb-4b04-9eec-6816cf4a0f26)
+2026-09-17 20:45:20.001 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:20.001 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:20.001 | INFO | 📥 [Web UI] 接收到新警報: f77e52ac-e94f-42a7-8f5d-459dc28e65e9, Level: C, Code: 29502
+2026-09-17 20:45:20.002 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=f77e52ac-e94f-42a7-8f5d-459dc28e65e9)
+2026-09-17 20:45:20.187 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:20.187 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:20.188 | INFO | 📥 [Web UI] 接收到新警報: d4902c20-3e86-4e12-a2cc-415473439630, Level: C, Code: LIFT_4271
+2026-09-17 20:45:20.188 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=d4902c20-3e86-4e12-a2cc-415473439630)
+2026-09-17 20:45:20.406 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:20.407 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:20.407 | INFO | 📥 [Web UI] 接收到新警報: ed42264b-f90e-45ba-abde-5000ddf58673, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:20.408 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=ed42264b-f90e-45ba-abde-5000ddf58673)
+2026-09-17 20:45:20.608 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:20.608 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:20.608 | INFO | 📥 [Web UI] 接收到新警報: f06d37ce-53f7-4fd1-86e1-0a88f496aa08, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:20.609 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=f06d37ce-53f7-4fd1-86e1-0a88f496aa08)
+2026-09-17 20:45:20.794 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:20.794 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:20.795 | INFO | 📥 [Web UI] 接收到新警報: df2620eb-ccdf-4091-990d-c97c541820ea, Level: B, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:20.795 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=df2620eb-ccdf-4091-990d-c97c541820ea)
+2026-09-17 20:45:21.013 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:21.013 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:21.013 | INFO | 📥 [Web UI] 接收到新警報: c8f3e912-7d60-4446-a0a9-3c2caf762393, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:21.014 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=c8f3e912-7d60-4446-a0a9-3c2caf762393)
+2026-09-17 20:45:21.201 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:21.201 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:21.201 | INFO | 📥 [Web UI] 接收到新警報: 83030873-cb4c-4670-bd8f-fd62641e6a6a, Level: C, Code: LIFT_4272
+2026-09-17 20:45:21.202 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=83030873-cb4c-4670-bd8f-fd62641e6a6a)
+2026-09-17 20:45:21.418 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:21.419 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:21.419 | INFO | 📥 [Web UI] 接收到新警報: 1d765fa1-3112-4a0c-aa12-431d98ff713f, Level: B, Code: DRYA0146
+2026-09-17 20:45:21.419 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=1d765fa1-3112-4a0c-aa12-431d98ff713f)
+2026-09-17 20:45:21.593 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:21.594 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:21.594 | INFO | 📥 [Web UI] 接收到新警報: ced4f360-336f-4821-a0f7-df93a5cfbb2a, Level: B, Code: LIFT_4271
+2026-09-17 20:45:21.594 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=ced4f360-336f-4821-a0f7-df93a5cfbb2a)
+2026-09-17 20:45:21.793 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:21.794 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:21.794 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:22.012 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:22.013 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:22.013 | INFO | 📥 [Web UI] 接收到新警報: 144855cc-14e3-46ed-8d1c-9d33e7beb4cd, Level: B, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:22.014 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=144855cc-14e3-46ed-8d1c-9d33e7beb4cd)
+2026-09-17 20:45:22.197 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:22.198 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:22.198 | INFO | 📥 [Web UI] 接收到新警報: a51d983e-bf16-4cdc-a3e2-d1dd3311f86b, Level: A, Code: DRYA0146
+2026-09-17 20:45:22.199 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=a51d983e-bf16-4cdc-a3e2-d1dd3311f86b)
+2026-09-17 20:45:22.431 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:22.432 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:22.432 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:22.603 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:22.603 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:22.604 | INFO | 📥 [Web UI] 接收到新警報: 93fe8e9d-86d7-4214-8542-a0295de8cbf2, Level: A, Code: LIFT_4271
+2026-09-17 20:45:22.604 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=93fe8e9d-86d7-4214-8542-a0295de8cbf2)
+2026-09-17 20:45:22.819 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:22.821 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:22.821 | INFO | 📥 [Web UI] 接收到新警報: 13facac8-3074-4547-b5e0-563a30abdaf8, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:22.822 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=13facac8-3074-4547-b5e0-563a30abdaf8)
+2026-09-17 20:45:23.007 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:23.007 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:23.008 | INFO | 📥 [Web UI] 接收到新警報: 301859ce-5f69-4eb5-bdb1-2d61bcc27d09, Level: B, Code: 29502
+2026-09-17 20:45:23.008 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=301859ce-5f69-4eb5-bdb1-2d61bcc27d09)
+2026-09-17 20:45:23.225 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:23.226 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:23.226 | INFO | 📥 [Web UI] 接收到新警報: a65c84f8-ce8f-4e31-bd5f-1393a98deff1, Level: C, Code: 29502
+2026-09-17 20:45:23.226 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a65c84f8-ce8f-4e31-bd5f-1393a98deff1)
+2026-09-17 20:45:23.413 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:23.413 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:23.414 | INFO | 📥 [Web UI] 接收到新警報: 80f499ee-6728-4645-88ed-0d8149ca0910, Level: A, Code: OHT_WD7093C
+2026-09-17 20:45:23.414 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=80f499ee-6728-4645-88ed-0d8149ca0910)
+2026-09-17 20:45:23.616 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:23.617 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:23.617 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:23.803 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:23.803 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:23.804 | INFO | 📥 [Web UI] 接收到新警報: 2cd01154-2bf6-4835-954a-fea8631bd0ce, Level: B, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:23.804 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=2cd01154-2bf6-4835-954a-fea8631bd0ce)
+2026-09-17 20:45:23.993 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:23.993 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:23.993 | INFO | 📥 [Web UI] 接收到新警報: f46d78fe-67f5-45fb-bc4f-0a139a6f7b83, Level: B, Code: DRYA0146
+2026-09-17 20:45:23.994 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=f46d78fe-67f5-45fb-bc4f-0a139a6f7b83)
+2026-09-17 20:45:24.211 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:24.211 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:24.212 | INFO | 📥 [Web UI] 接收到新警報: 0c457c77-aa32-4a3e-9d27-d333e3e8363d, Level: A, Code: LIFT_4272
+2026-09-17 20:45:24.212 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=0c457c77-aa32-4a3e-9d27-d333e3e8363d)
+2026-09-17 20:45:24.598 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:24.599 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:24.600 | INFO | 📥 [Web UI] 接收到新警報: 58ec2bd7-56e8-4779-9e70-1fcd27fe982d, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:24.600 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=58ec2bd7-56e8-4779-9e70-1fcd27fe982d)
+2026-09-17 20:45:24.862 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:24.862 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:24.863 | INFO | 📥 [Web UI] 接收到新警報: 5004149b-c440-479d-b9ec-2b8de02b5988, Level: C, Code: LIFT_4272
+2026-09-17 20:45:24.863 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=5004149b-c440-479d-b9ec-2b8de02b5988)
+2026-09-17 20:45:25.002 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:25.003 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:25.003 | INFO | 📥 [Web UI] 接收到新警報: 3c76006d-618a-428c-9cc3-4f8b4b060030, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:25.004 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=3c76006d-618a-428c-9cc3-4f8b4b060030)
+2026-09-17 20:45:25.206 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:25.206 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:25.207 | INFO | 📥 [Web UI] 接收到新警報: 76e528ef-052a-4178-a334-b28b6d7ca6a4, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:25.207 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=76e528ef-052a-4178-a334-b28b6d7ca6a4)
+2026-09-17 20:45:25.440 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:25.440 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:25.441 | INFO | 📥 [Web UI] 接收到新警報: 87f9f3df-31c4-4423-8695-5cf29d3d3ff4, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:25.441 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=87f9f3df-31c4-4423-8695-5cf29d3d3ff4)
+2026-09-17 20:45:25.455 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:25.456 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:25.456 | INFO | 📥 [Web UI] 接收到新警報: a51af5ca-2432-4a07-ad48-6e57366313ba, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:25.457 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a51af5ca-2432-4a07-ad48-6e57366313ba)
+2026-09-17 20:45:25.624 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:25.625 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:25.625 | INFO | 📥 [Web UI] 接收到新警報: 9dbc36cb-f49e-46ec-aadd-1ae2533ef882, Level: B, Code: DRYA0146
+2026-09-17 20:45:25.625 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=9dbc36cb-f49e-46ec-aadd-1ae2533ef882)
+2026-09-17 20:45:25.811 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:25.811 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:25.811 | INFO | 📥 [Web UI] 接收到新警報: 02ea7fd3-303f-4c36-984a-23f287f14d63, Level: C, Code: LIFT_4272
+2026-09-17 20:45:25.811 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=02ea7fd3-303f-4c36-984a-23f287f14d63)
+2026-09-17 20:45:26.029 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:26.029 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:26.029 | INFO | 📥 [Web UI] 接收到新警報: 973202f6-f667-44f1-9282-7c913425019d, Level: C, Code: LIFT_4271
+2026-09-17 20:45:26.031 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=973202f6-f667-44f1-9282-7c913425019d)
+2026-09-17 20:45:26.182 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:26.182 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:26.182 | INFO | 📥 [Web UI] 接收到新警報: 799d6855-8958-48ca-ae24-8a7e675ea505, Level: B, Code: 29502
+2026-09-17 20:45:26.183 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=799d6855-8958-48ca-ae24-8a7e675ea505)
+2026-09-17 20:45:26.616 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:26.617 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:26.617 | INFO | 📥 [Web UI] 接收到新警報: 90466b46-c034-48bd-9165-bad9ac172b03, Level: C, Code: DRYA0146
+2026-09-17 20:45:26.618 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=90466b46-c034-48bd-9165-bad9ac172b03)
+2026-09-17 20:45:26.819 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:26.820 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:26.820 | INFO | 📥 [Web UI] 接收到新警報: 8cf94e95-7195-4c26-9a34-50ad64c2cbed, Level: C, Code: DRYA0146
+2026-09-17 20:45:26.821 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=8cf94e95-7195-4c26-9a34-50ad64c2cbed)
+2026-09-17 20:45:27.006 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:27.006 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:27.007 | INFO | 📥 [Web UI] 接收到新警報: e9199971-a3a6-40e4-8a4e-a48dc153bafd, Level: B, Code: DRYA0146
+2026-09-17 20:45:27.007 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=e9199971-a3a6-40e4-8a4e-a48dc153bafd)
+2026-09-17 20:45:27.208 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:27.209 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:27.209 | INFO | 📥 [Web UI] 接收到新警報: 98bcc764-2027-4ba6-9101-4b17f7a6f2d7, Level: B, Code: LIFT_4272
+2026-09-17 20:45:27.209 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=98bcc764-2027-4ba6-9101-4b17f7a6f2d7)
+2026-09-17 20:45:27.382 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:27.382 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:27.382 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:27.429 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:27.429 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:27.431 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:27.601 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:27.601 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:27.601 | INFO | 📥 [Web UI] 接收到新警報: 0e4c00f0-6eb1-46a5-adf3-db6a5b7f5626, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:27.602 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=0e4c00f0-6eb1-46a5-adf3-db6a5b7f5626)
+2026-09-17 20:45:27.816 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:27.817 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:27.817 | INFO | 📥 [Web UI] 接收到新警報: cdbb7fee-64ac-4e4a-ad52-2fa55ec9e896, Level: A, Code: LIFT_4272
+2026-09-17 20:45:27.818 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=cdbb7fee-64ac-4e4a-ad52-2fa55ec9e896)
+2026-09-17 20:45:28.005 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:28.005 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:28.006 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:28.191 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:28.191 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:28.192 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:28.394 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:28.395 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:28.395 | INFO | 📥 [Web UI] 接收到新警報: 121fd362-659d-466d-aed6-a95693f31e52, Level: C, Code: LIFT_4272
+2026-09-17 20:45:28.396 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=121fd362-659d-466d-aed6-a95693f31e52)
+2026-09-17 20:45:28.644 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:28.645 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:28.645 | INFO | 📥 [Web UI] 接收到新警報: 89884eef-8172-4bf4-8d7b-e917f8396342, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:28.645 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=89884eef-8172-4bf4-8d7b-e917f8396342)
+2026-09-17 20:45:28.798 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:28.799 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:28.799 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:29.034 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:29.034 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:29.035 | INFO | 📥 [Web UI] 接收到新警報: 8cc3c951-4f85-49a5-a670-71afc0bf1cd2, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:29.035 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=8cc3c951-4f85-49a5-a670-71afc0bf1cd2)
+2026-09-17 20:45:29.205 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:29.206 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:29.206 | INFO | 📥 [Web UI] 接收到新警報: 039de92c-a8f9-4d20-883e-651c4ecbbdc1, Level: B, Code: OHT_WD7093C
+2026-09-17 20:45:29.207 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=039de92c-a8f9-4d20-883e-651c4ecbbdc1)
+2026-09-17 20:45:29.408 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:29.409 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:29.409 | INFO | 📥 [Web UI] 接收到新警報: f7bf3b54-ecf3-4e5a-b776-68396b5abfcd, Level: B, Code: DRYA0146
+2026-09-17 20:45:29.409 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=f7bf3b54-ecf3-4e5a-b776-68396b5abfcd)
+2026-09-17 20:45:30.015 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:30.015 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:30.016 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:30.201 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:30.201 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:30.203 | INFO | 📥 [Web UI] 接收到新警報: 3ce6210f-d974-4cf7-8a37-44f18ff273c4, Level: B, Code: 29502
+2026-09-17 20:45:30.203 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=3ce6210f-d974-4cf7-8a37-44f18ff273c4)
+2026-09-17 20:45:30.420 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:30.421 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:30.421 | INFO | 📥 [Web UI] 接收到新警報: 21dd69ba-56a7-439e-b331-e1c743ecd4ba, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:30.421 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=21dd69ba-56a7-439e-b331-e1c743ecd4ba)
+2026-09-17 20:45:30.590 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:30.591 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:30.591 | INFO | 📥 [Web UI] 接收到新警報: cbc2026c-912f-49b0-8fdd-25033e13f7f3, Level: A, Code: STRESS_NOCODE
+2026-09-17 20:45:30.591 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=cbc2026c-912f-49b0-8fdd-25033e13f7f3)
+2026-09-17 20:45:30.654 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:30.655 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:30.656 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:30.807 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:30.809 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:30.809 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:30.823 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:30.824 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:30.825 | INFO | 📥 [Web UI] 接收到新警報: 6ab35e76-680d-4245-b508-2923f88003ca, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:30.825 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=6ab35e76-680d-4245-b508-2923f88003ca)
+2026-09-17 20:45:31.011 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:31.011 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:31.011 | INFO | 📥 [Web UI] 接收到新警報: 6bf55f57-ee0e-47a0-acd5-a67f49129d21, Level: A, Code: STRESS_NOCODE
+2026-09-17 20:45:31.011 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=6bf55f57-ee0e-47a0-acd5-a67f49129d21)
+2026-09-17 20:45:31.228 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:31.228 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:31.229 | INFO | 📥 [Web UI] 接收到新警報: 24e23ee4-352e-49a4-b0f0-a425381ca0e0, Level: B, Code: LIFT_4272
+2026-09-17 20:45:31.229 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=24e23ee4-352e-49a4-b0f0-a425381ca0e0)
+2026-09-17 20:45:31.415 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:31.416 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:31.417 | INFO | 📥 [Web UI] 接收到新警報: a6847f2c-695e-4b06-95f5-f270d5bd3902, Level: C, Code: DRYA0146
+2026-09-17 20:45:31.417 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a6847f2c-695e-4b06-95f5-f270d5bd3902)
+2026-09-17 20:45:31.633 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:31.633 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:31.634 | INFO | 📥 [Web UI] 接收到新警報: f6dfcf1d-0415-48ef-9a4b-873863922918, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:31.634 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=f6dfcf1d-0415-48ef-9a4b-873863922918)
+2026-09-17 20:45:31.822 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:31.823 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:31.824 | INFO | 📥 [Web UI] 接收到新警報: 8df5e7c8-a131-46fb-a10b-66a90f1f08e8, Level: A, Code: 29502
+2026-09-17 20:45:31.824 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=8df5e7c8-a131-46fb-a10b-66a90f1f08e8)
+2026-09-17 20:45:31.993 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:31.993 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:31.994 | INFO | 📥 [Web UI] 接收到新警報: f1206756-2db4-4c2b-9a1a-ff127f042b5a, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:31.994 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=f1206756-2db4-4c2b-9a1a-ff127f042b5a)
+2026-09-17 20:45:32.208 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:32.209 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:32.210 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:32.429 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:32.429 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:32.430 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:32.615 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:32.616 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:32.616 | INFO | 📥 [Web UI] 接收到新警報: 165a53c5-ce20-42e6-be25-cd4902e3e266, Level: B, Code: 29502
+2026-09-17 20:45:32.616 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=165a53c5-ce20-42e6-be25-cd4902e3e266)
+2026-09-17 20:45:32.816 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:32.817 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:32.817 | INFO | 📥 [Web UI] 接收到新警報: 18da1187-73e4-4db1-91b3-05516ff1b322, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:32.817 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=18da1187-73e4-4db1-91b3-05516ff1b322)
+2026-09-17 20:45:33.004 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:33.004 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:33.005 | INFO | 📥 [Web UI] 接收到新警報: e55be87c-abd1-455f-a141-cefa4607cf61, Level: C, Code: 29502
+2026-09-17 20:45:33.005 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=e55be87c-abd1-455f-a141-cefa4607cf61)
+2026-09-17 20:45:33.219 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:33.221 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:33.221 | INFO | 📥 [Web UI] 接收到新警報: 47fa82c1-d933-47a5-97e9-73720dca4b97, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:33.221 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=47fa82c1-d933-47a5-97e9-73720dca4b97)
+2026-09-17 20:45:33.424 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:33.425 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:33.425 | INFO | 📥 [Web UI] 接收到新警報: 12d291cf-87f7-40da-9f2c-256ad1119c63, Level: B, Code: STRESS_NOCODE
+2026-09-17 20:45:33.426 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=12d291cf-87f7-40da-9f2c-256ad1119c63)
+2026-09-17 20:45:33.611 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:33.612 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:33.612 | INFO | 📥 [Web UI] 接收到新警報: eccf11e0-108c-465e-b9de-897012615a6a, Level: B, Code: OHT_WD7093C
+2026-09-17 20:45:33.613 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=eccf11e0-108c-465e-b9de-897012615a6a)
+2026-09-17 20:45:33.814 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:33.815 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:33.815 | INFO | 📥 [Web UI] 接收到新警報: 0a022b79-cd60-4187-b03b-1eb04d8725ad, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:33.816 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=0a022b79-cd60-4187-b03b-1eb04d8725ad)
+2026-09-17 20:45:34.001 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:34.002 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:34.002 | INFO | 📥 [Web UI] 接收到新警報: 642b22ea-6e17-48b4-9372-349312ae36bb, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:34.003 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=642b22ea-6e17-48b4-9372-349312ae36bb)
+2026-09-17 20:45:34.201 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:34.202 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:34.202 | INFO | 📥 [Web UI] 接收到新警報: 8324fac7-dfc3-4741-bdee-6e50d977a89f, Level: C, Code: 29502
+2026-09-17 20:45:34.203 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=8324fac7-dfc3-4741-bdee-6e50d977a89f)
+2026-09-17 20:45:34.404 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:34.405 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:34.405 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:34.606 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:34.607 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:34.608 | INFO | 📥 [Web UI] 接收到新警報: 26878596-ab7f-4b6b-b3e5-ee3b86872a7f, Level: B, Code: OHT_WD7093C
+2026-09-17 20:45:34.609 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=26878596-ab7f-4b6b-b3e5-ee3b86872a7f)
+2026-09-17 20:45:34.810 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:34.810 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:34.810 | INFO | 📥 [Web UI] 接收到新警報: 1b1dd6db-ceb9-44f1-9341-33c8c64cb59c, Level: B, Code: DRYA0146
+2026-09-17 20:45:34.811 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=1b1dd6db-ceb9-44f1-9341-33c8c64cb59c)
+2026-09-17 20:45:35.011 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:35.013 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:35.013 | INFO | 📥 [Web UI] 接收到新警報: 0fd2e242-06e7-4771-ad28-d6a1551be2df, Level: C, Code: DRYA0146
+2026-09-17 20:45:35.014 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=0fd2e242-06e7-4771-ad28-d6a1551be2df)
+2026-09-17 20:45:35.214 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:35.214 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:35.215 | INFO | 📥 [Web UI] 接收到新警報: 636b7f57-d108-4bd5-94af-c239fafb3828, Level: A, Code: DRYA0146
+2026-09-17 20:45:35.215 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=636b7f57-d108-4bd5-94af-c239fafb3828)
+2026-09-17 20:45:35.416 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:35.417 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:35.417 | INFO | 📥 [Web UI] 接收到新警報: 6c333e58-065c-4722-affb-72becdda04da, Level: C, Code: DRYA0146
+2026-09-17 20:45:35.418 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=6c333e58-065c-4722-affb-72becdda04da)
+2026-09-17 20:45:35.605 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:35.606 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:35.606 | INFO | 📥 [Web UI] 接收到新警報: bcdecb87-e315-4025-af44-806a50c48865, Level: B, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:35.607 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=bcdecb87-e315-4025-af44-806a50c48865)
+2026-09-17 20:45:35.805 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:35.806 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:35.806 | INFO | 📥 [Web UI] 接收到新警報: de2ab794-4822-49e5-8d26-3641a89da845, Level: C, Code: LIFT_4272
+2026-09-17 20:45:35.807 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=de2ab794-4822-49e5-8d26-3641a89da845)
+2026-09-17 20:45:36.009 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:36.009 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:36.010 | INFO | 📥 [Web UI] 接收到新警報: d1249132-faf7-41e4-a8ca-eb838c050f5a, Level: B, Code: 29502
+2026-09-17 20:45:36.010 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=d1249132-faf7-41e4-a8ca-eb838c050f5a)
+2026-09-17 20:45:36.195 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:36.196 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:36.196 | INFO | 📥 [Web UI] 接收到新警報: aac8cd58-11f5-45bb-a974-5c65cc0b470a, Level: B, Code: DRYA0146
+2026-09-17 20:45:36.197 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=aac8cd58-11f5-45bb-a974-5c65cc0b470a)
+2026-09-17 20:45:36.430 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:36.430 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:36.431 | INFO | 📥 [Web UI] 接收到新警報: c4e0ff2f-a7ac-4f6d-868c-5fc50f354578, Level: A, Code: 29502
+2026-09-17 20:45:36.431 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=c4e0ff2f-a7ac-4f6d-868c-5fc50f354578)
+2026-09-17 20:45:36.586 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:36.587 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:36.587 | INFO | 📥 [Web UI] 接收到新警報: 8162afa2-638a-48c2-af02-ee6e1ea497ac, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:36.588 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=8162afa2-638a-48c2-af02-ee6e1ea497ac)
+2026-09-17 20:45:36.805 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:36.805 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:36.806 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:37.024 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:37.024 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:37.025 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:37.211 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:37.211 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:37.211 | INFO | 📥 [Web UI] 接收到新警報: 2f79d6a4-9d48-4bec-8f02-e6a4bc02994f, Level: C, Code: DRYA0146
+2026-09-17 20:45:37.211 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=2f79d6a4-9d48-4bec-8f02-e6a4bc02994f)
+2026-09-17 20:45:37.429 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:37.429 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:37.431 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:37.601 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:37.602 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:37.602 | INFO | 📥 [Web UI] 接收到新警報: 2310a6ac-7803-4b7e-ac53-3bbc3de0f515, Level: C, Code: DRYA0146
+2026-09-17 20:45:37.603 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=2310a6ac-7803-4b7e-ac53-3bbc3de0f515)
+2026-09-17 20:45:37.803 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:37.804 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:37.804 | INFO | 📥 [Web UI] 接收到新警報: 7365a2b8-f9ac-49bd-9c15-28a345fe9202, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:37.805 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=7365a2b8-f9ac-49bd-9c15-28a345fe9202)
+2026-09-17 20:45:37.992 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 20:45:37.993 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 20:45:37.993 | INFO | 📥 [Web UI] 接收到新警報: 8db87595-db62-4976-8069-6ca091902d07, Level: C, Code: 29502
+2026-09-17 20:45:37.993 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=8db87595-db62-4976-8069-6ca091902d07)
+2026-09-17 20:45:38.179 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:38.179 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:38.179 | INFO | 📥 [Web UI] 接收到新警報: 471e3c03-e2e6-431d-9e41-dd8327b4c34e, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:38.181 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=471e3c03-e2e6-431d-9e41-dd8327b4c34e)
+2026-09-17 20:45:38.411 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:38.412 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:38.412 | INFO | 📥 [Web UI] 接收到新警報: bbe9856f-2c9b-4fc6-b437-ba9c8fe0a6ca, Level: B, Code: LIFT_4272
+2026-09-17 20:45:38.412 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=bbe9856f-2c9b-4fc6-b437-ba9c8fe0a6ca)
+2026-09-17 20:45:38.598 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:38.599 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:38.599 | INFO | 📥 [Web UI] 接收到新警報: 577cb452-7b50-4e2e-a855-cb93aa5f9ade, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:38.599 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=577cb452-7b50-4e2e-a855-cb93aa5f9ade)
+2026-09-17 20:45:38.801 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:38.802 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:38.803 | INFO | 📥 [Web UI] 接收到新警報: f33df0d8-6c6b-4ffd-967b-87e36ee32166, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:38.803 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=f33df0d8-6c6b-4ffd-967b-87e36ee32166)
+2026-09-17 20:45:39.006 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 20:45:39.007 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 20:45:39.008 | INFO | 📥 [Web UI] 接收到新警報: 5caa9afd-7aef-4d47-a393-f779374443ba, Level: C, Code: STRESS_NOCODE
+2026-09-17 20:45:39.008 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=5caa9afd-7aef-4d47-a393-f779374443ba)
+2026-09-17 20:45:39.191 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:39.192 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:39.192 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 20:45:39.410 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 20:45:39.410 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 20:45:39.411 | INFO | 📥 [Web UI] 接收到新警報: d7c695d2-98bc-40c9-9ced-aadb667efc7c, Level: C, Code: LIFT_4272
+2026-09-17 20:45:39.411 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=d7c695d2-98bc-40c9-9ced-aadb667efc7c)
+2026-09-17 20:45:39.655 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 20:45:39.656 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 20:45:39.657 | INFO | 📥 [Web UI] 接收到新警報: 3b2a362e-8e43-4ea3-8e63-8a7743c96863, Level: C, Code: LIFT_4271
+2026-09-17 20:45:39.657 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=3b2a362e-8e43-4ea3-8e63-8a7743c96863)
+2026-09-17 20:45:39.825 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:39.826 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:39.827 | INFO | 📥 [Web UI] 接收到新警報: a73f89ed-f4e2-429c-b9b9-f22aeabc6c08, Level: C, Code: OHT_WD7093C
+2026-09-17 20:45:39.827 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=a73f89ed-f4e2-429c-b9b9-f22aeabc6c08)
+2026-09-17 20:45:40.012 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 20:45:40.013 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 20:45:40.014 | INFO | 📥 [Web UI] 接收到新警報: 9b8d5187-914b-400f-bcf4-e189cee8f692, Level: A, Code: OHT_WD7093C
+2026-09-17 20:45:40.014 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=9b8d5187-914b-400f-bcf4-e189cee8f692)
+2026-09-17 20:45:40.246 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 20:45:40.247 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 20:45:40.247 | INFO | 📥 [Web UI] 接收到新警報: f3bb65cb-a78e-4d8f-8294-210b997b862e, Level: B, Code: DRYA0146
+2026-09-17 20:45:40.247 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=f3bb65cb-a78e-4d8f-8294-210b997b862e)
+2026-09-17 20:45:40.416 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 20:45:40.417 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 20:45:40.418 | INFO | 📥 [Web UI] 接收到新警報: eb7a935a-5a3b-412a-81e2-b82825501fc9, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 20:45:40.418 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=eb7a935a-5a3b-412a-81e2-b82825501fc9)
+2026-09-17 20:53:27.643 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 20:53:27.660 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 20:53:28.185 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12609 筆)
+2026-09-17 20:53:28.195 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 21:06:35.924 | INFO | 🔑 [Web UI] 登入：K18251
+2026-09-17 21:06:45.236 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:45.238 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 21:06:45.240 | INFO | 📥 [Web UI] 接收到新警報: 5bd797e0-58a5-4acb-b695-5c5a28fa7137, Level: C, Code: 29502
+2026-09-17 21:06:45.241 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=5bd797e0-58a5-4acb-b695-5c5a28fa7137)
+2026-09-17 21:06:45.454 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 21:06:45.455 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 21:06:45.457 | INFO | 📥 [Web UI] 接收到新警報: a522028d-819d-4c40-bd51-5818e876ed6b, Level: A, Code: STRESS_NOCODE
+2026-09-17 21:06:45.458 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=a522028d-819d-4c40-bd51-5818e876ed6b)
+2026-09-17 21:06:45.627 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:06:45.629 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:06:45.630 | INFO | 📥 [Web UI] 接收到新警報: 4372b1f7-7412-4f06-b63f-bde328eb2968, Level: A, Code: LIFT_4271
+2026-09-17 21:06:45.632 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=4372b1f7-7412-4f06-b63f-bde328eb2968)
+2026-09-17 21:06:45.812 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 21:06:45.812 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 21:06:45.813 | INFO | 📥 [Web UI] 接收到新警報: 0b1e8478-11ba-4392-93db-483b04ac6d8c, Level: B, Code: LIFT_4272
+2026-09-17 21:06:45.814 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=0b1e8478-11ba-4392-93db-483b04ac6d8c)
+2026-09-17 21:06:46.046 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:46.048 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:46.049 | INFO | 📥 [Web UI] 接收到新警報: d1157ece-8c2a-42f1-a488-d4c852541a42, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 21:06:46.050 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=d1157ece-8c2a-42f1-a488-d4c852541a42)
+2026-09-17 21:06:46.232 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:46.233 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 21:06:46.234 | INFO | 📥 [Web UI] 接收到新警報: 66ae8d61-1a7b-4330-958f-4fd2ed22bebb, Level: C, Code: 29502
+2026-09-17 21:06:46.235 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=66ae8d61-1a7b-4330-958f-4fd2ed22bebb)
+2026-09-17 21:06:46.433 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:06:46.433 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:06:46.434 | INFO | 📥 [Web UI] 接收到新警報: 02673e28-dba6-4422-a0be-5aa4af153618, Level: C, Code: OHT_WD7093C
+2026-09-17 21:06:46.435 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=02673e28-dba6-4422-a0be-5aa4af153618)
+2026-09-17 21:06:46.619 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:46.620 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 21:06:46.621 | INFO | 📥 [Web UI] 接收到新警報: 629fde8e-7faa-439c-933f-c4a900fb4fbb, Level: C, Code: 29502
+2026-09-17 21:06:46.624 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=629fde8e-7faa-439c-933f-c4a900fb4fbb)
+2026-09-17 21:06:46.819 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:46.819 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:46.820 | INFO | 📥 [Web UI] 接收到新警報: b2d41801-b6ee-4b06-9384-6632e57de6c0, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 21:06:46.821 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=b2d41801-b6ee-4b06-9384-6632e57de6c0)
+2026-09-17 21:06:47.024 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 21:06:47.025 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 21:06:47.026 | INFO | 📥 [Web UI] 接收到新警報: 06ce4d4d-4493-497b-8ba8-a335e5a5904c, Level: C, Code: STRESS_NOCODE
+2026-09-17 21:06:47.027 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=06ce4d4d-4493-497b-8ba8-a335e5a5904c)
+2026-09-17 21:06:47.244 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:47.246 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 21:06:47.246 | INFO | 📥 [Web UI] 接收到新警報: d12abc6f-61b9-4316-a8c1-e985d68d762a, Level: C, Code: 29502
+2026-09-17 21:06:47.247 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=d12abc6f-61b9-4316-a8c1-e985d68d762a)
+2026-09-17 21:06:47.475 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:47.476 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:47.477 | INFO | 📥 [Web UI] 接收到新警報: 095daa51-7ebe-4e2e-805c-4e5d14c7d813, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 21:06:47.478 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=095daa51-7ebe-4e2e-805c-4e5d14c7d813)
+2026-09-17 21:06:47.632 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:06:47.634 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:06:47.635 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 21:06:47.820 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:06:47.821 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:06:47.821 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 21:06:48.023 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:06:48.024 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:06:48.025 | INFO | 📥 [Web UI] 接收到新警報: 5eeb117b-e72b-473f-8424-dfdcbd9960ec, Level: B, Code: DRYA0146
+2026-09-17 21:06:48.026 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=5eeb117b-e72b-473f-8424-dfdcbd9960ec)
+2026-09-17 21:06:48.253 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:48.254 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:48.254 | INFO | 📥 [Web UI] 接收到新警報: 7447f41b-83ed-4971-a5ed-9712e97030c0, Level: B, Code: UNKNOWN_CODE_999
+2026-09-17 21:06:48.254 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=7447f41b-83ed-4971-a5ed-9712e97030c0)
+2026-09-17 21:06:48.426 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:48.429 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:48.431 | INFO | 📥 [Web UI] 接收到新警報: c2ca6e0c-0e07-4d58-9325-fd1d81291965, Level: B, Code: UNKNOWN_CODE_999
+2026-09-17 21:06:48.432 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=c2ca6e0c-0e07-4d58-9325-fd1d81291965)
+2026-09-17 21:06:48.627 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 21:06:48.629 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 21:06:48.630 | INFO | 📥 [Web UI] 接收到新警報: 89a2168e-0704-4e22-a9ca-5eaf02a81b4c, Level: A, Code: LIFT_4272
+2026-09-17 21:06:48.632 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=89a2168e-0704-4e22-a9ca-5eaf02a81b4c)
+2026-09-17 21:06:48.846 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:48.847 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 21:06:48.848 | INFO | 📥 [Web UI] 接收到新警報: eea82963-5dd9-493f-9225-6afec19c4cbf, Level: C, Code: 29502
+2026-09-17 21:06:48.849 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=eea82963-5dd9-493f-9225-6afec19c4cbf)
+2026-09-17 21:06:49.033 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:06:49.034 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:06:49.035 | INFO | 📥 [Web UI] 接收到新警報: 99268868-6b7d-4106-af5c-03577e5415a6, Level: B, Code: LIFT_4271
+2026-09-17 21:06:49.036 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=99268868-6b7d-4106-af5c-03577e5415a6)
+2026-09-17 21:06:49.219 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 21:06:49.221 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 21:06:49.222 | INFO | 📥 [Web UI] 接收到新警報: 6945d087-9611-4a30-9c76-fac4d4d6decd, Level: A, Code: LIFT_4272
+2026-09-17 21:06:49.223 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=6945d087-9611-4a30-9c76-fac4d4d6decd)
+2026-09-17 21:06:49.438 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:06:49.439 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:06:49.440 | INFO | 📥 [Web UI] 接收到新警報: e439710a-ca2b-481f-96a4-c46b6c24f98e, Level: A, Code: OHT_WD7093C
+2026-09-17 21:06:49.442 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=e439710a-ca2b-481f-96a4-c46b6c24f98e)
+2026-09-17 21:06:49.642 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:06:49.643 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:06:49.644 | INFO | 📥 [Web UI] 接收到新警報: 485a4d5a-c947-45e0-b67f-9a3428281a47, Level: C, Code: DRYA0146
+2026-09-17 21:06:49.645 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=485a4d5a-c947-45e0-b67f-9a3428281a47)
+2026-09-17 21:06:49.843 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:06:49.843 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:06:49.843 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 21:06:50.031 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:06:50.033 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:06:50.034 | INFO | 📥 [Web UI] 接收到新警報: 8a4d4610-9a14-4c39-a631-77e540eba42f, Level: C, Code: OHT_WD7093C
+2026-09-17 21:06:50.036 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=8a4d4610-9a14-4c39-a631-77e540eba42f)
+2026-09-17 21:06:50.247 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:06:50.249 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:06:50.251 | INFO | 📥 [Web UI] 接收到新警報: f072923f-9abd-4475-889e-525a983a3917, Level: B, Code: OHT_WD7093C
+2026-09-17 21:06:50.251 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=f072923f-9abd-4475-889e-525a983a3917)
+2026-09-17 21:06:50.447 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 21:06:50.447 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 21:06:50.449 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 21:06:50.647 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 21:06:50.648 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 21:06:50.648 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 21:06:50.818 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:06:50.818 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:06:50.819 | INFO | 📥 [Web UI] 接收到新警報: 203a049a-b7d6-4ee9-ab64-31a2a613a916, Level: B, Code: OHT_WD7093C
+2026-09-17 21:06:50.820 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=203a049a-b7d6-4ee9-ab64-31a2a613a916)
+2026-09-17 21:06:51.037 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:06:51.039 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:06:51.040 | INFO | 📥 [Web UI] 接收到新警報: e09e80c3-5988-4596-af1a-6ae4e8c452ab, Level: C, Code: LIFT_4271
+2026-09-17 21:06:51.041 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=e09e80c3-5988-4596-af1a-6ae4e8c452ab)
+2026-09-17 21:06:51.223 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:51.225 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 21:06:51.226 | INFO | 📥 [Web UI] 接收到新警報: 180e8125-2427-43ce-b14f-e923b2b25f67, Level: B, Code: 29502
+2026-09-17 21:06:51.228 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=180e8125-2427-43ce-b14f-e923b2b25f67)
+2026-09-17 21:06:51.424 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 21:06:51.425 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 21:06:51.425 | INFO | 📥 [Web UI] 接收到新警報: 9f48ce78-8ef3-420d-ba84-e08eda15f0ac, Level: C, Code: LIFT_4272
+2026-09-17 21:06:51.426 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=9f48ce78-8ef3-420d-ba84-e08eda15f0ac)
+2026-09-17 21:06:51.658 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:51.661 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:51.663 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 21:06:51.825 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:51.825 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 21:06:51.826 | INFO | 📥 [Web UI] 接收到新警報: 402ea581-b543-48f3-99d1-4392f35c419a, Level: A, Code: 29502
+2026-09-17 21:06:51.827 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=402ea581-b543-48f3-99d1-4392f35c419a)
+2026-09-17 21:06:52.014 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:52.016 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:52.017 | INFO | 📥 [Web UI] 接收到新警報: 7c6e97ba-7266-45a4-b392-e573c0dce5ee, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 21:06:52.018 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=7c6e97ba-7266-45a4-b392-e573c0dce5ee)
+2026-09-17 21:06:52.245 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:52.246 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 21:06:52.246 | INFO | 📥 [Web UI] 接收到新警報: 96bac8e0-fe95-4553-bf99-214b9e29fd5d, Level: C, Code: 29502
+2026-09-17 21:06:52.246 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=96bac8e0-fe95-4553-bf99-214b9e29fd5d)
+2026-09-17 21:06:52.419 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:06:52.420 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:06:52.420 | INFO | 📥 [Web UI] 接收到新警報: faa938bb-f206-4abd-a45f-65a3191be29a, Level: C, Code: LIFT_4271
+2026-09-17 21:06:52.420 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=faa938bb-f206-4abd-a45f-65a3191be29a)
+2026-09-17 21:06:52.635 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 21:06:52.635 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 21:06:52.636 | INFO | 📥 [Web UI] 接收到新警報: 19e54091-640d-4e88-a2e6-b8ecba4a2a0b, Level: B, Code: LIFT_4272
+2026-09-17 21:06:52.636 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=19e54091-640d-4e88-a2e6-b8ecba4a2a0b)
+2026-09-17 21:06:52.822 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:52.822 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:52.823 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 21:06:53.036 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:06:53.036 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:06:53.037 | INFO | 📥 [Web UI] 接收到新警報: 2d504c84-278f-4d66-91a7-98a6cb4d6f0a, Level: B, Code: OHT_WD7093C
+2026-09-17 21:06:53.037 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=2d504c84-278f-4d66-91a7-98a6cb4d6f0a)
+2026-09-17 21:06:53.237 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:53.237 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 21:06:53.238 | INFO | 📥 [Web UI] 接收到新警報: dcfc9184-0bea-410b-8cc1-62a105128ed9, Level: B, Code: 29502
+2026-09-17 21:06:53.238 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=dcfc9184-0bea-410b-8cc1-62a105128ed9)
+2026-09-17 21:06:53.422 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 21:06:53.422 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=STRESS_NOCODE
+2026-09-17 21:06:53.423 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 21:06:53.624 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:53.625 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 21:06:53.625 | INFO | 📥 [Web UI] 接收到新警報: b50f705f-ba13-4e5c-936f-f173d3cd0bdc, Level: C, Code: 29502
+2026-09-17 21:06:53.625 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=b50f705f-ba13-4e5c-936f-f173d3cd0bdc)
+2026-09-17 21:06:53.811 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:06:53.811 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 21:06:53.812 | INFO | 📥 [Web UI] 接收到新警報: a8f4e767-4d37-4b54-841f-1049de74e5cc, Level: A, Code: 29502
+2026-09-17 21:06:53.812 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=a8f4e767-4d37-4b54-841f-1049de74e5cc)
+2026-09-17 21:06:54.059 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 21:06:54.060 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 21:06:54.060 | INFO | 📥 [Web UI] 接收到新警報: 3c73d1a1-366f-47f5-bd39-726cc16c71bc, Level: B, Code: LIFT_4272
+2026-09-17 21:06:54.060 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=3c73d1a1-366f-47f5-bd39-726cc16c71bc)
+2026-09-17 21:06:54.214 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:06:54.214 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 21:06:54.214 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 21:07:26.104 | INFO | 🗑️ [Web UI] K18251 確認警報 a8f4e767-4d37-4b54-841f-1049de74e5cc | Code=29502 Place=K22-3F | 選項=其他 | 備註=55
+2026-09-17 21:08:50.865 | INFO | 🗑️ [Web UI] K18251 確認警報 d1157ece-8c2a-42f1-a488-d4c852541a42 | Code=UNKNOWN_CODE_999 Place=K18-5F | 選項=持續觀察 | 備註=
+2026-09-17 21:08:52.844 | INFO | 🗑️ [Web UI] K18251 確認警報 66ae8d61-1a7b-4330-958f-4fd2ed22bebb | Code=29502 Place=K11-11F | 選項=轉交維修 | 備註=
+2026-09-17 21:14:44.294 | INFO | 🔑 [Web UI] 登入：K18251
+2026-09-17 21:14:48.856 | INFO | 🗑️ [Web UI] K18251 確認警報 7c6e97ba-7266-45a4-b392-e573c0dce5ee | Code=UNKNOWN_CODE_999 Place=K22-4F | 選項=持續觀察 | 備註=
+2026-09-17 21:19:35.520 | INFO | 🗑️ [Web UI] K18251 確認警報 6945d087-9611-4a30-9c76-fac4d4d6decd | Code=LIFT_4272 Place=K21-10F | 選項=轉交維修 | 備註=
+2026-09-17 21:19:58.757 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 21:19:58.791 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 21:19:59.693 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12609 筆)
+2026-09-17 21:19:59.711 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 21:26:58.108 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-09-17 21:26:58.137 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-09-17 21:26:58.920 | SUCCESS | ✅ 比對字典載入完成！(AlarmCode: 114492 筆, 括號代號: 12609 筆)
+2026-09-17 21:26:58.935 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-09-17 21:27:14.613 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:27:14.613 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:27:14.613 | INFO | 📥 [Web UI] 接收到新警報: e484b2bb-0de4-4ddd-81fb-e53f4f805e72, Level: B, Code: DRYA0146
+2026-09-17 21:27:14.615 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=e484b2bb-0de4-4ddd-81fb-e53f4f805e72)
+2026-09-17 21:27:14.831 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:27:14.832 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:27:14.833 | INFO | 📥 [Web UI] 接收到新警報: 45def538-27cb-4cc3-82dc-80d9d7d99be6, Level: C, Code: LIFT_4271
+2026-09-17 21:27:14.833 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=45def538-27cb-4cc3-82dc-80d9d7d99be6)
+2026-09-17 21:27:15.019 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:27:15.019 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:27:15.020 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 21:27:15.233 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:27:15.235 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:27:15.235 | INFO | 📥 [Web UI] 接收到新警報: dc529a9d-284f-43f6-ae63-1158366900de, Level: C, Code: DRYA0146
+2026-09-17 21:27:15.236 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=dc529a9d-284f-43f6-ae63-1158366900de)
+2026-09-17 21:27:15.420 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:27:15.420 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:27:15.421 | INFO | 📥 [Web UI] 接收到新警報: 3145059c-b5f1-48f8-910c-6133b73e71ae, Level: C, Code: DRYA0146
+2026-09-17 21:27:15.421 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=3145059c-b5f1-48f8-910c-6133b73e71ae)
+2026-09-17 21:27:15.607 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:27:15.607 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=UNKNOWN_CODE_999
+2026-09-17 21:27:15.608 | INFO | 📥 [Web UI] 接收到新警報: 7fb102f3-e65d-4fc8-99d1-5e4cec7f85a4, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 21:27:15.608 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=7fb102f3-e65d-4fc8-99d1-5e4cec7f85a4)
+2026-09-17 21:27:15.809 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:27:15.810 | INFO | 🔍 [步驟 B] 比對結果: Method=Not Found, Code=29502
+2026-09-17 21:27:15.810 | INFO | 📥 [Web UI] 接收到新警報: 668ee016-8e84-4ddd-a5b6-4f3dc601b2f6, Level: B, Code: 29502
+2026-09-17 21:27:15.811 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=668ee016-8e84-4ddd-a5b6-4f3dc601b2f6)
+2026-09-17 21:27:16.012 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:27:16.013 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:27:16.013 | INFO | 📥 [Web UI] 接收到新警報: 733c16e8-fa53-479f-ba7e-82497170aa15, Level: C, Code: OHT_WD7093C
+2026-09-17 21:27:16.013 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=733c16e8-fa53-479f-ba7e-82497170aa15)
+2026-09-17 21:27:16.213 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:27:16.214 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:27:16.214 | INFO | 📥 [Web UI] 接收到新警報: 2138edf7-9ed9-43cd-9a7d-b30273ffe4c8, Level: B, Code: LIFT_4271
+2026-09-17 21:27:16.214 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=2138edf7-9ed9-43cd-9a7d-b30273ffe4c8)
+2026-09-17 21:27:16.429 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:27:16.430 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:27:16.430 | INFO | 📥 [Web UI] 接收到新警報: aed14437-fec8-454d-a6ff-feadfe5e7d82, Level: B, Code: DRYA0146
+2026-09-17 21:27:16.431 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=aed14437-fec8-454d-a6ff-feadfe5e7d82)
+2026-09-17 21:27:16.616 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:27:16.616 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:27:16.617 | INFO | 📥 [Web UI] 接收到新警報: 345411b2-2a96-4954-a007-fc7eb0568f10, Level: C, Code: LIFT_4271
+2026-09-17 21:27:16.617 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=345411b2-2a96-4954-a007-fc7eb0568f10)
+2026-09-17 21:27:16.820 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:27:16.821 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:27:16.821 | INFO | 📥 [Web UI] 接收到新警報: 67bbecb4-7697-4abd-a682-83793555cfde, Level: C, Code: LIFT_4271
+2026-09-17 21:27:16.821 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=67bbecb4-7697-4abd-a682-83793555cfde)
+2026-09-17 21:27:16.992 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:27:16.993 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:27:16.993 | INFO | 📥 [Web UI] 接收到新警報: 2df075f4-eba3-4752-b65a-bdf97224674b, Level: B, Code: LIFT_4271
+2026-09-17 21:27:16.994 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=2df075f4-eba3-4752-b65a-bdf97224674b)
+2026-09-17 21:27:17.210 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:27:17.211 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 21:27:17.211 | INFO | 📥 [Web UI] 接收到新警報: 2b6f116a-ce34-45d2-b324-35b77f93da16, Level: A, Code: 29502
+2026-09-17 21:27:17.212 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=2b6f116a-ce34-45d2-b324-35b77f93da16)
+2026-09-17 21:27:17.414 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:27:17.414 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:27:17.415 | INFO | 📥 [Web UI] 接收到新警報: 61ddf682-ae7d-421b-b179-e773908e15cd, Level: B, Code: OHT_WD7093C
+2026-09-17 21:27:17.415 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=61ddf682-ae7d-421b-b179-e773908e15cd)
+2026-09-17 21:27:17.631 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:27:17.631 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 21:27:17.632 | INFO | 📥 [Web UI] 接收到新警報: 032dcf62-a098-4d71-86bf-4d874cfb4185, Level: B, Code: 29502
+2026-09-17 21:27:17.632 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=032dcf62-a098-4d71-86bf-4d874cfb4185)
+2026-09-17 21:27:17.818 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:27:17.819 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:27:17.819 | INFO | 📥 [Web UI] 接收到新警報: e60c5399-712a-44df-81bd-874a8d8c4b83, Level: B, Code: DRYA0146
+2026-09-17 21:27:17.819 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=e60c5399-712a-44df-81bd-874a8d8c4b83)
+2026-09-17 21:27:18.084 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:27:18.085 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:27:18.085 | INFO | ℹ️ [步驟 C] 等級為 'D'，不符合顯示條件，跳過推送。
+2026-09-17 21:27:18.223 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:27:18.223 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 21:27:18.224 | INFO | 📥 [Web UI] 接收到新警報: 4ecb1a02-7d01-4fea-a8bc-b299c470a1d9, Level: C, Code: 29502
+2026-09-17 21:27:18.224 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=4ecb1a02-7d01-4fea-a8bc-b299c470a1d9)
+2026-09-17 21:27:18.426 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:27:18.426 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 21:27:18.426 | INFO | 📥 [Web UI] 接收到新警報: 4a1ea041-b098-4cd7-a5d0-04c5e0133490, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 21:27:18.427 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=4a1ea041-b098-4cd7-a5d0-04c5e0133490)
+2026-09-17 21:27:18.611 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:27:18.612 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 21:27:18.612 | INFO | 📥 [Web UI] 接收到新警報: adf4b65a-4d45-4aae-bb4a-acac8a4c9700, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 21:27:18.613 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=adf4b65a-4d45-4aae-bb4a-acac8a4c9700)
+2026-09-17 21:27:18.830 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:27:18.830 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:27:18.831 | INFO | 📥 [Web UI] 接收到新警報: 222132e2-75db-4ae1-9836-5f576df212df, Level: A, Code: LIFT_4271
+2026-09-17 21:27:18.831 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=222132e2-75db-4ae1-9836-5f576df212df)
+2026-09-17 21:27:19.019 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:27:19.019 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 21:27:19.020 | INFO | 📥 [Web UI] 接收到新警報: 2e93523c-1a4d-40e6-9c7c-68b9be80f6bb, Level: A, Code: UNKNOWN_CODE_999
+2026-09-17 21:27:19.020 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=2e93523c-1a4d-40e6-9c7c-68b9be80f6bb)
+2026-09-17 21:27:19.217 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4271 (DB 寫入目前停用)
+2026-09-17 21:27:19.217 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4271
+2026-09-17 21:27:19.218 | INFO | ℹ️ [步驟 C] 等級為 'E'，不符合顯示條件，跳過推送。
+2026-09-17 21:27:19.420 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=STRESS_NOCODE (DB 寫入目前停用)
+2026-09-17 21:27:19.421 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=STRESS_NOCODE
+2026-09-17 21:27:19.421 | INFO | 📥 [Web UI] 接收到新警報: b9b8b60d-a25b-4be3-a334-eb006c3c55da, Level: C, Code: STRESS_NOCODE
+2026-09-17 21:27:19.421 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=b9b8b60d-a25b-4be3-a334-eb006c3c55da)
+2026-09-17 21:27:19.609 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=DRYA0146 (DB 寫入目前停用)
+2026-09-17 21:27:19.610 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=DRYA0146
+2026-09-17 21:27:19.610 | INFO | 📥 [Web UI] 接收到新警報: 6363726d-da23-44d8-a5ee-962ea39c9791, Level: C, Code: DRYA0146
+2026-09-17 21:27:19.611 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=6363726d-da23-44d8-a5ee-962ea39c9791)
+2026-09-17 21:27:19.812 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=UNKNOWN_CODE_999 (DB 寫入目前停用)
+2026-09-17 21:27:19.813 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=UNKNOWN_CODE_999
+2026-09-17 21:27:19.813 | INFO | 📥 [Web UI] 接收到新警報: 21fe27d2-8389-4510-8cba-9fde2c838f49, Level: C, Code: UNKNOWN_CODE_999
+2026-09-17 21:27:19.814 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=21fe27d2-8389-4510-8cba-9fde2c838f49)
+2026-09-17 21:27:20.000 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=29502 (DB 寫入目前停用)
+2026-09-17 21:27:20.000 | INFO | 🔍 [步驟 B] 比對結果: Method=Extracted_Code, Code=29502
+2026-09-17 21:27:20.002 | INFO | 📥 [Web UI] 接收到新警報: 58651a1a-2f5d-4e40-b707-5e23d0f22efb, Level: C, Code: 29502
+2026-09-17 21:27:20.002 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=58651a1a-2f5d-4e40-b707-5e23d0f22efb)
+2026-09-17 21:27:20.215 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=OHT_WD7093C (DB 寫入目前停用)
+2026-09-17 21:27:20.215 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=OHT_WD7093C
+2026-09-17 21:27:20.215 | INFO | 📥 [Web UI] 接收到新警報: afeae4f6-29a3-449a-b83a-7cc5f1cb8eaf, Level: C, Code: OHT_WD7093C
+2026-09-17 21:27:20.217 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=afeae4f6-29a3-449a-b83a-7cc5f1cb8eaf)
+2026-09-17 21:27:20.402 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=LIFT_4272 (DB 寫入目前停用)
+2026-09-17 21:27:20.402 | INFO | 🔍 [步驟 B] 比對結果: Method=AlarmCode, Code=LIFT_4272
+2026-09-17 21:27:20.403 | INFO | 📥 [Web UI] 接收到新警報: b02bf15b-fd38-4074-b24f-39fcff7cc320, Level: B, Code: LIFT_4272
+2026-09-17 21:27:20.403 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=b02bf15b-fd38-4074-b24f-39fcff7cc320)
+2026-09-17 21:27:31.081 | WARNING | 🧹 [Web UI] K18251 清空全部未確認警報，共 27 筆

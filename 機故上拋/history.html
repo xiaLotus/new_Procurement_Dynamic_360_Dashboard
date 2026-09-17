@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>機故警報 — 已確認紀錄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; background: #eef2f7; }
+  [v-cloak] { display: none; }
+  .bg-grid {
+    background-image:
+      linear-gradient(rgba(15,23,42,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15,23,42,.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .panel { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 30px -12px rgba(15,23,42,.12); }
+  .filter {
+    background: #fff; border: 1px solid #e2e8f0; border-radius: .5rem;
+    padding: .4rem .75rem; font-size: .875rem; font-weight: 500; color: #334155;
+    box-shadow: 0 1px 2px rgba(0,0,0,.03);
+  }
+  select.filter {
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat: no-repeat; background-position: right .6rem center; padding-right: 2rem;
+  }
+  .filter:focus { outline: none; box-shadow: 0 0 0 4px rgba(59,130,246,.12); border-color: #60a5fa; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+</style>
+</head>
+
+<body class="min-h-screen text-slate-800 bg-grid">
+<div id="app" v-cloak>
+
+  <!-- 登入（與儀表板共用 sessionStorage） -->
+  <div v-if="!loggedIn" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center px-4">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
+      <h1 class="text-lg font-bold text-slate-900 mb-1">已確認紀錄</h1>
+      <p class="text-xs text-slate-500 mb-6">請登入後查看</p>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">帳號</label>
+          <input v-model.trim="login.username" type="text" autocomplete="username" @keydown.enter="$refs.pass.focus()"
+                 class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">密碼</label>
+          <input ref="pass" v-model="login.password" type="password" autocomplete="current-password" @keydown.enter="doLogin"
+                 class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400">
+        </div>
+        <p v-if="login.error" class="text-sm text-red-600">{{ login.error }}</p>
+        <button @click="doLogin" :disabled="login.busy"
+                class="w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold py-2.5 rounded-lg transition disabled:opacity-60">
+          {{ login.busy ? '登入中...' : '登入' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-slate-950 text-white sticky top-0 z-30 shadow-lg">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 bg-blue-500/15 border border-blue-500/30 rounded-xl flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-base sm:text-xl font-black tracking-wide truncate">已確認紀錄</h1>
+            <p class="text-[11px] text-slate-400 hidden sm:block">Checked Alarm History · 每 5 秒更新</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 sm:gap-5 text-xs sm:text-sm">
+          <div class="hidden md:flex items-center gap-2">
+            <span class="text-slate-400">最後更新</span>
+            <span class="text-slate-200 font-medium tabular-nums">{{ lastUpdate }}</span>
+          </div>
+          <div class="flex items-center gap-2 pl-3 border-l border-slate-700">
+            <a href="dashboard.html" class="text-xs text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 rounded-md px-2 py-1 transition">回儀表板</a>
+            <span class="text-slate-200 font-medium hidden sm:inline">{{ username }}</span>
+            <button @click="doLogout" class="text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-md px-2 py-1 transition">登出</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- 統計 -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <div class="panel rounded-xl p-4 border-l-4 border-l-slate-400">
+        <p class="text-[11px] font-bold tracking-widest text-slate-500">總筆數</p>
+        <p class="text-3xl font-black text-slate-900 mt-1 tabular-nums">{{ records.length }}</p>
+      </div>
+      <div v-for="lv in ['A','B','C']" :key="lv"
+           class="panel rounded-xl p-4 border-l-4 cursor-pointer select-none transition"
+           :class="[levelStyle[lv].stat, filters.level === lv ? 'ring-4 ring-slate-200' : '']"
+           @click="filters.level = filters.level === lv ? '' : lv">
+        <p class="text-[11px] font-bold tracking-widest" :class="levelStyle[lv].text">LEVEL {{ lv }}</p>
+        <p class="text-3xl font-black text-slate-900 mt-1 tabular-nums">{{ counts[lv] }}</p>
+      </div>
+    </section>
+
+    <!-- 篩選列 -->
+    <section class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 mb-4">
+      <div class="flex flex-wrap items-end gap-3">
+        <label class="flex flex-col gap-1 text-xs text-slate-500">棟別
+          <select v-model="filters.building" class="filter"><option value="">全部</option><option v-for="b in BUILDINGS" :key="b" :value="b">{{ b }}</option></select>
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-slate-500">樓層
+          <select v-model="filters.floor" class="filter"><option value="">全部</option><option v-for="f in FLOORS" :key="f" :value="f">{{ f }}</option></select>
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-slate-500">等級
+          <select v-model="filters.level" class="filter"><option value="">全部</option><option>A</option><option>B</option><option>C</option></select>
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-slate-500">處理結果
+          <select v-model="filters.action" class="filter"><option value="">全部</option><option v-for="a in actionOptions" :key="a" :value="a">{{ a }}</option></select>
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-slate-500">處理人
+          <select v-model="filters.user" class="filter"><option value="">全部</option><option v-for="u in userOptions" :key="u" :value="u">{{ u }}</option></select>
+        </label>
+        <label class="flex flex-col gap-1 text-xs text-slate-500">關鍵字
+          <input v-model.trim="filters.keyword" class="filter" type="text" placeholder="Alarm Code / 訊息 / 備註">
+        </label>
+        <button v-if="isFiltering" @click="resetFilters" class="text-xs text-slate-500 hover:text-slate-800 border border-slate-200 bg-white rounded-lg px-3 py-2 transition">清除</button>
+      </div>
+      <div class="flex items-center gap-2 text-xs text-slate-500">
+        <span class="bg-white border border-slate-200 rounded-lg px-3 py-1.5">顯示 <b>{{ filtered.length }}</b> / <b>{{ records.length }}</b> 筆</span>
+        <button @click="exportCsv" :disabled="!filtered.length" class="bg-white border border-slate-200 hover:bg-slate-50 rounded-lg px-3 py-1.5 text-slate-700 font-medium transition disabled:opacity-50">匯出 CSV</button>
+      </div>
+    </section>
+
+    <!-- 表格 -->
+    <div class="panel rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs">
+            <tr>
+              <th v-for="h in headers" :key="h.key" @click="sortBy(h.key)"
+                  class="text-left px-4 py-2.5 font-semibold whitespace-nowrap cursor-pointer select-none hover:text-slate-800">
+                {{ h.label }}
+                <span v-if="sort.key === h.key" class="ml-1 text-slate-400">{{ sort.dir === 'asc' ? '▲' : '▼' }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in filtered" :key="r.alert_id + r.checked_at" class="border-t border-slate-100 hover:bg-slate-50/60">
+              <td class="px-4 py-2 tabular-nums text-slate-600 whitespace-nowrap">{{ r.checked_at }}</td>
+              <td class="px-4 py-2 font-medium text-slate-800 whitespace-nowrap">{{ r.checked_by }}</td>
+              <td class="px-4 py-2"><span class="inline-flex px-2 py-0.5 rounded-md border text-[11px] font-bold" :class="levelStyle[r.lv]?.badge || levelStyle.C.badge">{{ r.lv }}</span></td>
+              <td class="px-4 py-2 text-slate-600 whitespace-nowrap">{{ r.Place }}</td>
+              <td class="px-4 py-2 font-semibold whitespace-nowrap" :class="levelStyle[r.lv]?.text || levelStyle.C.text">{{ r.AlarmCode }}</td>
+              <td class="px-4 py-2 text-slate-700 max-w-[320px] truncate" :title="r.AlarmMessage_1">{{ r.AlarmMessage_1 }}</td>
+              <td class="px-4 py-2 text-slate-700 whitespace-nowrap">{{ r.check_action }}</td>
+              <td class="px-4 py-2 text-slate-500 max-w-[260px] truncate" :title="r.check_note">{{ r.check_note }}</td>
+              <td class="px-4 py-2 tabular-nums text-slate-400 whitespace-nowrap">{{ r.received_at }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-if="filtered.length === 0" class="text-center text-sm text-slate-400 py-12">
+        {{ records.length === 0 ? '尚無紀錄' : '此篩選條件下沒有紀錄' }}
+      </div>
+    </div>
+
+    <footer class="mt-10 pt-5 border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row gap-2 sm:justify-between">
+      <span>Equipment Alarm Monitoring System</span>
+      <span>API：<span class="font-mono">{{ API_BASE }}</span></span>
+    </footer>
+  </main>
+</div>
+
+<script>
+const app = Vue.createApp({
+  data() {
+    return {
+      // ---------- 設定 ----------
+      API_BASE: "http://localhost:8900",
+      POLL_MS: 5000,
+      FETCH_LIMIT: 500,          // 後端 checked_alerts 上限也是 500
+      BUILDINGS: ["K11", "K18", "K21", "K22", "K25"],
+      FLOORS: ["1F", "2F", "3F", "4F", "5F", "6F", "7F", "8F", "9F", "10F", "11F", "12F"],
+      levelStyle: {
+        A: { text: "text-red-600",   badge: "bg-red-50 text-red-600 border-red-200",       stat: "border-l-red-500" },
+        B: { text: "text-amber-600", badge: "bg-amber-50 text-amber-700 border-amber-200", stat: "border-l-amber-400" },
+        C: { text: "text-blue-600",  badge: "bg-blue-50 text-blue-600 border-blue-200",    stat: "border-l-blue-500" }
+      },
+      headers: [
+        { key: "checked_at",     label: "確認時間" },
+        { key: "checked_by",     label: "處理人" },
+        { key: "lv",             label: "等級" },
+        { key: "Place",          label: "位置" },
+        { key: "AlarmCode",      label: "Alarm Code" },
+        { key: "AlarmMessage_1", label: "訊息" },
+        { key: "check_action",   label: "處理結果" },
+        { key: "check_note",     label: "備註" },
+        { key: "received_at",    label: "接收時間" }
+      ],
+
+      // ---------- 狀態 ----------
+      loggedIn: false,
+      username: "",
+      login: { username: "", password: "", error: "", busy: false },
+      records: [],
+      lastUpdate: "--:--:--",
+      timer: null,
+      filters: { building: "", floor: "", level: "", action: "", user: "", keyword: "" },
+      sort: { key: "checked_at", dir: "desc" }
+    };
+  },
+
+  computed: {
+    counts() {
+      const c = { A: 0, B: 0, C: 0 };
+      this.records.forEach(r => { if (c[r.lv] !== undefined) c[r.lv]++; });
+      return c;
+    },
+    actionOptions() { return [...new Set(this.records.map(r => r.check_action).filter(Boolean))].sort(); },
+    userOptions()   { return [...new Set(this.records.map(r => r.checked_by).filter(Boolean))].sort(); },
+    isFiltering()   { return Object.values(this.filters).some(v => v); },
+    filtered() {
+      const f = this.filters, kw = f.keyword.toLowerCase();
+      const rows = this.records.filter(r =>
+        (!f.building || r.building === f.building) &&
+        (!f.floor    || r.floor    === f.floor) &&
+        (!f.level    || r.lv       === f.level) &&
+        (!f.action   || r.check_action === f.action) &&
+        (!f.user     || r.checked_by   === f.user) &&
+        (!kw || [r.AlarmCode, r.AlarmMessage_1, r.check_note, r.Matched_Query_Message, r.System]
+                  .map(x => String(x || "").toLowerCase()).join(" ").includes(kw))
+      );
+      const { key, dir } = this.sort, m = dir === "asc" ? 1 : -1;
+      return rows.sort((a, b) => String(a[key] ?? "").localeCompare(String(b[key] ?? ""), "zh-TW", { numeric: true }) * m);
+    }
+  },
+
+  mounted() {
+    this.username = sessionStorage.getItem("alarm_dashboard_user") || "";
+    if (sessionStorage.getItem("alarm_dashboard_pass")) {
+      this.loggedIn = true;
+      this.startPolling();
+    }
+  },
+  beforeUnmount() { this.stopPolling(); },
+
+  methods: {
+    authHeaders() {
+      return {
+        "X-Dashboard-Password": sessionStorage.getItem("alarm_dashboard_pass") || "",
+        "X-Dashboard-User": this.username
+      };
+    },
+    normalize(raw) {
+      const parts = String(raw.Place || "").trim().split(/[-_\s/]+/).filter(Boolean);
+      const floor = parts.find(p => /^\d+F$/i.test(p));
+      return { ...raw, lv: String(raw.Level || "").toUpperCase(), building: parts[0] || "", floor: floor ? floor.toUpperCase() : "" };
+    },
+    sortBy(key) {
+      if (this.sort.key === key) this.sort.dir = this.sort.dir === "asc" ? "desc" : "asc";
+      else this.sort = { key, dir: "asc" };
+    },
+    resetFilters() { Object.keys(this.filters).forEach(k => this.filters[k] = ""); },
+
+    // ---------- 登入 ----------
+    async doLogin() {
+      const { username, password } = this.login;
+      if (!username || !password) { this.login.error = "請輸入帳號與密碼"; return; }
+      this.login.busy = true; this.login.error = "";
+      try {
+        const res = await fetch(`${this.API_BASE}/api/login`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
+        sessionStorage.setItem("alarm_dashboard_pass", password);
+        sessionStorage.setItem("alarm_dashboard_user", username);
+        this.username = username; this.login.password = "";
+        this.loggedIn = true;
+        this.startPolling();
+      } catch (e) {
+        this.login.error = e.message === "Failed to fetch" ? "無法連線到 API，請確認伺服器已啟動" : e.message;
+      } finally { this.login.busy = false; }
+    },
+    doLogout() {
+      this.stopPolling();
+      sessionStorage.removeItem("alarm_dashboard_pass");
+      sessionStorage.removeItem("alarm_dashboard_user");
+      this.records = []; this.username = ""; this.loggedIn = false;
+    },
+
+    // ---------- 資料 ----------
+    startPolling() { this.stopPolling(); this.fetchHistory(); this.timer = setInterval(this.fetchHistory, this.POLL_MS); },
+    stopPolling()  { if (this.timer) { clearInterval(this.timer); this.timer = null; } },
+    async fetchHistory() {
+      try {
+        const res = await fetch(`${this.API_BASE}/get_checked_alerts?limit=${this.FETCH_LIMIT}`, { cache: "no-store", headers: this.authHeaders() });
+        if (res.status === 401) { this.doLogout(); this.login.error = "請重新登入"; return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const list = await res.json();
+        if (!Array.isArray(list)) return;
+        this.lastUpdate = new Date().toLocaleTimeString("zh-TW", { hour12: false });
+        const sig = list.map(r => `${r.alert_id}|${r.checked_at}`).join(",");
+        if (sig !== this._lastSig) { this._lastSig = sig; this.records = list.map(this.normalize); }
+      } catch (e) { console.error("讀取歷史紀錄失敗：", e); }
+    },
+
+    // ---------- 匯出 ----------
+    exportCsv() {
+      const rows = this.filtered;
+      if (!rows.length) return;
+      const cols = ["checked_at","checked_by","Level","Place","System","AlarmCode","AlarmMessage_1","Match_Method","Matched_Query_Message","check_action","check_note","received_at"];
+      const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const csv = "\uFEFF" + [cols.join(","), ...rows.map(r => cols.map(c => esc(r[c])).join(","))].join("\r\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      a.download = `checked_alerts_${new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")}.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+  }
+});
+
+app.mount("#app");
+</script>
+</body>
+</html>
