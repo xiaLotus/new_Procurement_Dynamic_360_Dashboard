@@ -1,7 +1,9 @@
 from datetime import datetime
 import glob                 # 修正：原本 from glob import glob 但下方用 glob.glob() 會 AttributeError
+import json                 # 新增：DB 寫入失敗時把 CHECK 紀錄備份成 JSONL
 import os
 import re               # 用於正則表達式提取代號
+import time             # 新增：熱重載背景執行緒用
 import requests         # 保留：若日後要 POST 到其他外部系統仍可使用
 import uuid             # 用於生成唯一的警報 ID
 import threading        # 用於多執行緒安全的記憶體操作
@@ -42,100 +44,329 @@ engine = create_engine(
 )
 
 # =====================================================
+# 啟動時確認 alarm_checked 表存在 (已存在就什麼都不做)
+#   alarmcode_alarmmessage : 全部上拋的原始警報 (既有的表，寫入目前停用)
+#   alarm_checked          : 按過 CHECK 的紀錄，歷史紀錄頁讀這張
+# =====================================================
+def ensure_tables():
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS alarm_checked (
+                    id                    BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                    alert_id              CHAR(36)     NOT NULL,
+                    checked_by            VARCHAR(64)  NOT NULL,
+                    checked_at            DATETIME     NOT NULL,
+                    check_action          VARCHAR(32)  NOT NULL DEFAULT '',
+                    check_note            VARCHAR(500) NOT NULL DEFAULT '',
+                    `System`              VARCHAR(100) NOT NULL DEFAULT '',
+                    `Plant`               VARCHAR(50)  NOT NULL DEFAULT '',
+                    `Place`               VARCHAR(50)  NOT NULL DEFAULT '',
+                    `AlarmCode`           VARCHAR(100) NOT NULL DEFAULT '',
+                    `Level`               VARCHAR(16)  NOT NULL DEFAULT '',
+                    `AlarmMessage_1`      VARCHAR(255) NOT NULL DEFAULT '',
+                    `Match_Method`        VARCHAR(32)  NOT NULL DEFAULT '',
+                    `Matched_Query_Message` VARCHAR(500) NOT NULL DEFAULT '',
+                    received_at           DATETIME     NULL,
+                    PRIMARY KEY (id),
+                    UNIQUE KEY uk_alert_id (alert_id),
+                    KEY idx_checked_at (checked_at),
+                    KEY idx_place (`Place`),
+                    KEY idx_alarmcode (`AlarmCode`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+            """))
+        logger.success("✅ alarm_checked 表已就緒")
+        return True
+    except Exception as e:
+        logger.error(f"❌ 建立 alarm_checked 失敗 (不影響警報接收，但 CHECK 紀錄無法寫入 DB): {e}")
+        return False
+
+ensure_tables()
+
+# DB 寫入失敗時的備份檔：一行一筆 JSON，DB 恢復後可據此補寫
+CHECKED_FAILED_FILE = os.path.join(log_folder, "checked_failed.jsonl")
+
+
+def save_checked_record(record: dict) -> bool:
+    """把一筆 CHECK 紀錄寫入 alarm_checked；失敗就備份到 checked_failed.jsonl，回傳是否寫入 DB 成功"""
+    params = {
+        "alert_id": str(record.get("alert_id") or ""),
+        "checked_by": str(record.get("checked_by") or "unknown")[:64],
+        "checked_at": record.get("checked_at"),
+        "check_action": str(record.get("check_action") or "")[:32],
+        "check_note": str(record.get("check_note") or "")[:500],
+        "System": str(record.get("System") or "")[:100],
+        "Plant": str(record.get("Plant") or "")[:50],
+        "Place": str(record.get("Place") or "")[:50],
+        "AlarmCode": str(record.get("AlarmCode") or "")[:100],
+        "Level": str(record.get("Level") or "")[:16],
+        "AlarmMessage_1": str(record.get("AlarmMessage_1") or "")[:255],
+        "Match_Method": str(record.get("Match_Method") or "")[:32],
+        "Matched_Query_Message": str(record.get("Matched_Query_Message") or "")[:500],
+        "received_at": record.get("received_at") or None,
+    }
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("""
+                INSERT INTO alarm_checked
+                    (alert_id, checked_by, checked_at, check_action, check_note,
+                     `System`, `Plant`, `Place`, `AlarmCode`, `Level`, `AlarmMessage_1`,
+                     `Match_Method`, `Matched_Query_Message`, received_at)
+                VALUES
+                    (:alert_id, :checked_by, :checked_at, :check_action, :check_note,
+                     :System, :Plant, :Place, :AlarmCode, :Level, :AlarmMessage_1,
+                     :Match_Method, :Matched_Query_Message, :received_at)
+            """), params)
+        return True
+    except Exception as e:
+        logger.error(f"❌ 寫入 alarm_checked 失敗，已備份到 {CHECKED_FAILED_FILE}: {e}")
+        try:
+            with open(CHECKED_FAILED_FILE, "a", encoding="utf-8") as f:
+                f.write(json.dumps(params, ensure_ascii=False, default=str) + "\n")
+        except Exception as e2:
+            logger.error(f"❌ 備份 CHECK 紀錄也失敗: {e2} | {params}")
+        return False
+
+
+# =====================================================
 # 【Web 儀表板】全域記憶體儲存與執行緒鎖
 # =====================================================
 active_alerts = {}
 alerts_lock = threading.Lock()
 
-# 已確認 (CHECK) 的紀錄之後改由 DB 讀取，目前不在記憶體暫存
+# 已確認 (CHECK) 的紀錄寫入 / 讀取 DB 的 alarm_checked 表；這是歷史頁一次最多讀取的筆數
 CHECKED_MAX = 500
 
 # =====================================================
-# 2. 全域比對字典 (啟動時載入)
+# 2. 全域比對字典 (啟動時載入 + 每日更新後自動熱重載)
 # =====================================================
-DICT_BY_CODE = {}
-DICT_BY_EXTRACTED = {}
+QUERY_CSV = "query_result.csv"      # 固定檔名；每日更新直接覆蓋這個檔即可
+RELOAD_CHECK_SEC = 300              # 每 5 分鐘檢查一次檔案修改時間
+MIN_ROWS_RATIO = 0.8                # 新檔列數低於舊檔 80% 視為異常，保留舊字典
+QUERY_SETTLE_SEC = 10               # 檔案最後修改未滿 10 秒 = 可能還在寫入，等下一輪再讀
+DISPLAY_LEVELS = ['A', 'B', 'C']    # 會推送到前端的等級
+
+# 四本字典放在同一個 dict，重載時「整包換掉」，進行中的請求不會讀到半新半舊
+#   sys_code : (SYSTEM, alarmcode)  -> (alarmcode, message, lv)     ← 唯一鍵，最準
+#   sys_ext  : (SYSTEM, 括號代號)    -> (alarmcode, message, lv)
+#   code     : alarmcode            -> [(alarmcode, message, lv, 正規化訊息), ...]  ← 跨設備後備
+#   ext      : 括號代號              -> [(alarmcode, message, lv, 正規化訊息), ...]  ← 跨設備後備
+# 跨設備後備 (code / ext) 同一個代號在不同設備意義可能完全不同 (例如 AlarmCode "1")，
+# 所以必須「訊息內容也相符」才採用，避免借到別台設備的等級造成誤報。
+QUERY_DICTS = {"sys_code": {}, "code": {}, "sys_ext": {}, "ext": {}}
+
+_query_mtime = 0        # 目前字典對應的檔案 mtime
+_query_rows = 0         # 目前字典對應的列數
+_query_loaded_at = ""   # 最後成功載入時間
+_query_bad_mtime = 0    # 已判定為異常的檔案 mtime (避免每 5 分鐘重複報錯)
+_reload_lock = threading.Lock()
 
 # 括號代號提取：支援 ()、（）、[] 三種括號
 PAREN_PATTERN = r'[（(\[]([^)）\]]+)[)）\]]'
 
-def load_query_data_to_memory():
-    """啟動時將 20 萬筆 query_result.csv 載入記憶體，避免每次請求都讀取檔案"""
-    global DICT_BY_CODE, DICT_BY_EXTRACTED
-    csv_path = "query_result.csv" # 請確認檔案路徑正確
+# 同一個 key 有多筆時，保留等級最嚴重的那筆 (A 最優先)，寧可多報不可漏報
+_LV_RANK = {"A": 0, "B": 1, "C": 2, "D": 3, "E": 4}
 
-    try:
-        if os.path.exists(csv_path):
-            logger.info("⏳ 正在載入 query_result.csv 到記憶體...")
-            df_query = pd.read_csv(csv_path)
 
-            # 修正：CSV 的 message 前後多包了一層雙引號 ("01096 ...")，這裡去掉
-            df_query['message'] = df_query['message'].astype(str).str.strip().str.strip('"')
+def _norm_msg(s):
+    """訊息正規化：去掉空白、標點、底線，轉大寫，只留文字與數字，用來比較兩段訊息是否相同"""
+    return re.sub(r'[\W_]+', '', str(s)).upper()
 
-            # 2.1 建立 AlarmCode 字典
-            df_query['alarmcode_clean'] = df_query['alarmcode'].astype(str).str.strip()
-            DICT_BY_CODE = dict(zip(df_query['alarmcode_clean'], zip(df_query['alarmcode'], df_query['message'])))
 
-            # 2.2 建立 Extracted_Code 字典 (向量化提取，速度極快)
-            raw_ext = df_query['message'].str.extract(PAREN_PATTERN)[0]
+def _msg_similar(a: str, b: str) -> bool:
+    """兩段『已正規化』訊息是否相符：完全相同，或較短者 (至少 6 字) 被較長者包含"""
+    if not a or not b:
+        return False
+    if a == b:
+        return True
+    short, long_ = (a, b) if len(a) <= len(b) else (b, a)
+    return len(short) >= 6 and short in long_
+
+
+def _norm_lv(v):
+    """LV_A / Lv_A / lv_a → 'A'；不是 LV_x 格式回傳 None"""
+    m = re.match(r'^LV_([A-Z])$', str(v).strip().upper())
+    return m.group(1) if m else None
+
+
+def load_query_data_to_memory(force: bool = False) -> bool:
+    """
+    載入 query_result.csv 到記憶體。
+    - 檔案 mtime 沒變就直接略過 (force=True 例外)
+    - 讀檔失敗 / 列數暴跌：保留舊字典，不影響線上比對
+    回傳 True 表示這次有成功換上新字典。
+    """
+    global QUERY_DICTS, _query_mtime, _query_rows, _query_loaded_at, _query_bad_mtime
+
+    with _reload_lock:
+        try:
+            if not os.path.exists(QUERY_CSV):
+                logger.warning(f"⚠️ 找不到 {QUERY_CSV}，沿用目前字典。")
+                return False
+
+            mtime = os.path.getmtime(QUERY_CSV)
+            if not force and mtime in (_query_mtime, _query_bad_mtime):
+                return False
+
+            if not force and time.time() - mtime < QUERY_SETTLE_SEC:
+                logger.info(f"⏸️ {QUERY_CSV} 剛被修改 (可能還在寫入)，下一輪再載入")
+                return False
+
+            logger.info(f"⏳ 正在載入 {QUERY_CSV} 到記憶體...")
+            df = pd.read_csv(QUERY_CSV, dtype=str, encoding="utf-8-sig").fillna("")
+
+            missing = {"system", "alarmcode", "LV", "message"} - set(df.columns)
+            if missing:
+                _query_bad_mtime = mtime
+                logger.error(f"❌ {QUERY_CSV} 缺少欄位 {missing}，保留舊字典")
+                return False
+
+            if len(df) < _query_rows * MIN_ROWS_RATIO:
+                _query_bad_mtime = mtime
+                logger.error(f"❌ {QUERY_CSV} 列數異常 ({len(df)} < 舊 {_query_rows} 的 {MIN_ROWS_RATIO:.0%})，保留舊字典")
+                return False
+
+            # ---- 清理 ----
+            # message 前後可能多包一層雙引號 (舊格式有、新格式沒有，兩種都相容)
+            df['message'] = df['message'].str.strip().str.strip('"').str.strip()
+            df['alarmcode'] = df['alarmcode'].str.strip()
+            df['sys'] = df['system'].str.strip().str.upper()
+            df['lv'] = df['LV'].map(_norm_lv)
+
+            # 欄位錯位的列 (LV 欄不是 LV_x、message 欄才是 LV_x)：等級從 message 救回來
+            shifted = df['lv'].isna() & df['message'].map(_norm_lv).notna()
+            if shifted.any():
+                df.loc[shifted, 'lv'] = df.loc[shifted, 'message'].map(_norm_lv)
+                df.loc[shifted, 'message'] = ""
+                logger.warning(f"⚠️ {QUERY_CSV} 有 {int(shifted.sum())} 列欄位錯位，已從 message 欄救回等級")
+
+            # 括號代號 (向量化提取)
+            raw_ext = df['message'].str.extract(PAREN_PATTERN)[0]
             code_ext = raw_ext.str.extract(r'([A-Za-z0-9\.]+)')[0]
-            final_ext = code_ext.fillna(raw_ext).str.upper()
-            df_query['Extracted_Code'] = final_ext
+            df['ext'] = code_ext.fillna(raw_ext).str.upper()
 
-            df_valid = df_query[df_query['Extracted_Code'].notna()]
-            DICT_BY_EXTRACTED = dict(zip(df_valid['Extracted_Code'], zip(df_valid['alarmcode'], df_valid['message'])))
+            # 排序：嚴重度低的在前、高的在後 → dict 後蓋前，重複 key 會留下最嚴重的
+            # 結果與 CSV 列順序無關，每天更新後比對結果才穩定
+            df['_rank'] = df['lv'].map(_LV_RANK).fillna(9)
+            df = df.sort_values('_rank', ascending=False, kind="stable")
 
-            logger.success(f"✅ 比對字典載入完成！(AlarmCode: {len(DICT_BY_CODE)} 筆, 括號代號: {len(DICT_BY_EXTRACTED)} 筆)")
-        else:
-            logger.warning(f"⚠️ 找不到 {csv_path}，將跳過預載入比對字典。")
-    except Exception as e:
-        logger.error(f"❌ 載入比對字典失敗: {e}")
+            df = df[df['alarmcode'] != ""]          # 沒有 alarmcode 的列無法當 key，略過
+            df['nmsg'] = df['message'].map(_norm_msg)
 
-# 伺服器啟動前執行載入
-load_query_data_to_memory()
+            val = list(zip(df['alarmcode'], df['message'], df['lv']))
+            df_ext = df[df['ext'].notna()]
+            val_ext = list(zip(df_ext['alarmcode'], df_ext['message'], df_ext['lv']))
+
+            # 跨設備後備：同代號的所有候選都留著 (嚴重度低 → 高)，比對時再用訊息挑
+            by_code, by_ext = {}, {}
+            for code, v, nm in zip(df['alarmcode'], val, df['nmsg']):
+                if nm:
+                    by_code.setdefault(code, []).append(v + (nm,))
+            for ext, v, nm in zip(df_ext['ext'], val_ext, df_ext['nmsg']):
+                if nm:
+                    by_ext.setdefault(ext, []).append(v + (nm,))
+
+            new_dicts = {
+                "sys_code": dict(zip(zip(df['sys'], df['alarmcode']), val)),
+                "sys_ext":  dict(zip(zip(df_ext['sys'], df_ext['ext']), val_ext)),
+                "code":     by_code,
+                "ext":      by_ext,
+            }
+
+            old_rows = _query_rows
+            QUERY_DICTS = new_dicts          # 一次換掉參考 (atomic)
+            _query_mtime, _query_rows = mtime, len(df)
+            _query_loaded_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            logger.success(
+                f"✅ 比對字典載入完成！列數 {old_rows} → {len(df)} "
+                f"(system+code: {len(new_dicts['sys_code'])}, system+括號: {len(new_dicts['sys_ext'])}, "
+                f"跨設備 code: {len(new_dicts['code'])}, 跨設備括號: {len(new_dicts['ext'])})"
+            )
+            return True
+
+        except Exception as e:
+            # 常見原因：更新程式還在寫檔。mtime 沒記錄，下一輪會自動重試
+            logger.error(f"❌ 載入比對字典失敗，沿用舊字典: {e}")
+            return False
+
+
+def _reload_loop():
+    while True:
+        time.sleep(RELOAD_CHECK_SEC)
+        load_query_data_to_memory()
+
+
+# 伺服器啟動前執行載入，之後由背景執行緒定時檢查檔案是否更新
+load_query_data_to_memory(force=True)     # 啟動時一律載入 (不受「剛修改」等待限制)
+threading.Thread(target=_reload_loop, daemon=True, name="query-reloader").start()
 
 
 # =====================================================
 # 3. 【核心獨立 Function】單獨處理比對邏輯
 # =====================================================
-def match_alarm_record(data: dict, dict_by_code: dict, dict_by_extracted: dict) -> dict:
+def match_alarm_record(data: dict, dicts: dict) -> dict:
     """
-    單獨的比對函數，接收單筆資料與比對字典，回傳完整的比對結果。
-    絕對不遺漏任何欄位，完美對應您提供的 CSV 範例結構。
+    單獨的比對函數，接收單筆資料與比對字典 (QUERY_DICTS)，回傳完整的比對結果。
+    比對順序 (越前面越準)：
+      1. System + AlarmCode                      (同設備，直接採用)
+      2. AlarmCode      + 訊息內容相符            (跨設備後備)
+      3. System + 括號代號                        (同設備，直接採用)
+      4. 括號代號        + 訊息內容相符            (跨設備後備)
+    AlarmCode 為空白時不做 1、2。
     """
     match_result = {
         "Match_Method": "Not Found",
         "Matched_Query_AlarmCode": None,
         "Matched_Query_Message": None,
+        "Matched_Query_LV": None,
         "Extracted_Code_Used": None
     }
 
+    def fill(method, hit, ext_code=None):
+        match_result["Match_Method"] = method
+        match_result["Matched_Query_AlarmCode"], match_result["Matched_Query_Message"], match_result["Matched_Query_LV"] = hit
+        match_result["Extracted_Code_Used"] = ext_code
+        return match_result
+
+    def pick(candidates, alarm_nmsg):
+        """跨設備候選中挑『訊息相符』且最嚴重的一筆 (清單已依嚴重度低→高排序，所以倒著找)"""
+        for c in reversed(candidates or []):
+            if _msg_similar(alarm_nmsg, c[3]):
+                return c[:3]
+        return None
+
+    system = str(data.get("System", "")).strip().upper()
     alarm_code = str(data.get("AlarmCode", "")).strip()
 
-    combined_msg = " ".join([
-        str(data.get("AlarmMessage_1", "")),
-        str(data.get("AlarmMessage_2", "")),
-        str(data.get("AlarmMessage_3", "")),
-        str(data.get("AlarmMessage_4", ""))
-    ])
+    # 訊息是每 255 字切開的，要直接接回去 (不能加空白)
+    combined_msg = "".join(str(data.get(f"AlarmMessage_{i}", "") or "") for i in range(1, 5))
+    alarm_nmsg = _norm_msg(combined_msg)
 
     # --- 第一階段：使用 AlarmCode 進行匹配 ---
-    if alarm_code in dict_by_code:
-        match_result["Match_Method"] = "AlarmCode"
-        match_result["Matched_Query_AlarmCode"], match_result["Matched_Query_Message"] = dict_by_code[alarm_code]
+    if alarm_code:
+        hit = dicts["sys_code"].get((system, alarm_code))
+        if hit:
+            return fill("System+AlarmCode", hit)
 
-    # --- 第二階段：針對沒匹配到的，使用 Extracted_Code 進行匹配 ---
-    else:
-        match = re.search(PAREN_PATTERN, combined_msg)
-        if match:
-            content = match.group(1).strip()
-            code_match = re.search(r'[A-Za-z0-9\.]+', content)
-            ext_code = code_match.group(0).upper() if code_match else content.upper()
+        hit = pick(dicts["code"].get(alarm_code), alarm_nmsg)
+        if hit:
+            return fill("AlarmCode", hit)
 
-            if ext_code in dict_by_extracted:
-                match_result["Match_Method"] = "Extracted_Code"
-                match_result["Matched_Query_AlarmCode"], match_result["Matched_Query_Message"] = dict_by_extracted[ext_code]
-                match_result["Extracted_Code_Used"] = ext_code
+    # --- 第二階段：針對沒匹配到的，使用括號代號進行匹配 ---
+    match = re.search(PAREN_PATTERN, combined_msg)
+    if match:
+        content = match.group(1).strip()
+        code_match = re.search(r'[A-Za-z0-9\.]+', content)
+        ext_code = code_match.group(0).upper() if code_match else content.upper()
+
+        hit = dicts["sys_ext"].get((system, ext_code))
+        if hit:
+            return fill("System+Extracted_Code", hit, ext_code)
+
+        hit = pick(dicts["ext"].get(ext_code), alarm_nmsg)
+        if hit:
+            return fill("Extracted_Code", hit, ext_code)
 
     return match_result
 
@@ -147,14 +378,29 @@ def match_alarm_record(data: dict, dict_by_code: dict, dict_by_extracted: dict) 
 def home():
     return "AlarmCode API Running", 200
 
+def query_dict_status():
+    return {
+        "file": QUERY_CSV,
+        "rows": _query_rows,
+        "loaded_at": _query_loaded_at,
+        "file_mtime": datetime.fromtimestamp(_query_mtime).strftime("%Y-%m-%d %H:%M:%S") if _query_mtime else None,
+    }
+
 @app.route("/health")
 def health():
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        return {"status": "running", "db": "connected", "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, 200
+        return {"status": "running", "db": "connected", "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "query_dict": query_dict_status()}, 200
     except Exception as e:
-        return {"status": "running", "db": "error", "error": str(e)}, 500
+        return {"status": "running", "db": "error", "error": str(e), "query_dict": query_dict_status()}, 500
+
+@app.route("/reload_query", methods=["GET", "POST"])
+def reload_query():
+    """手動立即重載 query_result.csv (不想等 5 分鐘時用)"""
+    ok = load_query_data_to_memory(force=True)
+    return jsonify({"status": "reloaded" if ok else "kept_old", "query_dict": query_dict_status()}), 200
 
 def get_latest_log():
     log_files = glob.glob(os.path.join(log_folder, "api_*.log"))
@@ -219,7 +465,8 @@ def remove_alert(alert_id):
     """
     前端在 CHECK 視窗選完選項 / 輸入文字後呼叫。
     body: { "username": "...", "action": "已處理", "note": "自由文字" }
-    會把該筆警報從 active_alerts 移除，並記 log；之後在此寫入 DB。
+    會把該筆警報從 active_alerts 移除、記 log，並寫入 DB 的 alarm_checked 表。
+    DB 寫入失敗不影響 CHECK (畫面照樣移除)，紀錄會備份到 checked_failed.jsonl。
     """
     body = request.get_json(silent=True) or {}
     username = str(body.get("username", "")).strip() or "unknown"
@@ -243,16 +490,9 @@ def remove_alert(alert_id):
     logger.info(f"🗑️ [Web UI] {username} 確認警報 {alert_id} | Code={alert.get('AlarmCode')} "
                 f"Place={alert.get('Place')} | 選項={action} | 備註={note}")
 
-    # # 日後要落 DB 的話在這裡寫入 (目前停用)
-    # with engine.begin() as conn:
-    #     conn.execute(text("""
-    #         INSERT INTO alarm_checked (alert_id, checked_by, checked_at, check_action, check_note,
-    #                                    `System`, `Place`, `AlarmCode`, `Level`, `AlarmMessage_1`)
-    #         VALUES (:alert_id, :checked_by, :checked_at, :check_action, :check_note,
-    #                 :System, :Place, :AlarmCode, :Level, :AlarmMessage_1)
-    #     """), record)
+    db_saved = save_checked_record(record)
 
-    return jsonify({"status": "removed", "record": record}), 200
+    return jsonify({"status": "removed", "db_saved": db_saved, "record": record}), 200
 
 @app.route('/clear_alerts', methods=['POST'])
 def clear_alerts():
@@ -268,30 +508,29 @@ def clear_alerts():
 @app.route('/get_checked_alerts')
 def get_checked_alerts():
     """
-    提供歷史紀錄頁顯示 (最新在前)。
-    之後改從 DB 讀取；目前先回傳空清單。
+    提供歷史紀錄頁顯示 (最新在前)，從 DB 的 alarm_checked 表讀取。
     """
     limit = max(1, min(request.args.get("limit", 50, type=int), CHECKED_MAX))
-    records = []
 
-    # # 之後從 DB 讀取 (目前停用)
-    # try:
-    #     with engine.connect() as conn:
-    #         rows = conn.execute(text("""
-    #             SELECT alert_id, checked_by, checked_at, check_action, check_note,
-    #                    `System`, `Plant`, `Place`, `AlarmCode`, `Level`,
-    #                    `AlarmMessage_1`, `Match_Method`, `Matched_Query_Message`, received_at
-    #             FROM alarm_checked
-    #             ORDER BY checked_at DESC
-    #             LIMIT :limit
-    #         """), {"limit": limit}).mappings().all()
-    #     records = [dict(r) for r in rows]
-    #     for r in records:
-    #         for k in ("checked_at", "received_at"):
-    #             if r.get(k) is not None and not isinstance(r[k], str):
-    #                 r[k] = r[k].strftime("%Y-%m-%d %H:%M:%S")
-    # except Exception as e:
-    #     logger.error(f"❌ 讀取 alarm_checked 失敗: {e}")
+    try:
+        with engine.connect() as conn:
+            rows = conn.execute(text("""
+                SELECT alert_id, checked_by, checked_at, check_action, check_note,
+                       `System`, `Plant`, `Place`, `AlarmCode`, `Level`,
+                       `AlarmMessage_1`, `Match_Method`, `Matched_Query_Message`, received_at
+                FROM alarm_checked
+                ORDER BY checked_at DESC, id DESC
+                LIMIT :limit
+            """), {"limit": limit}).mappings().all()
+        records = [dict(r) for r in rows]
+        for r in records:
+            for k in ("checked_at", "received_at"):
+                if r.get(k) is not None and not isinstance(r[k], str):
+                    r[k] = r[k].strftime("%Y-%m-%d %H:%M:%S")
+    except Exception as e:
+        # 回 500 讓歷史頁保留上一次的內容，而不是誤顯示「尚無紀錄」
+        logger.error(f"❌ 讀取 alarm_checked 失敗: {e}")
+        return jsonify({"status": "error", "message": "讀取歷史紀錄失敗"}), 500
 
     return jsonify(records), 200
 
@@ -350,14 +589,19 @@ def upload_message():
         logger.info(f"ℹ️ [步驟 A] 收到資料：AlarmCode={data.get('AlarmCode')} (DB 寫入目前停用)")
 
         # 【步驟 B】呼叫「獨立比對 Function」進行比對
-        match_result = match_alarm_record(data, DICT_BY_CODE, DICT_BY_EXTRACTED)
-        logger.info(f"🔍 [步驟 B] 比對結果: Method={match_result['Match_Method']}, Code={data.get('AlarmCode')}")
+        # 先取一次 QUERY_DICTS 參考，就算此時剛好熱重載，這筆請求也會用同一版字典比完
+        match_result = match_alarm_record(data, QUERY_DICTS)
+        logger.info(f"🔍 [步驟 B] 比對結果: Method={match_result['Match_Method']}, "
+                    f"LV={match_result['Matched_Query_LV']}, Code={data.get('AlarmCode')}")
 
-        # 【步驟 C】確認資料是 ABC 等級才推送到前端顯示
-        level = str(data.get("Level", "Unknown")).strip().upper() # 請確認實際 JSON 中的等級欄位名稱
+        # 【步驟 C】決定等級：以 query_result.csv 比對到的 LV 為主；
+        #           比對不到才用 JSON 自帶的 Level (真實資料沒有此欄位，test.py 才有)
+        payload_level = str(data.get("Level", "") or "").strip().upper()
+        level = match_result["Matched_Query_LV"] or payload_level or "UNKNOWN"
         data["Level"] = level
+        data["Level_Source"] = "query_result" if match_result["Matched_Query_LV"] else ("payload" if payload_level else "none")
 
-        if level in ['A', 'B', 'C']:
+        if level in DISPLAY_LEVELS:
             # 修正：原本用 requests.post 打自己的 /api/webhook_receive，
             # 同一個 process 繞一圈網路沒必要，改為直接寫入記憶體
             payload = {**data, **match_result}
@@ -368,6 +612,7 @@ def upload_message():
                 'status': 'success',
                 'message': '資料已處理，符合等級條件，並已推送前端顯示',
                 'alert_id': alert_id,
+                'level': level,
                 'match_result': match_result
             }), 200
         else:
@@ -375,6 +620,7 @@ def upload_message():
             return jsonify({
                 'status': 'success_stored_only',
                 'message': f'資料已處理，但等級 ({level}) 不符合顯示條件，未推送前端',
+                'level': level,
                 'match_result': match_result
             }), 200
 
