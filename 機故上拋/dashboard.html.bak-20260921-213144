@@ -19,15 +19,6 @@
     background-size: 28px 28px;
   }
   .panel { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 30px -12px rgba(15,23,42,.12); }
-  .level-stat { padding: 12px 14px; }
-  .level-count { font-size: 28px; line-height: 1.15; margin-top: 6px; }
-  .claimed-card { filter: grayscale(1); background: #e2e8f0 !important; border-color: #94a3b8 !important; animation: none !important; box-shadow: none; }
-  .claimed-card button { background: #94a3b8 !important; cursor: not-allowed; }
-  .claimed-card dl, .claimed-card span { background-color: #e2e8f0; }
-  @media (max-width: 480px) {
-    .level-stat { padding: 10px; }
-    .level-count { font-size: 24px; }
-  }
 
   /* 卡片進出動畫（transition-group） */
   .card-enter-active { transition: all .35s cubic-bezier(.2,.8,.2,1); }
@@ -141,7 +132,7 @@
     <!-- 統計 -->
     <section class="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
       <div v-for="lv in ['A','B','C']" :key="lv"
-           class="panel level-stat rounded-xl border-l-4 cursor-pointer select-none transition"
+           class="panel rounded-xl p-4 sm:p-5 border-l-4 cursor-pointer select-none transition"
            :class="[levelStyle[lv].stat, filters.level === lv ? 'ring-4 ring-slate-200' : '']"
            @click="toggleLevelFilter(lv)"
            :title="filters.level === lv ? '取消只看 Level ' + lv : '只看 Level ' + lv">
@@ -149,7 +140,8 @@
           <span class="text-[11px] sm:text-xs font-bold tracking-widest" :class="levelStyle[lv].text">LEVEL {{ lv }}</span>
           <span class="w-2 h-2 rounded-full" :class="levelStyle[lv].dotBg"></span>
         </div>
-        <p class="level-count font-black text-slate-900 tabular-nums">{{ counts[lv] }}</p>
+        <p class="text-3xl sm:text-4xl font-black text-slate-900 mt-2 tabular-nums">{{ counts[lv] }}</p>
+        <p class="text-xs sm:text-sm text-slate-500 mt-0.5">{{ levelStyle[lv].label }}</p>
       </div>
     </section>
 
@@ -191,8 +183,7 @@
     <transition-group name="card" tag="div" class="relative grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
       <article v-for="a in visibleAlerts" :key="a.alert_id"
                class="panel rounded-xl border-l-4 overflow-hidden flex flex-col"
-               :class="[levelStyle[a.lv].card, isClaimedByOther(a) ? 'claimed-card' : (a.lv === 'A' ? 'glow-a' : '')]"
-               @click="openCheck(a)">
+               :class="[levelStyle[a.lv].card, a.lv === 'A' ? 'glow-a' : '']">
         <div class="p-4 sm:p-5 flex-1">
           <div class="flex items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-2 flex-wrap">
@@ -212,12 +203,11 @@
           </dl>
         </div>
         <div class="px-4 sm:px-5 pb-4 sm:pb-5">
-          <button @click.stop="openCheck(a)" :disabled="isClaimedByOther(a) || claimBusy"
+          <button @click="openCheck(a)"
                   class="w-full flex items-center justify-center gap-2 text-white text-sm font-bold py-2.5 rounded-lg transition focus:outline-none focus:ring-4 active:scale-[0.98]"
                   :class="levelStyle[a.lv].button">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <template v-if="isClaimedByOther(a)">已由 {{ a.claimed_by_name || '其他人' }} 點選</template>
-            <template v-else>待修 <span class="font-normal opacity-80">點我始修</span></template>
+            待修 <span class="font-normal opacity-80">點我始修</span>
           </button>
         </div>
       </article>
@@ -294,9 +284,6 @@ const app = Vue.createApp({
     return {
       // ---------- 設定 ----------
       API_BASE: "http://localhost:8900",
-      clientId: "",
-      pageId: "",
-      claimBusy: false,
       POLL_MS: 2000,
       BUILDINGS: ["K11", "K18", "K21", "K22", "K25"],
       FLOORS: ["1F", "2F", "3F", "4F", "5F", "6F", "7F", "8F", "9F", "10F", "11F", "12F"],
@@ -345,8 +332,6 @@ const app = Vue.createApp({
           (!f.floor    || a.floor    === f.floor) &&
           (!f.level    || a.lv       === f.level))
         .sort((x, y) => {
-          const occupied = Number(this.isClaimedByOther(x)) - Number(this.isClaimedByOther(y));
-          if (occupied) return occupied;
           const rx = this.LEVEL_RANK[x.lv] ?? 9, ry = this.LEVEL_RANK[y.lv] ?? 9;
           if (rx !== ry) return rx - ry;
           return String(y.received_at || "").localeCompare(String(x.received_at || ""));
@@ -362,11 +347,6 @@ const app = Vue.createApp({
   },
 
   mounted() {
-    const newId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    this.clientId = sessionStorage.getItem('alarm_dashboard_client') || newId();
-    sessionStorage.setItem('alarm_dashboard_client', this.clientId);
-    this.pageId = newId();
-    this.ensureSession().catch(e => console.error('頁面狀態同步失敗：', e));
     // 還原篩選
     try {
       const saved = JSON.parse(localStorage.getItem("alarm_dashboard_filters") || "{}");
@@ -390,24 +370,6 @@ const app = Vue.createApp({
   beforeUnmount() { this.stopPolling(); },
 
   methods: {
-    isClaimedByOther(a) {
-      return !!a.claimed_by_client && a.claimed_by_client !== this.clientId;
-    },
-    ensureSession() {
-      if (!this._sessionPromise) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        this._sessionPromise = fetch(`${this.API_BASE}/api/dashboard_session`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({ client_id: this.clientId, page_id: this.pageId })
-        }).then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        }).catch(e => { this._sessionPromise = null; throw e; })
-          .finally(() => clearTimeout(timeout));
-      }
-      return this._sessionPromise;
-    },
     // ---------- 工具 ----------
     authHeaders(extra = {}) {
       return {
@@ -479,11 +441,7 @@ const app = Vue.createApp({
     stopPolling() { if (this.timer) { clearInterval(this.timer); this.timer = null; } },
 
     async fetchAlerts() {
-      if (this._fetching) return;
-      this._fetching = true;
       try {
-        // 點選狀態同步獨立執行，避免失敗時阻擋既有警報列表。
-        this.ensureSession().catch(e => console.warn('頁面狀態同步失敗：', e));
         const res = await fetch(`${this.API_BASE}/get_alerts`, { cache: "no-store", headers: this.authHeaders() });
         if (res.status === 401) { this.forceRelogin("請重新登入"); return; }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -495,12 +453,12 @@ const app = Vue.createApp({
 
         // 只有內容真的變了才更新 alerts（Vue 再做 DOM diff，畫面不會每 2 秒跳）
         const next = list.map(this.normalize);
-        const sig = JSON.stringify(next);
+        const sig = next.map(a => `${a.alert_id}|${a.lv}|${a.AlarmCode}|${a.received_at}`).sort().join(",");
         if (sig !== this._lastSig) { this._lastSig = sig; this.alerts = next; }
       } catch (e) {
         this.apiOnline = false;
         console.error("無法連線到 API：", e);
-      } finally { this._fetching = false; }
+      }
     },
 
     // ---------- 一鍵清空 ----------
@@ -526,25 +484,8 @@ const app = Vue.createApp({
     },
 
     // ---------- CHECK ----------
-    async openCheck(item) {
-      if (this.isClaimedByOther(item) || this.claimBusy) return;
-      this.claimBusy = true;
-      try {
-        await this.ensureSession();
-        const res = await fetch(`${this.API_BASE}/claim_alert/${encodeURIComponent(item.alert_id)}`, {
-          method: 'POST', headers: this.authHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ client_id: this.clientId, page_id: this.pageId, username: this.username })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
-        Object.assign(item, data);
-        this.check = { target: item, action: "", note: "", error: "", busy: false };
-      } catch (e) {
-        window.alert(e.message || '點選失敗，請再試一次');
-      } finally {
-        this.claimBusy = false;
-        this.fetchAlerts();
-      }
+    openCheck(alert) {
+      this.check = { target: alert, action: "", note: "", error: "", busy: false };
     },
     closeCheck() { this.check.target = null; },
     selectOption(opt) {
@@ -562,13 +503,10 @@ const app = Vue.createApp({
         const res = await fetch(`${this.API_BASE}/remove_alert/${encodeURIComponent(target.alert_id)}`, {
           method: "POST",
           headers: this.authHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ username: this.username, action, note, client_id: this.clientId, page_id: this.pageId })
+          body: JSON.stringify({ username: this.username, action, note })
         });
         if (res.status === 401) { this.forceRelogin("請重新登入"); return; }
-        if (!res.ok && res.status !== 404) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.message || `HTTP ${res.status}`);
-        }
+        if (!res.ok && res.status !== 404) throw new Error(`HTTP ${res.status}`);
 
         // 本地先移除，畫面立即反應；下次輪詢再同步
         this.alerts = this.alerts.filter(a => a.alert_id !== target.alert_id);
@@ -576,7 +514,7 @@ const app = Vue.createApp({
         this.closeCheck();
       } catch (e) {
         console.error("移除警報失敗：", e);
-        this.check.error = e.message || "送出失敗，請再試一次";
+        this.check.error = "送出失敗，請再試一次";
       } finally { this.check.busy = false; }
     }
   }

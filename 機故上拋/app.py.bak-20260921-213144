@@ -133,48 +133,6 @@ def save_checked_record(record: dict) -> bool:
 # =====================================================
 active_alerts = {}
 alerts_lock = threading.Lock()
-dashboard_sessions = {}
-
-
-@app.route('/api/dashboard_session', methods=['POST'])
-def dashboard_session():
-    body = request.get_json(silent=True) or {}
-    if not isinstance(body, dict):
-        return jsonify({'message': 'JSON body must be an object'}), 400
-    client_id = str(body.get('client_id') or '')[:100]
-    page_id = str(body.get('page_id') or '')[:100]
-    if not client_id or not page_id:
-        return jsonify({'message': 'Missing session identifiers'}), 400
-    with alerts_lock:
-        if dashboard_sessions.get(client_id) != page_id:
-            for alert in active_alerts.values():
-                if alert.get('claimed_by_client') == client_id:
-                    alert.pop('claimed_by_client', None)
-                    alert.pop('claimed_by_name', None)
-            dashboard_sessions[client_id] = page_id
-    return jsonify({'status': 'ready'})
-
-
-@app.route('/claim_alert/<alert_id>', methods=['POST'])
-def claim_alert(alert_id):
-    body = request.get_json(silent=True) or {}
-    if not isinstance(body, dict):
-        return jsonify({'message': 'JSON body must be an object'}), 400
-    client_id = str(body.get('client_id') or '')[:100]
-    page_id = str(body.get('page_id') or '')[:100]
-    with alerts_lock:
-        if not client_id or dashboard_sessions.get(client_id) != page_id:
-            return jsonify({'message': '頁面已失效，請重新整理'}), 409
-        alert = active_alerts.get(alert_id)
-        if alert is None:
-            return jsonify({'message': '該警報已不存在'}), 404
-        owner = alert.get('claimed_by_client')
-        if owner and owner != client_id:
-            return jsonify({'message': '此問題已由其他人點選'}), 409
-        alert['claimed_by_client'] = client_id
-        alert['claimed_by_name'] = str(body.get('username') or 'unknown')[:64]
-        result = dict(alert)
-    return jsonify(result)
 
 # 已確認 (CHECK) 的紀錄寫入 / 讀取 DB 的 alarm_checked 表；這是歷史頁一次最多讀取的筆數
 CHECKED_MAX = 500
@@ -500,7 +458,7 @@ def webhook_receive():
 def get_alerts():
     """提供給前端網頁撈取目前所有未確認的警報"""
     with alerts_lock:
-        return jsonify([dict(a) for a in active_alerts.values()]), 200
+        return jsonify(list(active_alerts.values())), 200
 
 @app.route('/remove_alert/<alert_id>', methods=['POST'])
 def remove_alert(alert_id):
@@ -516,11 +474,6 @@ def remove_alert(alert_id):
     note = str(body.get("note", "")).strip()
 
     with alerts_lock:
-        current = active_alerts.get(alert_id)
-        owner = current.get('claimed_by_client') if current else None
-        if owner and (owner != body.get('client_id') or
-                      dashboard_sessions.get(owner) != body.get('page_id')):
-            return jsonify({'message': '此問題已由其他人點選，請重新整理'}), 409
         alert = active_alerts.pop(alert_id, None)
 
     if alert is None:
