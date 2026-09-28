@@ -1,9 +1,9 @@
 from datetime import datetime
 import glob                 # 修正：原本 from glob import glob 但下方用 glob.glob() 會 AttributeError
-import json                 # 新增：DB 寫入失敗時把 CHECK 紀錄備份成 JSONL
+import json                 # DB 寫入失敗時把 CHECK 紀錄備份成 JSONL
 import os
 import re               # 用於正則表達式提取代號
-import time             # 新增：熱重載背景執行緒用
+import time             # 熱重載背景執行緒用
 import requests         # 保留：若日後要 POST 到其他外部系統仍可使用
 import uuid             # 用於生成唯一的警報 ID
 import threading        # 用於多執行緒安全的記憶體操作
@@ -41,12 +41,16 @@ engine = create_engine(
     f"mysql+pymysql://{db_config['user']}:{db_config['password']}@"
     f"{db_config['host']}:{db_config['port']}/{db_config['database']}?charset={db_config['charset']}",
     pool_recycle=1800, pool_pre_ping=True, pool_timeout=30, pool_size=100, max_overflow=200,
+    connect_args={"connect_timeout": 3, "read_timeout": 10, "write_timeout": 10},   # DB 連不上時 3 秒就放棄，不要卡 10 秒以上
 )
 
 # =====================================================
 # 啟動時確認 alarm_checked 表存在 (已存在就什麼都不做)
 #   alarmcode_alarmmessage : 全部上拋的原始警報 (既有的表，寫入目前停用)
 #   alarm_checked          : 按過 CHECK 的紀錄，歷史紀錄頁讀這張
+#
+# 修改：同一張單允許多人同時送出結果，所以 alert_id 不再是 UNIQUE，
+#       改成一般索引 (舊表會自動 ALTER)。
 # =====================================================
 def ensure_tables():
     try:
@@ -69,12 +73,21 @@ def ensure_tables():
                     `Matched_Query_Message` VARCHAR(500) NOT NULL DEFAULT '',
                     received_at           DATETIME     NULL,
                     PRIMARY KEY (id),
-                    UNIQUE KEY uk_alert_id (alert_id),
+                    KEY idx_alert_id (alert_id),
                     KEY idx_checked_at (checked_at),
                     KEY idx_place (`Place`),
                     KEY idx_alarmcode (`AlarmCode`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """))
+            # 舊表若還有 UNIQUE KEY uk_alert_id，改成一般索引 (允許同一張單多筆紀錄)
+            has_unique = conn.execute(text("""
+                SELECT COUNT(*) FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'alarm_checked'
+                  AND INDEX_NAME = 'uk_alert_id'
+            """)).scalar()
+            if has_unique:
+                conn.execute(text("ALTER TABLE alarm_checked DROP INDEX uk_alert_id, ADD INDEX idx_alert_id (alert_id)"))
+                logger.warning("🔧 alarm_checked.uk_alert_id 已改為一般索引 idx_alert_id (允許多人送出同一張單)")
         logger.success("✅ alarm_checked 表已就緒")
         return True
     except Exception as e:
@@ -130,51 +143,10 @@ def save_checked_record(record: dict) -> bool:
 
 # =====================================================
 # 【Web 儀表板】全域記憶體儲存與執行緒鎖
+#   修改：移除「點選鎖定 (claim)」機制，同一張單允許多人同時開啟並送出。
 # =====================================================
 active_alerts = {}
 alerts_lock = threading.Lock()
-dashboard_sessions = {}
-
-
-@app.route('/api/dashboard_session', methods=['POST'])
-def dashboard_session():
-    body = request.get_json(silent=True) or {}
-    if not isinstance(body, dict):
-        return jsonify({'message': 'JSON body must be an object'}), 400
-    client_id = str(body.get('client_id') or '')[:100]
-    page_id = str(body.get('page_id') or '')[:100]
-    if not client_id or not page_id:
-        return jsonify({'message': 'Missing session identifiers'}), 400
-    with alerts_lock:
-        if dashboard_sessions.get(client_id) != page_id:
-            for alert in active_alerts.values():
-                if alert.get('claimed_by_client') == client_id:
-                    alert.pop('claimed_by_client', None)
-                    alert.pop('claimed_by_name', None)
-            dashboard_sessions[client_id] = page_id
-    return jsonify({'status': 'ready'})
-
-
-@app.route('/claim_alert/<alert_id>', methods=['POST'])
-def claim_alert(alert_id):
-    body = request.get_json(silent=True) or {}
-    if not isinstance(body, dict):
-        return jsonify({'message': 'JSON body must be an object'}), 400
-    client_id = str(body.get('client_id') or '')[:100]
-    page_id = str(body.get('page_id') or '')[:100]
-    with alerts_lock:
-        if not client_id or dashboard_sessions.get(client_id) != page_id:
-            return jsonify({'message': '頁面已失效，請重新整理'}), 409
-        alert = active_alerts.get(alert_id)
-        if alert is None:
-            return jsonify({'message': '該警報已不存在'}), 404
-        owner = alert.get('claimed_by_client')
-        if owner and owner != client_id:
-            return jsonify({'message': '此問題已由其他人點選'}), 409
-        alert['claimed_by_client'] = client_id
-        alert['claimed_by_name'] = str(body.get('username') or 'unknown')[:64]
-        result = dict(alert)
-    return jsonify(result)
 
 # 已確認 (CHECK) 的紀錄寫入 / 讀取 DB 的 alarm_checked 表；這是歷史頁一次最多讀取的筆數
 CHECKED_MAX = 500
@@ -462,7 +434,28 @@ def view_logs():
 
 
 # =====================================================
-# 【Web 儀表板】登入 API (新增)
+# 【Web 儀表板】Group 分組設定 (groups.json 與 app.py 同目錄)
+#   格式: [{ "name": "K11-3~6F", "buildings": ["K11"], "floors": ["3F","4F","5F","6F"] }, ...]
+#   floors 為空陣列 = 該棟全部樓層。改完 JSON 不用重啟，前端每次載入頁面都會重新讀。
+# =====================================================
+GROUPS_JSON = "groups.json"
+
+@app.route('/api/groups')
+def api_groups():
+    """提供前端 Group 分組設定；讀不到或格式錯就回空陣列 (前端會改用內建預設)"""
+    try:
+        with open(GROUPS_JSON, encoding="utf-8-sig") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            raise ValueError("groups.json 最外層必須是陣列")
+        return jsonify(data), 200
+    except Exception as e:
+        logger.warning(f"⚠️ 讀取 {GROUPS_JSON} 失敗，前端將使用內建預設分組: {e}")
+        return jsonify([]), 200
+
+
+# =====================================================
+# 【Web 儀表板】登入 API
 # =====================================================
 @app.route('/api/login', methods=['POST'])
 def api_login():
@@ -481,7 +474,7 @@ def store_alert(data: dict) -> str:
     """把警報放進記憶體，回傳 alert_id (upload_message 與 webhook_receive 共用)"""
     alert_id = str(uuid.uuid4())
     data['alert_id'] = alert_id
-    data['received_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   # 新增：接收時間
+    data['received_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   # 接收時間
     with alerts_lock:
         active_alerts[alert_id] = data
     logger.info(f"📥 [Web UI] 接收到新警報: {alert_id}, Level: {data.get('Level')}, Code: {data.get('AlarmCode')}")
@@ -502,29 +495,40 @@ def get_alerts():
     with alerts_lock:
         return jsonify([dict(a) for a in active_alerts.values()]), 200
 
+# 前端送來的警報快照只允許這些欄位寫進紀錄 (避免亂塞欄位)
+_ALERT_SNAPSHOT_KEYS = ("alert_id", "System", "Plant", "Place", "AlarmCode", "Level",
+                        "AlarmMessage_1", "Match_Method", "Matched_Query_Message", "received_at")
+
 @app.route('/remove_alert/<alert_id>', methods=['POST'])
 def remove_alert(alert_id):
     """
     前端在 CHECK 視窗選完選項 / 輸入文字後呼叫。
-    body: { "username": "...", "action": "已處理", "note": "自由文字" }
-    會把該筆警報從 active_alerts 移除、記 log，並寫入 DB 的 alarm_checked 表。
+    body: { "username": "...", "action": "已處理", "note": "自由文字", "alert": {...卡片快照} }
+
+    修改：同一張單允許多人同時送出。
+      - 警報還在記憶體：移除並寫入紀錄 (status=removed)
+      - 警報已被別人先消掉：用前端帶來的快照照樣寫入紀錄 (status=removed_by_other)，
+        這樣另一台手機「已點開但還沒送出」的卡片也能送出結果。
+      - 沒在記憶體、也沒帶快照：才回 404。
     DB 寫入失敗不影響 CHECK (畫面照樣移除)，紀錄會備份到 checked_failed.jsonl。
     """
     body = request.get_json(silent=True) or {}
     username = str(body.get("username", "")).strip() or "unknown"
     action = str(body.get("action", "")).strip()
     note = str(body.get("note", "")).strip()
+    snapshot = body.get("alert") if isinstance(body.get("alert"), dict) else None
 
     with alerts_lock:
-        current = active_alerts.get(alert_id)
-        owner = current.get('claimed_by_client') if current else None
-        if owner and (owner != body.get('client_id') or
-                      dashboard_sessions.get(owner) != body.get('page_id')):
-            return jsonify({'message': '此問題已由其他人點選，請重新整理'}), 409
         alert = active_alerts.pop(alert_id, None)
 
+    status = "removed"
     if alert is None:
-        return jsonify({"status": "not_found", "message": "該警報已不存在"}), 404
+        if not snapshot:
+            return jsonify({"status": "not_found", "message": "該警報已不存在"}), 404
+        # 只取白名單欄位，alert_id 以 URL 為準
+        alert = {k: snapshot.get(k) for k in _ALERT_SNAPSHOT_KEYS if k in snapshot}
+        alert["alert_id"] = alert_id
+        status = "removed_by_other"
 
     record = {
         **alert,
@@ -534,12 +538,14 @@ def remove_alert(alert_id):
         "check_note": note,
     }
 
-    logger.info(f"🗑️ [Web UI] {username} 確認警報 {alert_id} | Code={alert.get('AlarmCode')} "
+    logger.info(f"🗑️ [Web UI] {username} 確認警報 {alert_id} ({status}) | Code={alert.get('AlarmCode')} "
                 f"Place={alert.get('Place')} | 選項={action} | 備註={note}")
 
-    db_saved = save_checked_record(record)
+    # DB 寫入丟到背景執行緒：不管 DB 通不通，前端都立刻收到 200、卡片馬上消掉。
+    # 寫入失敗 save_checked_record 會自己備份到 checked_failed.jsonl，紀錄不會遺失。
+    threading.Thread(target=save_checked_record, args=(record,), daemon=True, name="save-checked").start()
 
-    return jsonify({"status": "removed", "db_saved": db_saved, "record": record}), 200
+    return jsonify({"status": status, "db_saved": "async", "record": record}), 200
 
 @app.route('/clear_alerts', methods=['POST'])
 def clear_alerts():
@@ -605,7 +611,7 @@ def upload_message():
     try:
         msg_chunks = split_message(data["AlarmMessage"])
 
-        # 修正：把切割後的片段放回 data，比對與前端才拿得到 AlarmMessage_1~4
+        # 把切割後的片段放回 data，比對與前端才拿得到 AlarmMessage_1~4
         data["AlarmMessage_1"], data["AlarmMessage_2"], data["AlarmMessage_3"], data["AlarmMessage_4"] = msg_chunks
 
         # (保留您原本的 DataFrame 建立邏輯，維持原程式碼結構)
@@ -649,8 +655,6 @@ def upload_message():
         data["Level_Source"] = "query_result" if match_result["Matched_Query_LV"] else ("payload" if payload_level else "none")
 
         if level in DISPLAY_LEVELS:
-            # 修正：原本用 requests.post 打自己的 /api/webhook_receive，
-            # 同一個 process 繞一圈網路沒必要，改為直接寫入記憶體
             payload = {**data, **match_result}
             alert_id = store_alert(payload)
             logger.success(f"✅ [步驟 C] 等級 {level} 符合顯示條件，已推送前端 (alert_id={alert_id})")

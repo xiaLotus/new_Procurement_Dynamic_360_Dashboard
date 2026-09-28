@@ -1,0 +1,8 @@
+[
+  { "name": "K11-3~6F",  "buildings": ["K11"], "floors": ["3F", "4F", "5F", "6F"] },
+  { "name": "K11-8F",    "buildings": ["K11"], "floors": ["8F"] },
+  { "name": "K21-8F&9F", "buildings": ["K21"], "floors": ["8F", "9F"] },
+  { "name": "K22-5F&8F", "buildings": ["K22"], "floors": ["5F", "8F"] },
+  { "name": "K25",       "buildings": ["K25"], "floors": [] },
+  { "name": "K18",       "buildings": ["K18"], "floors": [] }
+]

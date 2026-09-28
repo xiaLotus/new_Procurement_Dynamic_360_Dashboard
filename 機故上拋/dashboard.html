@@ -8,9 +8,38 @@
 <script src="static/js/tailwinds.js"></script>
 <script src="static/js/vue.global.prod.js"></script>
 <style>
-  * { box-sizing: border-box; }
-  body { font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; background: #eef2f7; }
+  * { box-sizing: border-box; min-width: 0; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }   /* 關掉手機瀏覽器的字型自動放大 */
+  html, body { max-width: 100%; overflow-x: hidden; }                 /* 禁止橫向溢出 */
+  body { margin: 0; font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; background: #eef2f7; font-size: 14px; }
   [v-cloak] { display: none; }
+  img, svg { max-width: 100%; }
+
+  /* ---- 關鍵版面用純 CSS 寫死，不依賴 Tailwind 類別是否生效 ---- */
+  .wrap      { max-width: 1600px; margin: 0 auto; padding: 12px; width: 100%; }
+  @media (min-width: 640px) { .wrap { padding: 16px 24px; } }
+  .m-hide { display: none !important; }
+  @media (min-width: 640px) { .m-hide { display: inline-flex !important; } }
+  .hdr-inner { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .hdr-left  { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; }
+  .hdr-right { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; font-size: 12px; }
+  .stats     { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .toolbar   { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cards     { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .card      { display: flex; align-items: center; gap: 10px; padding: 9px 10px; overflow: hidden; }
+  .card-body { flex: 1 1 auto; min-width: 0; }
+  .card-btn  { flex: 0 0 auto; }
+  .card-title{ font-size: 16px; font-weight: 900; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 11px; }
+  .card-time { margin-left: auto; white-space: nowrap; }
+  @media (min-width: 640px) {
+    body { font-size: 15px; }
+    .stats { gap: 16px; }
+    .card  { padding: 12px 16px; }
+    .card-title { font-size: 18px; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  }
+  @media (min-width: 1280px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
   .bg-grid {
     background-image:
@@ -19,30 +48,26 @@
     background-size: 28px 28px;
   }
   .panel { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 30px -12px rgba(15,23,42,.12); }
-  .level-stat { padding: 12px 14px; }
-  .level-count { font-size: 28px; line-height: 1.15; margin-top: 6px; }
-  .claimed-card { filter: grayscale(1); background: #e2e8f0 !important; border-color: #94a3b8 !important; animation: none !important; box-shadow: none; }
-  .claimed-card button { background: #94a3b8 !important; cursor: not-allowed; }
-  .claimed-card dl, .claimed-card span { background-color: #e2e8f0; }
-  @media (max-width: 480px) {
-    .level-stat { padding: 10px; }
-    .level-count { font-size: 24px; }
-  }
+
+  /* 統計方塊：縮小，手機上不佔高度 */
+  .level-stat { padding: 8px 12px; }
+  .level-count { font-size: 22px; line-height: 1.1; margin-top: 2px; }
 
   /* 卡片進出動畫（transition-group） */
-  .card-enter-active { transition: all .35s cubic-bezier(.2,.8,.2,1); }
-  .card-leave-active { transition: all .25s ease; position: absolute; width: 100%; }
-  .card-enter-from   { opacity: 0; transform: translateY(14px) scale(.98); }
+  .card-enter-active { transition: all .3s cubic-bezier(.2,.8,.2,1); }
+  /* 離場時關掉 glow-a 的無限動畫，否則 Vue 會等 2 秒動畫才移除 Level A 卡片 */
+  .card-leave-active { transition: all .2s ease; position: absolute; width: 100%; animation: none !important; }
+  .card-enter-from   { opacity: 0; transform: translateY(10px) scale(.98); }
   .card-leave-to     { opacity: 0; transform: scale(.96); }
-  .card-move         { transition: transform .4s cubic-bezier(.2,.8,.2,1); }
+  .card-move         { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
 
   .modal-enter-active, .modal-leave-active { transition: opacity .2s ease; }
   .modal-enter-from, .modal-leave-to { opacity: 0; }
 
   .glow-a { animation: glowA 2s infinite; }
   @keyframes glowA {
-    0%,100% { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 30px -12px rgba(220,38,38,.25); }
-    50%     { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 12px 34px -8px rgba(220,38,38,.55); }
+    0%,100% { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px -12px rgba(220,38,38,.25); }
+    50%     { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px -8px rgba(220,38,38,.55); }
   }
 
   .dot { width: 8px; height: 8px; border-radius: 9999px; display: inline-block; }
@@ -101,31 +126,31 @@
        Header
   ============================================================ -->
   <header class="bg-slate-950 text-white sticky top-0 z-30 shadow-lg">
-    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3 min-w-0">
-          <div class="w-10 h-10 bg-red-500/15 border border-red-500/30 rounded-xl flex items-center justify-center shrink-0">
-            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
+    <div class="wrap max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5" style="padding-top:10px;padding-bottom:10px">
+      <div class="hdr-inner">
+        <div class="hdr-left">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 bg-red-500/15 border border-red-500/30 rounded-xl flex items-center justify-center shrink-0" style="flex:0 0 auto">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-red-400" style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
           </div>
           <div class="min-w-0">
-            <h1 class="text-base sm:text-xl font-black tracking-wide truncate">機故警報監控</h1>
-            <p class="text-[11px] text-slate-400 hidden sm:block">Equipment Alarm Monitoring · 每 2 秒更新</p>
+            <h1 class="text-sm sm:text-xl font-black tracking-wide truncate" style="margin:0">機故警報監控</h1>
+            <p class="m-hide text-[11px] text-slate-400 hidden sm:block" style="margin:0">Equipment Alarm Monitoring · 每 2 秒更新</p>
           </div>
         </div>
 
-        <div class="flex items-center gap-3 sm:gap-5 text-xs sm:text-sm">
-          <div class="flex items-center gap-2">
+        <div class="hdr-right sm:gap-5 sm:text-sm">
+          <div class="flex items-center gap-1.5">
             <span class="dot" :class="apiOnline ? 'dot-on' : 'dot-off'"></span>
-            <span class="hidden sm:inline text-slate-400">API</span>
+            <span class="m-hide hidden sm:inline text-slate-400">API</span>
             <span :class="apiOnline ? 'text-green-400' : 'text-red-400'" class="font-semibold">{{ apiOnline ? '正常' : '連線失敗' }}</span>
           </div>
-          <div class="hidden md:flex items-center gap-2">
+          <div class="m-hide hidden md:flex items-center gap-2">
             <span class="text-slate-400">最後更新</span>
             <span class="text-slate-200 font-medium tabular-nums">{{ lastUpdate }}</span>
           </div>
-          <div class="flex items-center gap-2 pl-3 border-l border-slate-700">
-            <a href="history.html" class="text-xs text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 rounded-md px-2 py-1 transition">歷史紀錄</a>
-            <span class="text-slate-200 font-medium hidden sm:inline">{{ username }}</span>
+          <div class="flex items-center gap-1.5 sm:gap-2 pl-2 sm:pl-3 border-l border-slate-700">
+            <a href="history.html" class="text-xs text-slate-300 hover:text-white border border-slate-700 hover:border-slate-500 rounded-md px-2 py-1 transition">歷史</a>
+            <span class="m-hide text-slate-200 font-medium hidden sm:inline">{{ username }}</span>
             <button @click="doLogout" class="text-xs text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 rounded-md px-2 py-1 transition">登出</button>
           </div>
         </div>
@@ -136,95 +161,72 @@
   <!-- ============================================================
        主內容
   ============================================================ -->
-  <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <main class="wrap max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
 
-    <!-- 統計 -->
-    <section class="grid grid-cols-3 gap-3 sm:gap-4 mb-6">
+    <!-- 統計 (縮小) -->
+    <section class="stats mb-3 sm:mb-6">
       <div v-for="lv in ['A','B','C']" :key="lv"
            class="panel level-stat rounded-xl border-l-4 cursor-pointer select-none transition"
            :class="[levelStyle[lv].stat, filters.level === lv ? 'ring-4 ring-slate-200' : '']"
            @click="toggleLevelFilter(lv)"
            :title="filters.level === lv ? '取消只看 Level ' + lv : '只看 Level ' + lv">
-        <div class="flex items-center justify-between">
-          <span class="text-[11px] sm:text-xs font-bold tracking-widest" :class="levelStyle[lv].text">LEVEL {{ lv }}</span>
-          <span class="w-2 h-2 rounded-full" :class="levelStyle[lv].dotBg"></span>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span class="text-[10px] sm:text-xs font-bold tracking-widest" style="font-size:10px" :class="levelStyle[lv].text">LEVEL {{ lv }}</span>
+          <span class="w-2 h-2 rounded-full" style="width:8px;height:8px;border-radius:9999px" :class="levelStyle[lv].dotBg"></span>
         </div>
-        <p class="level-count font-black text-slate-900 tabular-nums">{{ counts[lv] }}</p>
+        <p class="level-count font-black text-slate-900 tabular-nums" style="margin:2px 0 0">{{ counts[lv] }}</p>
       </div>
     </section>
 
-    <!-- 篩選列 -->
-    <section class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
-      <div>
-        <h2 class="text-lg font-bold text-slate-800">
-          未確認警報
-          <span class="ml-2 text-sm font-medium text-slate-500">{{ visibleAlerts.length }}<span v-if="isFiltering"> / {{ alerts.length }}</span> 筆</span>
-        </h2>
-      </div>
-      <div class="flex flex-wrap items-center gap-2 text-sm">
-        <label class="flex items-center gap-2">
-          <span class="text-slate-500 text-xs">棟別</span>
-          <select v-model="filters.building" class="filter bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100">
-            <option value="">全部</option>
-            <option v-for="b in BUILDINGS" :key="b" :value="b">{{ b }}</option>
+    <!-- 篩選列：Group 取代 棟別 / 樓層 -->
+    <section class="toolbar mb-3 sm:mb-4">
+      <h2 class="text-sm sm:text-lg font-bold text-slate-800 whitespace-nowrap" style="margin:0;white-space:nowrap">
+        未確認
+        <span class="ml-1 text-xs sm:text-sm font-medium text-slate-500">{{ visibleAlerts.length }}<span v-if="isFiltering"> / {{ alerts.length }}</span> 筆</span>
+      </h2>
+      <div class="flex items-center gap-2 text-sm" style="display:flex;align-items:center;gap:8px;min-width:0">
+        <label class="flex items-center gap-1.5" style="display:flex;align-items:center;gap:6px;min-width:0">
+          <span class="m-hide text-slate-500 text-xs hidden sm:inline">Group</span>
+          <select v-model="filters.group" style="max-width:170px;font-size:14px" class="filter bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100">
+            <option value="">全部 Group</option>
+            <option v-for="g in GROUPS" :key="g.name" :value="g.name">{{ g.name }}</option>
           </select>
         </label>
-        <label class="flex items-center gap-2">
-          <span class="text-slate-500 text-xs">樓層</span>
-          <select v-model="filters.floor" class="filter bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100">
-            <option value="">全部</option>
-            <option v-for="f in FLOORS" :key="f" :value="f">{{ f }}</option>
-          </select>
-        </label>
-        <button v-if="isFiltering" @click="resetFilters" class="text-xs text-slate-500 hover:text-slate-800 border border-slate-200 bg-white rounded-lg px-3 py-1.5 transition">清除篩選</button>
-        <!-- <button v-if="alerts.length" @click="clearAll" :disabled="clearing"
-                class="text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 border border-red-300 bg-white rounded-lg px-3 py-1.5 transition disabled:opacity-50">
-          {{ clearing ? '清除中...' : '移除全部警報' }}
-        </button> -->
-        <span class="inline-flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-500">
+        <button v-if="isFiltering" @click="resetFilters" class="text-xs text-slate-500 hover:text-slate-800 border border-slate-200 bg-white rounded-lg px-3 py-1.5 transition whitespace-nowrap">清除</button>
+        <span class="m-hide hidden sm:inline-flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-xs text-slate-500">
           <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>自動更新中
         </span>
       </div>
     </section>
 
-    <!-- 警報卡片 -->
-    <transition-group name="card" tag="div" class="relative grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+    <!-- 警報卡片 (精簡：只顯示機台與樓層) -->
+    <transition-group name="card" tag="div" class="cards">
       <article v-for="a in visibleAlerts" :key="a.alert_id"
-               class="panel rounded-xl border-l-4 overflow-hidden flex flex-col"
-               :class="[levelStyle[a.lv].card, isClaimedByOther(a) ? 'claimed-card' : (a.lv === 'A' ? 'glow-a' : '')]"
+               class="card panel rounded-xl border-l-4 cursor-pointer active:scale-[0.99] transition"
+               :class="[levelStyle[a.lv].card, a.lv === 'A' ? 'glow-a' : '']"
                @click="openCheck(a)">
-        <div class="p-4 sm:p-5 flex-1">
-          <div class="flex items-center justify-between gap-2 mb-3">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[11px] font-bold" :class="levelStyle[a.lv].badge">
-                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>LEVEL {{ a.lv }}
-              </span>
-              <span class="inline-flex px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[11px] font-semibold">{{ a.building }} · {{ a.floor }}</span>
-            </div>
-            <span class="text-[11px] text-slate-400 tabular-nums whitespace-nowrap">{{ shortTime(a.received_at) }}</span>
+        <div class="card-body">
+          <div class="card-meta">
+            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-bold leading-none" style="font-size:10px;padding:2px 6px" :class="levelStyle[a.lv].badge">
+              <span class="w-1.5 h-1.5 rounded-full bg-current" style="width:6px;height:6px;border-radius:9999px;display:inline-block;margin-right:3px"></span>{{ a.lv }}
+            </span>
+            <span class="inline-flex px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[11px] font-semibold leading-none" style="padding:2px 6px">{{ a.building }} {{ a.floor }}</span>
+            <span class="card-time text-slate-400 tabular-nums">{{ shortTime(a.received_at) }}</span>
           </div>
-
-          <h3 class="text-lg sm:text-xl font-black tracking-wide break-all leading-tight" :class="levelStyle[a.lv].text">{{ a.AlarmCode || 'Unknown Code' }}</h3>
-          <p class="text-sm leading-6 text-slate-700 mt-2 line-clamp-2 min-h-[48px]" :title="a.AlarmMessage_1">{{ a.AlarmMessage_1 || 'No Message' }}</p>
-
-          <dl class="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs bg-slate-50 border border-slate-100 rounded-lg p-3">
-            <dt class="text-slate-400">設備</dt><dd class="font-semibold text-slate-700 truncate text-right">{{ a.System || 'N/A' }}</dd>
-          </dl>
+          <h3 class="card-title" style="margin:0" :class="levelStyle[a.lv].text" :title="a.System">{{ a.System || 'N/A' }}</h3>
         </div>
-        <div class="px-4 sm:px-5 pb-4 sm:pb-5">
-          <button @click.stop="openCheck(a)" :disabled="isClaimedByOther(a) || claimBusy"
-                  class="w-full flex items-center justify-center gap-2 text-white text-sm font-bold py-2.5 rounded-lg transition focus:outline-none focus:ring-4 active:scale-[0.98]"
-                  :class="levelStyle[a.lv].button">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-            <template v-if="isClaimedByOther(a)">已由 {{ a.claimed_by_name || '其他人' }} 點選</template>
-            <template v-else>待修 <span class="font-normal opacity-80">點我始修</span></template>
-          </button>
-        </div>
+        <button @click.stop="openCheck(a)"
+                class="card-btn text-white text-xs sm:text-sm font-bold px-3 py-2 rounded-lg transition focus:outline-none focus:ring-4 active:scale-[0.98]"
+                style="display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:13px;padding:8px 12px;border:0"
+                :class="levelStyle[a.lv].button">
+          <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          待修
+        </button>
       </article>
     </transition-group>
 
     <!-- 空狀態 -->
-    <div v-if="visibleAlerts.length === 0" class="panel rounded-2xl py-16 px-8 text-center mt-2">
+    <div v-if="visibleAlerts.length === 0" class="panel rounded-2xl py-12 px-8 text-center mt-2">
       <div class="w-14 h-14 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-3">
         <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
       </div>
@@ -232,7 +234,7 @@
       <p class="text-sm text-slate-400 mt-1">{{ isFiltering && alerts.length ? '其他條件還有 ' + alerts.length + ' 筆未確認' : '系統將持續監控新的 Level A、B、C 警報' }}</p>
     </div>
 
-    <footer class="mt-10 pt-5 border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row gap-2 sm:justify-between">
+    <footer class="mt-8 pt-4 border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row gap-2 sm:justify-between">
       <span>Equipment Alarm Monitoring System</span>
     </footer>
   </main>
@@ -254,9 +256,10 @@
         <div class="bg-slate-50 border border-slate-100 rounded-lg p-3 mb-4 text-sm">
           <div class="flex items-center gap-2 mb-1">
             <span class="inline-flex px-2 py-0.5 rounded-md border text-[11px] font-bold" :class="levelStyle[check.target.lv].badge">LEVEL {{ check.target.lv }}</span>
-            <span class="font-bold" :class="levelStyle[check.target.lv].text">{{ check.target.AlarmCode }}</span>
-            <span class="text-xs text-slate-500 ml-auto">{{ check.target.Place }}</span>
+            <span class="font-bold" :class="levelStyle[check.target.lv].text">{{ check.target.System }}</span>
+            <span class="text-xs text-slate-500 ml-auto">{{ check.target.building }} {{ check.target.floor }}</span>
           </div>
+          <p class="text-xs text-slate-500 font-mono">{{ check.target.AlarmCode }}</p>
           <p class="text-slate-700 line-clamp-2">{{ check.target.AlarmMessage_1 }}</p>
         </div>
 
@@ -289,24 +292,31 @@
 </div>
 
 <script>
+// groups.json 讀不到時的預設值 (與 groups.json 內容相同)
+const DEFAULT_GROUPS = [
+  { name: "K11-3~6F",  buildings: ["K11"], floors: ["3F", "4F", "5F", "6F"] },
+  { name: "K11-8F",    buildings: ["K11"], floors: ["8F"] },
+  { name: "K21-8F&9F", buildings: ["K21"], floors: ["8F", "9F"] },
+  { name: "K22-5F&8F", buildings: ["K22"], floors: ["5F", "8F"] },
+  { name: "K25",       buildings: ["K25"], floors: [] },
+  { name: "K18",       buildings: ["K18"], floors: [] }
+];
+
 const app = Vue.createApp({
   data() {
     return {
       // ---------- 設定 ----------
       API_BASE: "http://localhost:8900",
-      clientId: "",
-      pageId: "",
-      claimBusy: false,
+      GROUPS_URL: "/api/groups",     // 由後端提供 (groups.json 放在 app.py 旁邊)；floors 為空陣列 = 該棟全部樓層
       POLL_MS: 2000,
-      BUILDINGS: ["K11", "K18", "K21", "K22", "K25"],
-      FLOORS: ["1F", "2F", "3F", "4F", "5F", "6F", "7F", "8F", "9F", "10F", "11F", "12F"],
+      GROUPS: DEFAULT_GROUPS,
       CHECK_OPTIONS: [
-        "已處理", 
-        "Reset", 
-        "調整", 
-        "持續觀察", 
+        "已處理",
+        "Reset",
+        "調整",
+        "持續觀察",
         "其他"
-    ],
+      ],
       LEVEL_RANK: { A: 0, B: 1, C: 2 },
       levelStyle: {
         A: { label: "高優先", text: "text-red-600",   badge: "bg-red-50 text-red-600 border-red-200",       stat: "border-l-red-500",   dotBg: "bg-red-500",   card: "border-l-red-500",   button: "bg-red-500 hover:bg-red-600 focus:ring-red-200" },
@@ -322,9 +332,8 @@ const app = Vue.createApp({
       apiOnline: false,
       lastUpdate: "--:--:--",
       timer: null,
-      filters: { building: "", floor: "", level: "" },
-      check: { target: null, action: "", note: "", error: "", busy: false },
-      clearing: false
+      filters: { group: "", level: "" },
+      check: { target: null, action: "", note: "", error: "", busy: false }
     };
   },
 
@@ -335,18 +344,18 @@ const app = Vue.createApp({
       return c;
     },
     isFiltering() {
-      return !!(this.filters.building || this.filters.floor || this.filters.level);
+      return !!(this.filters.group || this.filters.level);
+    },
+    activeGroup() {
+      return this.GROUPS.find(g => g.name === this.filters.group) || null;
     },
     visibleAlerts() {
-      const f = this.filters;
+      const f = this.filters, g = this.activeGroup;
       return this.alerts
         .filter(a =>
-          (!f.building || a.building === f.building) &&
-          (!f.floor    || a.floor    === f.floor) &&
-          (!f.level    || a.lv       === f.level))
+          (!g || this.inGroup(a, g)) &&
+          (!f.level || a.lv === f.level))
         .sort((x, y) => {
-          const occupied = Number(this.isClaimedByOther(x)) - Number(this.isClaimedByOther(y));
-          if (occupied) return occupied;
           const rx = this.LEVEL_RANK[x.lv] ?? 9, ry = this.LEVEL_RANK[y.lv] ?? 9;
           if (rx !== ry) return rx - ry;
           return String(y.received_at || "").localeCompare(String(x.received_at || ""));
@@ -362,19 +371,13 @@ const app = Vue.createApp({
   },
 
   mounted() {
-    const newId = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    this.clientId = sessionStorage.getItem('alarm_dashboard_client') || newId();
-    sessionStorage.setItem('alarm_dashboard_client', this.clientId);
-    this.pageId = newId();
-    this.ensureSession().catch(e => console.error('頁面狀態同步失敗：', e));
-    // 還原篩選
+    this.loadGroups();
+
+    // 還原篩選 (只記憶 group，不記憶等級)
     try {
       const saved = JSON.parse(localStorage.getItem("alarm_dashboard_filters") || "{}");
-      this.filters.building = this.BUILDINGS.includes(saved.building) ? saved.building : "";
-      this.filters.floor    = this.FLOORS.includes(saved.floor)       ? saved.floor    : "";
-      //   this.filters.level    = ["A","B","C"].includes(saved.level)     ? saved.level    : "";
-      // 👇 修改這裡：強制 level 為空字串，不記憶上次的等級篩選
-      this.filters.level    = ""; 
+      this.filters.group = typeof saved.group === "string" ? saved.group : "";
+      this.filters.level = "";
     } catch (_) {}
 
     // 還原登入
@@ -390,24 +393,32 @@ const app = Vue.createApp({
   beforeUnmount() { this.stopPolling(); },
 
   methods: {
-    isClaimedByOther(a) {
-      return !!a.claimed_by_client && a.claimed_by_client !== this.clientId;
-    },
-    ensureSession() {
-      if (!this._sessionPromise) {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
-        this._sessionPromise = fetch(`${this.API_BASE}/api/dashboard_session`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({ client_id: this.clientId, page_id: this.pageId })
-        }).then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        }).catch(e => { this._sessionPromise = null; throw e; })
-          .finally(() => clearTimeout(timeout));
+    // ---------- Group ----------
+    async loadGroups() {
+      try {
+        const res = await fetch(`${this.API_BASE}${this.GROUPS_URL}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const list = await res.json();
+        if (!Array.isArray(list) || !list.length) throw new Error("後端回傳空陣列 (groups.json 不存在或格式錯誤)");
+        {
+          this.GROUPS = list.map(g => ({
+            name: String(g.name || ""),
+            buildings: (g.buildings || []).map(b => String(b).toUpperCase()),
+            floors: (g.floors || []).map(f => String(f).toUpperCase())
+          })).filter(g => g.name);
+        }
+      } catch (e) {
+        console.warn("後端 /api/groups 讀取失敗，使用內建預設 Group：", e);
       }
-      return this._sessionPromise;
+      // 記憶的 group 已不存在時清掉
+      if (this.filters.group && !this.GROUPS.some(g => g.name === this.filters.group)) this.filters.group = "";
     },
+    inGroup(a, g) {
+      if (g.buildings.length && !g.buildings.includes(a.building)) return false;
+      if (g.floors.length && !g.floors.includes(a.floor)) return false;
+      return true;
+    },
+
     // ---------- 工具 ----------
     authHeaders(extra = {}) {
       return {
@@ -423,13 +434,13 @@ const app = Vue.createApp({
       return {
         ...raw,
         lv: String(raw.Level || "C").toUpperCase(),
-        building: parts[0] || "未知",
+        building: (parts[0] || "未知").toUpperCase(),
         floor: floor ? floor.toUpperCase() : "未知"
       };
     },
     shortTime(t) { return t ? String(t).slice(11, 19) : ""; },
     toggleLevelFilter(lv) { this.filters.level = this.filters.level === lv ? "" : lv; },
-    resetFilters() { this.filters.building = ""; this.filters.floor = ""; this.filters.level = ""; },
+    resetFilters() { this.filters.group = ""; this.filters.level = ""; },
 
     // ---------- 登入 ----------
     async doLogin() {
@@ -457,12 +468,11 @@ const app = Vue.createApp({
       this.stopPolling();
       sessionStorage.removeItem("alarm_dashboard_pass");
       sessionStorage.removeItem("alarm_dashboard_user");
-      this.alerts = []; 
-      this._lastSig = ""; 
-      this.username = ""; 
+      this.alerts = [];
+      this._lastSig = "";
+      this.username = "";
       this.loggedIn = false;
-      // 👇 順手重置登入表單狀態，避免上次錯誤訊息殘留
-      this.login = { username: "", password: "", error: "", busy: false }; 
+      this.login = { username: "", password: "", error: "", busy: false };
     },
     forceRelogin(msg) {
       this.doLogout();
@@ -482,8 +492,6 @@ const app = Vue.createApp({
       if (this._fetching) return;
       this._fetching = true;
       try {
-        // 點選狀態同步獨立執行，避免失敗時阻擋既有警報列表。
-        this.ensureSession().catch(e => console.warn('頁面狀態同步失敗：', e));
         const res = await fetch(`${this.API_BASE}/get_alerts`, { cache: "no-store", headers: this.authHeaders() });
         if (res.status === 401) { this.forceRelogin("請重新登入"); return; }
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -494,6 +502,7 @@ const app = Vue.createApp({
         this.lastUpdate = new Date().toLocaleTimeString("zh-TW", { hour12: false });
 
         // 只有內容真的變了才更新 alerts（Vue 再做 DOM diff，畫面不會每 2 秒跳）
+        // 已被別人消掉的卡片會在這裡從列表消失；但已點開的 CHECK 視窗 (check.target) 不受影響，仍可送出
         const next = list.map(this.normalize);
         const sig = JSON.stringify(next);
         if (sig !== this._lastSig) { this._lastSig = sig; this.alerts = next; }
@@ -503,48 +512,10 @@ const app = Vue.createApp({
       } finally { this._fetching = false; }
     },
 
-    // ---------- 一鍵清空 ----------
-    async clearAll() {
-      const n = this.alerts.length;
-      if (!n) return;
-      if (!confirm(`確定要移除目前全部 ${n} 筆未確認警報？\n此動作不會寫入任何紀錄，無法復原。`)) return;
-      this.clearing = true;
-      try {
-        const res = await fetch(`${this.API_BASE}/clear_alerts`, {
-          method: "POST",
-          headers: this.authHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ username: this.username })
-        });
-        if (res.status === 401) { this.forceRelogin("請重新登入"); return; }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        this.alerts = [];
-        this._lastSig = "";
-      } catch (e) {
-        console.error("清空失敗：", e);
-        alert("清空失敗，請再試一次");
-      } finally { this.clearing = false; }
-    },
-
     // ---------- CHECK ----------
-    async openCheck(item) {
-      if (this.isClaimedByOther(item) || this.claimBusy) return;
-      this.claimBusy = true;
-      try {
-        await this.ensureSession();
-        const res = await fetch(`${this.API_BASE}/claim_alert/${encodeURIComponent(item.alert_id)}`, {
-          method: 'POST', headers: this.authHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ client_id: this.clientId, page_id: this.pageId, username: this.username })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || `HTTP ${res.status}`);
-        Object.assign(item, data);
-        this.check = { target: item, action: "", note: "", error: "", busy: false };
-      } catch (e) {
-        window.alert(e.message || '點選失敗，請再試一次');
-      } finally {
-        this.claimBusy = false;
-        this.fetchAlerts();
-      }
+    openCheck(item) {
+      // 不鎖定：多人可同時開同一張單。複製一份快照，列表刷新時視窗內容不會變動
+      this.check = { target: { ...item }, action: "", note: "", error: "", busy: false };
     },
     closeCheck() { this.check.target = null; },
     selectOption(opt) {
@@ -559,13 +530,20 @@ const app = Vue.createApp({
 
       this.check.busy = true; this.check.error = "";
       try {
+        // 帶卡片快照：就算別人已先消掉，後端也能用快照寫入這個人的處理紀錄
+        const snapshot = {
+          alert_id: target.alert_id, System: target.System, Plant: target.Plant, Place: target.Place,
+          AlarmCode: target.AlarmCode, Level: target.Level, AlarmMessage_1: target.AlarmMessage_1,
+          Match_Method: target.Match_Method, Matched_Query_Message: target.Matched_Query_Message,
+          received_at: target.received_at
+        };
         const res = await fetch(`${this.API_BASE}/remove_alert/${encodeURIComponent(target.alert_id)}`, {
           method: "POST",
           headers: this.authHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ username: this.username, action, note, client_id: this.clientId, page_id: this.pageId })
+          body: JSON.stringify({ username: this.username, action, note, alert: snapshot })
         });
         if (res.status === 401) { this.forceRelogin("請重新登入"); return; }
-        if (!res.ok && res.status !== 404) {
+        if (!res.ok) {
           const data = await res.json().catch(() => ({}));
           throw new Error(data.message || `HTTP ${res.status}`);
         }
