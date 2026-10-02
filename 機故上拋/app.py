@@ -1,6 +1,6 @@
 from datetime import datetime
 import glob                 # 修正：原本 from glob import glob 但下方用 glob.glob() 會 AttributeError
-import json                 # DB 寫入失敗時把 CHECK 紀錄備份成 JSONL
+import json                 # DB 寫入失敗時把 CHECK 紀錄備份成 JSONL / 未確認警報中繼儲存
 import os
 import re               # 用於正則表達式提取代號
 import time             # 熱重載背景執行緒用
@@ -22,6 +22,10 @@ from waitress import serve
 log_folder = rf"機固上拋\Logs"
 os.makedirs(log_folder, exist_ok=True)
 log_file_path = os.path.join(log_folder, "api_{time:YYYY-MM-DD}.log")
+
+# 新增：中繼儲存資料夾 (未確認警報的落地檔放這裡)
+data_folder = rf"機固上拋\Data"
+os.makedirs(data_folder, exist_ok=True)
 
 logger.add(
     log_file_path, rotation="1 day", retention="30 days", encoding="utf-8",
@@ -144,9 +148,63 @@ def save_checked_record(record: dict) -> bool:
 # =====================================================
 # 【Web 儀表板】全域記憶體儲存與執行緒鎖
 #   修改：移除「點選鎖定 (claim)」機制，同一張單允許多人同時開啟並送出。
+#
+# 新增：中繼儲存 (active_alerts.json)
+#   - 每次新增 / 確認 / 清空警報後，把整份未確認清單寫到檔案
+#   - 伺服器重啟時從檔案讀回來，前端畫面不會因為重啟而清空
+#   - 寫檔先寫 .tmp 再 os.replace，就算寫到一半被中斷，舊檔也不會壞掉
 # =====================================================
 active_alerts = {}
 alerts_lock = threading.Lock()
+
+ACTIVE_ALERTS_FILE = os.path.join(data_folder, "active_alerts.json")
+_persist_lock = threading.Lock()     # 確保寫檔依序進行，舊快照不會蓋掉新快照
+
+
+def persist_active_alerts():
+    """把目前未確認警報整份寫到 active_alerts.json (失敗只記 log，不影響線上運作)"""
+    with _persist_lock:
+        with alerts_lock:
+            snapshot = list(active_alerts.values())    # 在 persist 鎖內取快照 → 寫入順序與修改順序一致
+        tmp = ACTIVE_ALERTS_FILE + ".tmp"
+        try:
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(snapshot, f, ensure_ascii=False, default=str)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, ACTIVE_ALERTS_FILE)
+        except Exception as e:
+            logger.error(f"❌ 寫入中繼儲存 {ACTIVE_ALERTS_FILE} 失敗 (記憶體內資料不受影響): {e}")
+
+
+def load_active_alerts():
+    """啟動時從 active_alerts.json 還原未確認警報；檔案壞掉就改名保留、從空清單開始"""
+    if not os.path.exists(ACTIVE_ALERTS_FILE):
+        logger.info("ℹ️ 沒有中繼儲存檔，未確認警報從空清單開始")
+        return
+    try:
+        with open(ACTIVE_ALERTS_FILE, encoding="utf-8") as f:
+            items = json.load(f)
+        if not isinstance(items, list):
+            raise ValueError("最外層必須是陣列")
+        restored = {}
+        for a in items:
+            if isinstance(a, dict) and a.get("alert_id"):
+                restored[str(a["alert_id"])] = a
+        with alerts_lock:
+            active_alerts.clear()
+            active_alerts.update(restored)
+        logger.success(f"♻️ 已從中繼儲存還原 {len(restored)} 筆未確認警報")
+    except Exception as e:
+        bad = ACTIVE_ALERTS_FILE + f".bad-{datetime.now():%Y%m%d-%H%M%S}"
+        try:
+            os.replace(ACTIVE_ALERTS_FILE, bad)
+        except Exception:
+            bad = "(改名失敗)"
+        logger.error(f"❌ 中繼儲存檔讀取失敗，已改名保留為 {bad}，未確認警報從空清單開始: {e}")
+
+
+load_active_alerts()
 
 # 已確認 (CHECK) 的紀錄寫入 / 讀取 DB 的 alarm_checked 表；這是歷史頁一次最多讀取的筆數
 CHECKED_MAX = 500
@@ -402,13 +460,16 @@ def query_dict_status():
 
 @app.route("/health")
 def health():
+    with alerts_lock:
+        active_count = len(active_alerts)
     try:
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
         return {"status": "running", "db": "connected", "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "query_dict": query_dict_status()}, 200
+                "active_alerts": active_count, "query_dict": query_dict_status()}, 200
     except Exception as e:
-        return {"status": "running", "db": "error", "error": str(e), "query_dict": query_dict_status()}, 500
+        return {"status": "running", "db": "error", "error": str(e),
+                "active_alerts": active_count, "query_dict": query_dict_status()}, 500
 
 @app.route("/reload_query", methods=["GET", "POST"])
 def reload_query():
@@ -471,12 +532,13 @@ def api_login():
 # 【Web 儀表板】後端 API 路由
 # =====================================================
 def store_alert(data: dict) -> str:
-    """把警報放進記憶體，回傳 alert_id (upload_message 與 webhook_receive 共用)"""
+    """把警報放進記憶體並寫入中繼儲存，回傳 alert_id (upload_message 與 webhook_receive 共用)"""
     alert_id = str(uuid.uuid4())
     data['alert_id'] = alert_id
     data['received_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   # 接收時間
     with alerts_lock:
         active_alerts[alert_id] = data
+    persist_active_alerts()          # 新增：落地到 active_alerts.json
     logger.info(f"📥 [Web UI] 接收到新警報: {alert_id}, Level: {data.get('Level')}, Code: {data.get('AlarmCode')}")
     return alert_id
 
@@ -529,6 +591,8 @@ def remove_alert(alert_id):
         alert = {k: snapshot.get(k) for k in _ALERT_SNAPSHOT_KEYS if k in snapshot}
         alert["alert_id"] = alert_id
         status = "removed_by_other"
+    else:
+        persist_active_alerts()      # 新增：真的有移除才更新中繼儲存
 
     record = {
         **alert,
@@ -555,6 +619,7 @@ def clear_alerts():
     with alerts_lock:
         count = len(active_alerts)
         active_alerts.clear()
+    persist_active_alerts()          # 新增：清空也要同步到中繼儲存，否則重啟又會跑回來
     logger.warning(f"🧹 [Web UI] {username} 清空全部未確認警報，共 {count} 筆")
     return jsonify({"status": "cleared", "count": count}), 200
 
