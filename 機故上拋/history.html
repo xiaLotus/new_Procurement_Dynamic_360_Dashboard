@@ -29,6 +29,34 @@
     background-repeat: no-repeat; background-position: right .6rem center; padding-right: 2rem;
   }
   .filter:focus { outline: none; box-shadow: 0 0 0 4px rgba(59,130,246,.12); border-color: #60a5fa; }
+
+  /* 【新增】表頭下拉選單 (處理人 / 等級) */
+  .th-select {
+    appearance: none; cursor: pointer;
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>") no-repeat right .4rem center;
+    border: 1px solid #e2e8f0; border-radius: 6px;
+    padding: 3px 1.5rem 3px 8px; font-size: 12px; font-weight: 600; color: #475569;
+  }
+  .th-select:focus { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.15); border-color: #60a5fa; }
+  .th-select-on { background-color: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+  .th-select:disabled { opacity: .5; cursor: not-allowed; background-color: #f8fafc; }
+  .th-group { display: inline-flex; align-items: center; gap: 4px; cursor: default; }
+
+  /* 【新增】分頁：每頁 20 筆，手機上可自動換行 (樣式與 dashboard 一致) */
+  .pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border-top: 1px solid #f1f5f9; background: #fff; }
+  .page-info { color: #64748b; font-size: 12px; }
+  .page-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .page-btn { border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #334155; padding: 7px 10px; font-size: 13px; cursor: pointer; }
+  .page-btn:hover:not(:disabled) { background: #f1f5f9; }
+  .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .page-btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+  .page-current { color: #0f172a; font-size: 13px; font-weight: 700; padding: 0 4px; white-space: nowrap; }
+
+  /* 【新增】頁尾 made by RuiYing 商標 (與 dashboard 一致) */
+  .brand { display: inline-flex; align-items: center; gap: 8px; color: #475569; }
+  .brand-mark { width: 22px; height: 22px; border-radius: 6px; background: #0f172a; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: .5px; }
+  .brand-text b { color: #0f172a; font-weight: 800; letter-spacing: .3px; }
+
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: #f1f5f9; }
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -60,6 +88,7 @@
           {{ login.busy ? '登入中...' : '登入' }}
         </button>
       </div>
+      <p class="text-center text-[11px] text-slate-400 mt-6" style="font-size:11px">made by <b class="text-slate-600">RuiYing</b></p>
     </div>
   </div>
 
@@ -145,13 +174,37 @@
             <tr>
               <th v-for="h in headers" :key="h.key" @click="sortBy(h.key)"
                   class="text-left px-4 py-2.5 font-semibold whitespace-nowrap cursor-pointer select-none hover:text-slate-800">
-                {{ h.label }}
+                <!-- 【新增】處理人、等級：表頭直接用下拉選單篩選 (與上方篩選列同步) -->
+                <select v-if="h.key === 'checked_by'" v-model="filters.user" @click.stop
+                        class="th-select" :class="{ 'th-select-on': filters.user }" title="篩選處理人">
+                  <option value="">{{ h.label }}（全部）</option>
+                  <option v-for="u in userOptions" :key="u" :value="u">{{ u }}</option>
+                </select>
+                <select v-else-if="h.key === 'lv'" v-model="filters.level" @click.stop
+                        class="th-select" :class="{ 'th-select-on': filters.level }" title="篩選等級">
+                  <option value="">{{ h.label }}（全部）</option>
+                  <option v-for="lv in ['A','B','C']" :key="lv" :value="lv">{{ lv }}</option>
+                </select>
+                <!-- 【新增】位置：先選棟別，再選該棟的樓層 (樓層選單在選棟別前停用) -->
+                <span v-else-if="h.key === 'Place'" class="th-group" @click.stop>
+                  <select v-model="filters.building" class="th-select" :class="{ 'th-select-on': filters.building }" title="篩選棟別">
+                    <option value="">棟別（全部）</option>
+                    <option v-for="b in buildingOptions" :key="b" :value="b">{{ b }}</option>
+                  </select>
+                  <select v-model="filters.floor" class="th-select" :class="{ 'th-select-on': filters.floor }"
+                          :disabled="!filters.building" :title="filters.building ? '篩選樓層' : '請先選棟別'">
+                    <option value="">{{ filters.building ? '樓層（全部）' : '請先選棟別' }}</option>
+                    <option v-for="f in floorOptions" :key="f" :value="f">{{ f }}</option>
+                  </select>
+                </span>
+                <template v-else>{{ h.label }}</template>
                 <span v-if="sort.key === h.key" class="ml-1 text-slate-400">{{ sort.dir === 'asc' ? '▲' : '▼' }}</span>
               </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in filtered" :key="r.alert_id + r.checked_at" class="border-t border-slate-100 hover:bg-slate-50/60">
+            <!-- 【修改】只顯示目前頁面的 20 筆 (原本 filtered 全部) -->
+            <tr v-for="r in pagedRecords" :key="r.alert_id + r.checked_at" class="border-t border-slate-100 hover:bg-slate-50/60">
               <td class="px-4 py-2 tabular-nums text-slate-600 whitespace-nowrap">{{ r.checked_at }}</td>
               <td class="px-4 py-2 font-medium text-slate-800 whitespace-nowrap">{{ r.checked_by }}</td>
               <td class="px-4 py-2"><span class="inline-flex px-2 py-0.5 rounded-md border text-[11px] font-bold" :class="levelStyle[r.lv]?.badge || levelStyle.C.badge">{{ r.lv }}</span></td>
@@ -164,15 +217,31 @@
             </tr>
           </tbody>
         </table>
+        <!-- 【修改】空白提示移到捲動區內：左右捲軸固定在框的最下方；sticky 讓提示文字左右捲動時仍置中可見 -->
+        <div v-if="filtered.length === 0" class="text-center text-sm text-slate-400 py-12" style="position:sticky;left:0;width:100%">
+          {{ records.length === 0 ? '尚無紀錄' : '此篩選條件下沒有紀錄' }}
+        </div>
       </div>
-      <div v-if="filtered.length === 0" class="text-center text-sm text-slate-400 py-12">
-        {{ records.length === 0 ? '尚無紀錄' : '此篩選條件下沒有紀錄' }}
-      </div>
+
+      <!-- 【新增】分頁：超過 20 筆才顯示 -->
+      <nav v-if="totalPages > 1" class="pagination" aria-label="歷史紀錄分頁">
+        <span class="page-info" aria-live="polite">第 {{ pageStart }}–{{ pageEnd }} 筆，共 {{ filtered.length }} 筆（每頁 {{ PAGE_SIZE }} 筆）</span>
+        <div class="page-controls">
+          <button type="button" class="page-btn" :disabled="currentPage <= 1" @click="goToPage(1)">首頁</button>
+          <button type="button" class="page-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">上一頁</button>
+          <span class="page-current">{{ currentPage }} / {{ totalPages }} 頁</span>
+          <button type="button" class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">下一頁</button>
+          <button type="button" class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(totalPages)">末頁</button>
+        </div>
+      </nav>
     </div>
 
-    <footer class="mt-10 pt-5 border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row gap-2 sm:justify-between">
-      <span>Equipment Alarm Monitoring System</span>
-      <span>API：<span class="font-mono">{{ API_BASE }}</span></span>
+    <footer class="mt-10 pt-5 border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
+      <span>Equipment Alarm Monitoring System · API：<span class="font-mono">{{ API_BASE }}</span></span>
+      <span class="brand">
+        <span class="brand-mark">RY</span>
+        <span class="brand-text">made by <b>RuiYing</b></span>
+      </span>
     </footer>
   </main>
 </div>
@@ -185,6 +254,7 @@ const app = Vue.createApp({
       API_BASE: "http://localhost:8900",
       POLL_MS: 5000,
       FETCH_LIMIT: 500,          // 後端 checked_alerts 上限也是 500
+      PAGE_SIZE: 20,             // 【新增】每頁筆數，要改每頁幾筆改這裡
       BUILDINGS: ["K11", "K18", "K21", "K22", "K25"],
       FLOORS: ["1F", "2F", "3F", "4F", "5F", "6F", "7F", "8F", "9F", "10F", "11F", "12F"],
       levelStyle: {
@@ -211,6 +281,7 @@ const app = Vue.createApp({
       records: [],
       lastUpdate: "--:--:--",
       timer: null,
+      currentPage: 1,            // 【新增】目前頁碼
       filters: { building: "", floor: "", level: "", action: "", user: "", keyword: "" },
       sort: { key: "checked_at", dir: "desc" }
     };
@@ -225,6 +296,20 @@ const app = Vue.createApp({
     actionOptions() { return [...new Set(this.records.map(r => r.check_action).filter(Boolean))].sort(); },
     userOptions()   { return [...new Set(this.records.map(r => r.checked_by).filter(Boolean))].sort(); },
     isFiltering()   { return Object.values(this.filters).some(v => v); },
+
+    // 【新增】位置下拉：棟別 = 預設清單 + 紀錄裡實際出現的棟別
+    buildingOptions() {
+      const set = new Set(this.BUILDINGS);
+      this.records.forEach(r => { if (r.building) set.add(r.building); });
+      return [...set].sort();
+    },
+    // 【新增】位置下拉：只列出「目前選的棟別」在紀錄中出現過的樓層，依數字排序
+    floorOptions() {
+      if (!this.filters.building) return [];
+      const set = new Set();
+      this.records.forEach(r => { if (r.building === this.filters.building && r.floor) set.add(r.floor); });
+      return [...set].sort((a, b) => parseInt(a) - parseInt(b));
+    },
     filtered() {
       const f = this.filters, kw = f.keyword.toLowerCase();
       const rows = this.records.filter(r =>
@@ -238,6 +323,38 @@ const app = Vue.createApp({
       );
       const { key, dir } = this.sort, m = dir === "asc" ? 1 : -1;
       return rows.sort((a, b) => String(a[key] ?? "").localeCompare(String(b[key] ?? ""), "zh-TW", { numeric: true }) * m);
+    },
+
+    // ---------- 【新增】分頁 ----------
+    totalPages() {
+      return Math.max(1, Math.ceil(this.filtered.length / this.PAGE_SIZE));
+    },
+    // 防止資料更新後頁數變少時，短暫讀到超出範圍的頁面
+    pageOffset() {
+      const page = Math.min(Math.max(1, this.currentPage), this.totalPages);
+      return (page - 1) * this.PAGE_SIZE;
+    },
+    pagedRecords() {
+      return this.filtered.slice(this.pageOffset, this.pageOffset + this.PAGE_SIZE);
+    },
+    pageStart() {
+      return this.filtered.length ? this.pageOffset + 1 : 0;
+    },
+    pageEnd() {
+      return Math.min(this.pageOffset + this.PAGE_SIZE, this.filtered.length);
+    }
+  },
+
+  // 【新增】篩選或排序改變時回第 1 頁；每 5 秒輪詢不會重設頁碼
+  watch: {
+    filters: { deep: true, handler() { this.currentPage = 1; } },
+    sort:    { deep: true, handler() { this.currentPage = 1; } },
+    // 【新增】換棟別時，若原本的樓層不屬於新棟別就清掉 (避免篩出空結果)
+    "filters.building"() {
+      if (this.filters.floor && !this.floorOptions.includes(this.filters.floor)) this.filters.floor = "";
+    },
+    totalPages(value) {
+      if (this.currentPage > value) this.currentPage = value;
     }
   },
 
@@ -268,6 +385,11 @@ const app = Vue.createApp({
     },
     resetFilters() { Object.keys(this.filters).forEach(k => this.filters[k] = ""); },
 
+    // 【新增】換頁
+    goToPage(page) {
+      this.currentPage = Math.min(Math.max(1, page), this.totalPages);
+    },
+
     // ---------- 登入 ----------
     async doLogin() {
       const { username, password } = this.login;
@@ -284,6 +406,7 @@ const app = Vue.createApp({
         sessionStorage.setItem("alarm_dashboard_user", username);
         this.username = username; this.login.password = "";
         this.loggedIn = true;
+        this.currentPage = 1;
         this.startPolling();
       } catch (e) {
         this.login.error = e.message === "Failed to fetch" ? "無法連線到 API，請確認伺服器已啟動" : e.message;
@@ -294,6 +417,7 @@ const app = Vue.createApp({
       sessionStorage.removeItem("alarm_dashboard_pass");
       sessionStorage.removeItem("alarm_dashboard_user");
       this.records = []; this.username = ""; this.loggedIn = false;
+      this.currentPage = 1; this._lastSig = "";
     },
 
     // ---------- 資料 ----------
@@ -313,12 +437,13 @@ const app = Vue.createApp({
     },
 
     // ---------- 匯出 ----------
+    // 匯出的是「全部篩選結果」，不是只有目前這一頁
     exportCsv() {
       const rows = this.filtered;
       if (!rows.length) return;
       const cols = ["checked_at","checked_by","Level","Place","System","AlarmCode","AlarmMessage_1","Match_Method","Matched_Query_Message","check_action","check_note","received_at"];
       const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
-      const csv = "\uFEFF" + [cols.join(","), ...rows.map(r => cols.map(c => esc(r[c])).join(","))].join("\r\n");
+      const csv = "﻿" + [cols.join(","), ...rows.map(r => cols.map(c => esc(r[c])).join(","))].join("\r\n");
       const a = document.createElement("a");
       a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
       a.download = `checked_alerts_${new Date().toISOString().slice(0,19).replace(/[:T]/g,"-")}.csv`;

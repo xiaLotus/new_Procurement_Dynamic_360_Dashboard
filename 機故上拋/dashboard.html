@@ -9,33 +9,35 @@
 <script src="static/js/vue.global.prod.js"></script>
 <style>
   * { box-sizing: border-box; min-width: 0; }
-  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }   /* 關掉手機瀏覽器的字型自動放大 */
-  html, body { max-width: 100%; overflow-x: hidden; }                 /* 禁止橫向溢出 */
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  html, body { max-width: 100%; overflow-x: hidden; }
   body { margin: 0; font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif; background: #eef2f7; font-size: 14px; }
   [v-cloak] { display: none; }
   img, svg { max-width: 100%; }
 
-  /* ---- 關鍵版面用純 CSS 寫死，不依賴 Tailwind 類別是否生效 ---- */
-  .wrap      { max-width: 1600px; margin: 0 auto; padding: 12px; width: 100%; }
+  /* 關鍵版面用純 CSS，不依賴 Tailwind 類別是否生效 */
+  .wrap { max-width: 1600px; margin: 0 auto; padding: 12px; width: 100%; }
   @media (min-width: 640px) { .wrap { padding: 16px 24px; } }
   .m-hide { display: none !important; }
   @media (min-width: 640px) { .m-hide { display: inline-flex !important; } }
   .hdr-inner { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .hdr-left  { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; }
+  .hdr-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; }
   .hdr-right { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; font-size: 12px; }
-  .stats     { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .toolbar   { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .cards     { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .card      { display: flex; align-items: center; gap: 10px; padding: 9px 10px; overflow: hidden; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cards { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .card { display: flex; align-items: center; gap: 10px; padding: 9px 10px; overflow: hidden; }
   .card-body { flex: 1 1 auto; min-width: 0; }
-  .card-btn  { flex: 0 0 auto; }
-  .card-title{ font-size: 16px; font-weight: 900; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-btn { flex: 0 0 auto; }
+  .card-title { font-size: 16px; font-weight: 900; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* 【新增】ClassName：放在機台名稱下方，太長就省略，滑鼠移上去看全文 */
+  .card-class { margin: 3px 0 0; font-size: 12px; line-height: 1.3; color: #64748b; font-family: Consolas, "Courier New", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 11px; }
   .card-time { margin-left: auto; white-space: nowrap; }
   @media (min-width: 640px) {
     body { font-size: 15px; }
     .stats { gap: 16px; }
-    .card  { padding: 12px 16px; }
+    .card { padding: 12px 16px; }
     .card-title { font-size: 18px; }
     .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   }
@@ -48,49 +50,56 @@
     background-size: 28px 28px;
   }
   .panel { background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 30px -12px rgba(15,23,42,.12); }
-
-  /* 統計方塊：縮小，手機上不佔高度 */
   .level-stat { padding: 8px 12px; }
   .level-count { font-size: 22px; line-height: 1.1; margin-top: 2px; }
 
-  /* 卡片進出動畫（transition-group） */
   .card-enter-active { transition: all .3s cubic-bezier(.2,.8,.2,1); }
-  /* 離場時關掉 glow-a 的無限動畫，否則 Vue 會等 2 秒動畫才移除 Level A 卡片 */
   .card-leave-active { transition: all .2s ease; position: absolute; width: 100%; animation: none !important; }
-  .card-enter-from   { opacity: 0; transform: translateY(10px) scale(.98); }
-  .card-leave-to     { opacity: 0; transform: scale(.96); }
-  .card-move         { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
-
+  .card-enter-from { opacity: 0; transform: translateY(10px) scale(.98); }
+  .card-leave-to { opacity: 0; transform: scale(.96); }
+  .card-move { transition: transform .35s cubic-bezier(.2,.8,.2,1); }
   .modal-enter-active, .modal-leave-active { transition: opacity .2s ease; }
   .modal-enter-from, .modal-leave-to { opacity: 0; }
-
   .glow-a { animation: glowA 2s infinite; }
   @keyframes glowA {
     0%,100% { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 8px 24px -12px rgba(220,38,38,.25); }
-    50%     { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px -8px rgba(220,38,38,.55); }
+    50% { box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px -8px rgba(220,38,38,.55); }
   }
-
   .dot { width: 8px; height: 8px; border-radius: 9999px; display: inline-block; }
-  .dot-on  { background: #22c55e; box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
+  .dot-on { background: #22c55e; box-shadow: 0 0 0 4px rgba(34,197,94,.15); }
   .dot-off { background: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,.15); }
-
   select.filter {
     appearance: none;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");
     background-repeat: no-repeat; background-position: right .6rem center; padding-right: 2rem;
   }
+
+  /* 分頁：每頁最多 10 筆，手機上可自動換行 */
+  .pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 16px; padding: 12px; border-radius: 12px; }
+  .page-info { color: #64748b; font-size: 12px; }
+  .page-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .page-btn { border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #334155; padding: 7px 10px; font-size: 13px; cursor: pointer; }
+  .page-btn:hover:not(:disabled) { background: #f1f5f9; }
+  .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .page-btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+  .page-current { color: #0f172a; font-size: 13px; font-weight: 700; padding: 0 4px; white-space: nowrap; }
+
+  /* 【新增】頁尾 made by RuiYing 商標 */
+  .site-footer { margin-top: 32px; padding: 14px 0 6px; border-top: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #94a3b8; }
+  .brand { display: inline-flex; align-items: center; gap: 8px; color: #475569; }
+  .brand-mark { width: 22px; height: 22px; border-radius: 6px; background: #0f172a; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: .5px; }
+  .brand-text { font-size: 12px; }
+  .brand-text b { color: #0f172a; font-weight: 800; letter-spacing: .3px; }
+
   ::-webkit-scrollbar { width: 8px; }
   ::-webkit-scrollbar-track { background: #f1f5f9; }
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 </style>
 </head>
-
 <body class="min-h-screen text-slate-800 bg-grid">
 <div id="app" v-cloak>
 
-  <!-- ============================================================
-       登入
-  ============================================================ -->
+  <!-- 登入：密碼欄位放入 form，由 submit 統一處理登入 -->
   <div v-if="!loggedIn" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center px-4">
     <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
       <div class="flex items-center gap-3 mb-6">
@@ -102,29 +111,28 @@
           <p class="text-xs text-slate-500">請登入後查看警報</p>
         </div>
       </div>
-      <div class="space-y-4">
+      <form class="space-y-4" @submit.prevent="doLogin">
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">帳號</label>
-          <input v-model.trim="login.username" type="text" autocomplete="username" @keydown.enter="$refs.pass.focus()"
+          <label for="login-username" class="block text-sm font-medium text-slate-700 mb-1">帳號</label>
+          <input id="login-username" name="username" v-model.trim="login.username" type="text" autocomplete="username" @keydown.enter.prevent="$refs.pass.focus()"
                  class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400">
         </div>
         <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">密碼</label>
-          <input ref="pass" v-model="login.password" type="password" autocomplete="current-password" @keydown.enter="doLogin"
+          <label for="login-password" class="block text-sm font-medium text-slate-700 mb-1">密碼</label>
+          <input id="login-password" name="password" ref="pass" v-model="login.password" type="password" autocomplete="current-password"
                  class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400">
         </div>
         <p v-if="login.error" class="text-sm text-red-600">{{ login.error }}</p>
-        <button @click="doLogin" :disabled="login.busy"
+        <button type="submit" :disabled="login.busy"
                 class="w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold py-2.5 rounded-lg transition disabled:opacity-60">
           {{ login.busy ? '登入中...' : '登入' }}
         </button>
-      </div>
+      </form>
+      <p class="text-center text-[11px] text-slate-400 mt-6" style="font-size:11px">made by <b class="text-slate-600">RuiYing</b></p>
     </div>
   </div>
 
-  <!-- ============================================================
-       Header
-  ============================================================ -->
+  <!-- Header -->
   <header class="bg-slate-950 text-white sticky top-0 z-30 shadow-lg">
     <div class="wrap max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3.5" style="padding-top:10px;padding-bottom:10px">
       <div class="hdr-inner">
@@ -133,11 +141,14 @@
             <svg class="w-4 h-4 sm:w-5 sm:h-5 text-red-400" style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z"/></svg>
           </div>
           <div class="min-w-0">
-            <h1 class="text-sm sm:text-xl font-black tracking-wide truncate" style="margin:0">機故警報監控</h1>
-            <p class="m-hide text-[11px] text-slate-400 hidden sm:block" style="margin:0">Equipment Alarm Monitoring · 每 2 秒更新</p>
+            <h1 class="text-sm sm:text-xl font-black tracking-wide truncate" style="margin:0">
+              機故警報監控
+              <!-- 【新增】標題旁顯示登入的 username -->
+              <span v-if="username" class="text-slate-400 font-semibold tracking-normal" style="font-size:.8em;margin-left:4px">({{ username }})</span>
+            </h1>
+            <p class="m-hide text-[11px] text-slate-400 hidden sm:block" style="margin:0">Equipment Alarm Monitoring · 每 2 秒更新 · 顯示 Level {{ SHOW_LEVELS.join('、') }}</p>
           </div>
         </div>
-
         <div class="hdr-right sm:gap-5 sm:text-sm">
           <div class="flex items-center gap-1.5">
             <span class="dot" :class="apiOnline ? 'dot-on' : 'dot-off'"></span>
@@ -158,14 +169,10 @@
     </div>
   </header>
 
-  <!-- ============================================================
-       主內容
-  ============================================================ -->
   <main class="wrap max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-6">
-
-    <!-- 統計 (縮小) -->
-    <section class="stats mb-3 sm:mb-6">
-      <div v-for="lv in ['A','B','C']" :key="lv"
+    <!-- 統計：只顯示 SHOW_LEVELS 內的等級，數量為全部警報 (不受分頁影響) -->
+    <section class="stats mb-3 sm:mb-6" :style="{ gridTemplateColumns: `repeat(${SHOW_LEVELS.length}, minmax(0, 1fr))` }">
+      <div v-for="lv in SHOW_LEVELS" :key="lv"
            class="panel level-stat rounded-xl border-l-4 cursor-pointer select-none transition"
            :class="[levelStyle[lv].stat, filters.level === lv ? 'ring-4 ring-slate-200' : '']"
            @click="toggleLevelFilter(lv)"
@@ -178,11 +185,10 @@
       </div>
     </section>
 
-    <!-- 篩選列：Group 取代 棟別 / 樓層 -->
     <section class="toolbar mb-3 sm:mb-4">
       <h2 class="text-sm sm:text-lg font-bold text-slate-800 whitespace-nowrap" style="margin:0;white-space:nowrap">
         未確認
-        <span class="ml-1 text-xs sm:text-sm font-medium text-slate-500">{{ visibleAlerts.length }}<span v-if="isFiltering"> / {{ alerts.length }}</span> 筆</span>
+        <span class="ml-1 text-xs sm:text-sm font-medium text-slate-500">{{ visibleAlerts.length }}<span v-if="isFiltering"> / {{ shownAlerts.length }}</span> 筆</span>
       </h2>
       <div class="flex items-center gap-2 text-sm" style="display:flex;align-items:center;gap:8px;min-width:0">
         <label class="flex items-center gap-1.5" style="display:flex;align-items:center;gap:6px;min-width:0">
@@ -199,9 +205,9 @@
       </div>
     </section>
 
-    <!-- 警報卡片 (精簡：只顯示機台與樓層) -->
+    <!-- 先篩選、排序，再取目前頁面的 10 筆 -->
     <transition-group name="card" tag="div" class="cards">
-      <article v-for="a in visibleAlerts" :key="a.alert_id"
+      <article v-for="a in pagedAlerts" :key="a.alert_id"
                class="card panel rounded-xl border-l-4 cursor-pointer active:scale-[0.99] transition"
                :class="[levelStyle[a.lv].card, a.lv === 'A' ? 'glow-a' : '']"
                @click="openCheck(a)">
@@ -214,6 +220,8 @@
             <span class="card-time text-slate-400 tabular-nums">{{ shortTime(a.received_at) }}</span>
           </div>
           <h3 class="card-title" style="margin:0" :class="levelStyle[a.lv].text" :title="a.System">{{ a.System || 'N/A' }}</h3>
+          <!-- 【新增】ClassName：例如 K21-8F_ASEF1-2900-A02F_UDROBOT，用來辨識是哪一種設備 -->
+          <p class="card-class" :title="a.ClassName">{{ a.ClassName || '—' }}</p>
         </div>
         <button @click.stop="openCheck(a)"
                 class="card-btn text-white text-xs sm:text-sm font-bold px-3 py-2 rounded-lg transition focus:outline-none focus:ring-4 active:scale-[0.98]"
@@ -225,23 +233,37 @@
       </article>
     </transition-group>
 
-    <!-- 空狀態 -->
+    <!-- 超過 10 筆才顯示分頁操作 -->
+    <nav v-if="totalPages > 1" class="pagination panel" aria-label="警報分頁">
+      <span class="page-info" aria-live="polite">第 {{ pageStart }}–{{ pageEnd }} 筆，共 {{ visibleAlerts.length }} 筆（每頁 {{ PAGE_SIZE }} 筆）</span>
+      <div class="page-controls">
+        <button type="button" class="page-btn" :disabled="currentPage <= 1" @click="goToPage(1)">首頁</button>
+        <button type="button" class="page-btn" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">上一頁</button>
+        <span class="page-current">{{ currentPage }} / {{ totalPages }} 頁</span>
+        <button type="button" class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">下一頁</button>
+        <button type="button" class="page-btn" :disabled="currentPage >= totalPages" @click="goToPage(totalPages)">末頁</button>
+      </div>
+    </nav>
+
     <div v-if="visibleAlerts.length === 0" class="panel rounded-2xl py-12 px-8 text-center mt-2">
       <div class="w-14 h-14 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-3">
         <svg class="w-7 h-7 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
       </div>
-      <h3 class="text-base font-bold text-slate-700">{{ isFiltering && alerts.length ? '此篩選條件下沒有警報' : '目前沒有未確認警報' }}</h3>
-      <p class="text-sm text-slate-400 mt-1">{{ isFiltering && alerts.length ? '其他條件還有 ' + alerts.length + ' 筆未確認' : '系統將持續監控新的 Level A、B、C 警報' }}</p>
+      <h3 class="text-base font-bold text-slate-700">{{ isFiltering && shownAlerts.length ? '此篩選條件下沒有警報' : '目前沒有未確認警報' }}</h3>
+      <p class="text-sm text-slate-400 mt-1">{{ isFiltering && shownAlerts.length ? '其他條件還有 ' + shownAlerts.length + ' 筆未確認' : '系統將持續監控新的 Level ' + SHOW_LEVELS.join('、') + ' 警報' }}</p>
     </div>
 
-    <footer class="mt-8 pt-4 border-t border-slate-200 text-xs text-slate-400 flex flex-col sm:flex-row gap-2 sm:justify-between">
+    <!-- 【新增】頁尾商標 -->
+    <footer class="site-footer">
       <span>Equipment Alarm Monitoring System</span>
+      <span class="brand">
+        <span class="brand-mark">RY</span>
+        <span class="brand-text">made by <b>RuiYing</b></span>
+      </span>
     </footer>
   </main>
 
-  <!-- ============================================================
-       CHECK 視窗
-  ============================================================ -->
+  <!-- CHECK 視窗 -->
   <transition name="modal">
     <div v-if="check.target" class="fixed inset-0 z-40 flex items-center justify-center bg-slate-950/60 px-4" @click.self="closeCheck">
       <div class="w-full max-w-md bg-white rounded-2xl shadow-2xl p-6">
@@ -252,17 +274,17 @@
           </div>
           <button @click="closeCheck" class="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
         </div>
-
         <div class="bg-slate-50 border border-slate-100 rounded-lg p-3 mb-4 text-sm">
           <div class="flex items-center gap-2 mb-1">
             <span class="inline-flex px-2 py-0.5 rounded-md border text-[11px] font-bold" :class="levelStyle[check.target.lv].badge">LEVEL {{ check.target.lv }}</span>
             <span class="font-bold" :class="levelStyle[check.target.lv].text">{{ check.target.System }}</span>
             <span class="text-xs text-slate-500 ml-auto">{{ check.target.building }} {{ check.target.floor }}</span>
           </div>
+          <!-- 【新增】視窗內也顯示 ClassName -->
+          <p v-if="check.target.ClassName" class="text-xs text-slate-600 font-mono break-all" style="margin:0 0 2px">{{ check.target.ClassName }}</p>
           <p class="text-xs text-slate-500 font-mono">{{ check.target.AlarmCode }}</p>
           <p class="text-slate-700 line-clamp-2">{{ check.target.AlarmMessage_1 }}</p>
         </div>
-
         <p class="text-sm font-medium text-slate-700 mb-2">處理結果</p>
         <div class="grid grid-cols-2 gap-2 mb-4">
           <button v-for="opt in CHECK_OPTIONS" :key="opt" type="button" @click="selectOption(opt)"
@@ -273,12 +295,10 @@
             {{ opt }}
           </button>
         </div>
-
         <label class="block text-sm font-medium text-slate-700 mb-1">備註（可空白）</label>
         <textarea ref="note" v-model.trim="check.note" rows="3" placeholder="補充說明…"
                   class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 resize-none"></textarea>
         <p v-if="check.error" class="text-sm text-red-600 mt-2">{{ check.error }}</p>
-
         <div class="flex gap-2 mt-5">
           <button @click="closeCheck" class="flex-1 border border-slate-300 text-slate-700 text-sm font-bold py-2.5 rounded-lg hover:bg-slate-50 transition">取消</button>
           <button @click="submitCheck" :disabled="check.busy" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold py-2.5 rounded-lg transition disabled:opacity-60">
@@ -288,11 +308,22 @@
       </div>
     </div>
   </transition>
-
 </div>
 
 <script>
-// groups.json 讀不到時的預設值 (與 groups.json 內容相同)
+// =====================================================================
+// 【顯示等級設定】★ 要切換只看 AB 或 ABC，改這一行就好 ★
+//
+//   只顯示 A、B   →  const SHOW_LEVELS = ["A", "B"];
+//   顯示 A、B、C  →  const SHOW_LEVELS = ["A", "B", "C"];
+//
+//   影響範圍：上方統計方塊、卡片列表、分頁、空白提示文字。
+//   注意：這裡只是「前端不顯示」，C 級警報仍然存在後端記憶體。
+//         若要後端連 C 級都不收，改 app.py 的 DISPLAY_LEVELS = ['A', 'B']。
+// =====================================================================
+const SHOW_LEVELS = ["A", "B", "C"];
+
+// groups.json 讀不到時的預設值
 const DEFAULT_GROUPS = [
   { name: "K11-3~6F",  buildings: ["K11"], floors: ["3F", "4F", "5F", "6F"] },
   { name: "K11-8F",    buildings: ["K11"], floors: ["8F"] },
@@ -307,23 +338,18 @@ const app = Vue.createApp({
     return {
       // ---------- 設定 ----------
       API_BASE: "http://localhost:8900",
-      GROUPS_URL: "/api/groups",     // 由後端提供 (groups.json 放在 app.py 旁邊)；floors 為空陣列 = 該棟全部樓層
+      GROUPS_URL: "/api/groups",
       POLL_MS: 2000,
+      PAGE_SIZE: 10,
+      SHOW_LEVELS: SHOW_LEVELS,
       GROUPS: DEFAULT_GROUPS,
-      CHECK_OPTIONS: [
-        "已處理",
-        "Reset",
-        "調整",
-        "持續觀察",
-        "其他"
-      ],
+      CHECK_OPTIONS: ["已處理", "Reset", "調整", "持續觀察", "其他"],
       LEVEL_RANK: { A: 0, B: 1, C: 2 },
       levelStyle: {
-        A: { label: "高優先", text: "text-red-600",   badge: "bg-red-50 text-red-600 border-red-200",       stat: "border-l-red-500",   dotBg: "bg-red-500",   card: "border-l-red-500",   button: "bg-red-500 hover:bg-red-600 focus:ring-red-200" },
+        A: { label: "高優先", text: "text-red-600", badge: "bg-red-50 text-red-600 border-red-200", stat: "border-l-red-500", dotBg: "bg-red-500", card: "border-l-red-500", button: "bg-red-500 hover:bg-red-600 focus:ring-red-200" },
         B: { label: "中優先", text: "text-amber-600", badge: "bg-amber-50 text-amber-700 border-amber-200", stat: "border-l-amber-400", dotBg: "bg-amber-400", card: "border-l-amber-400", button: "bg-amber-500 hover:bg-amber-600 focus:ring-amber-200" },
-        C: { label: "一般",   text: "text-blue-600",  badge: "bg-blue-50 text-blue-600 border-blue-200",    stat: "border-l-blue-500",  dotBg: "bg-blue-500",  card: "border-l-blue-500",  button: "bg-blue-500 hover:bg-blue-600 focus:ring-blue-200" }
+        C: { label: "一般", text: "text-blue-600", badge: "bg-blue-50 text-blue-600 border-blue-200", stat: "border-l-blue-500", dotBg: "bg-blue-500", card: "border-l-blue-500", button: "bg-blue-500 hover:bg-blue-600 focus:ring-blue-200" }
       },
-
       // ---------- 狀態 ----------
       loggedIn: false,
       username: "",
@@ -332,15 +358,21 @@ const app = Vue.createApp({
       apiOnline: false,
       lastUpdate: "--:--:--",
       timer: null,
+      currentPage: 1,
       filters: { group: "", level: "" },
       check: { target: null, action: "", note: "", error: "", busy: false }
     };
   },
 
   computed: {
+    // 【新增】只保留 SHOW_LEVELS 內的警報，後面所有統計 / 篩選 / 分頁都以這份為準
+    shownAlerts() {
+      return this.alerts.filter(a => this.SHOW_LEVELS.includes(a.lv));
+    },
     counts() {
-      const c = { A: 0, B: 0, C: 0 };
-      this.alerts.forEach(a => { if (c[a.lv] !== undefined) c[a.lv]++; });
+      const c = {};
+      this.SHOW_LEVELS.forEach(lv => { c[lv] = 0; });
+      this.shownAlerts.forEach(a => { if (c[a.lv] !== undefined) c[a.lv]++; });
       return c;
     },
     isFiltering() {
@@ -349,50 +381,74 @@ const app = Vue.createApp({
     activeGroup() {
       return this.GROUPS.find(g => g.name === this.filters.group) || null;
     },
+    // 完整篩選結果，用於統計、排序與計算總頁數
     visibleAlerts() {
       const f = this.filters, g = this.activeGroup;
-      return this.alerts
-        .filter(a =>
-          (!g || this.inGroup(a, g)) &&
-          (!f.level || a.lv === f.level))
+      return this.shownAlerts
+        .filter(a => (!g || this.inGroup(a, g)) && (!f.level || a.lv === f.level))
         .sort((x, y) => {
           const rx = this.LEVEL_RANK[x.lv] ?? 9, ry = this.LEVEL_RANK[y.lv] ?? 9;
           if (rx !== ry) return rx - ry;
           return String(y.received_at || "").localeCompare(String(x.received_at || ""));
         });
+    },
+    totalPages() {
+      return Math.max(1, Math.ceil(this.visibleAlerts.length / this.PAGE_SIZE));
+    },
+    // 防止即時更新減少頁數時，短暫讀到超出範圍的頁面
+    pageOffset() {
+      const page = Math.min(Math.max(1, this.currentPage), this.totalPages);
+      return (page - 1) * this.PAGE_SIZE;
+    },
+    pagedAlerts() {
+      return this.visibleAlerts.slice(this.pageOffset, this.pageOffset + this.PAGE_SIZE);
+    },
+    pageStart() {
+      return this.visibleAlerts.length ? this.pageOffset + 1 : 0;
+    },
+    pageEnd() {
+      return Math.min(this.pageOffset + this.PAGE_SIZE, this.visibleAlerts.length);
     }
   },
 
   watch: {
     filters: {
       deep: true,
-      handler(v) { try { localStorage.setItem("alarm_dashboard_filters", JSON.stringify(v)); } catch (_) {} }
+      handler(v) {
+        // 只在篩選變更時回第一頁；每 2 秒輪詢不會重設頁碼
+        this.currentPage = 1;
+        try { localStorage.setItem("alarm_dashboard_filters", JSON.stringify(v)); } catch (_) {}
+      }
+    },
+    totalPages(value) {
+      // 例如第 3 頁最後一筆被移除後，自動退回第 2 頁
+      if (this.currentPage > value) this.currentPage = value;
     }
   },
 
   mounted() {
     this.loadGroups();
-
-    // 還原篩選 (只記憶 group，不記憶等級)
     try {
       const saved = JSON.parse(localStorage.getItem("alarm_dashboard_filters") || "{}");
       this.filters.group = typeof saved.group === "string" ? saved.group : "";
       this.filters.level = "";
     } catch (_) {}
-
-    // 還原登入
     this.username = sessionStorage.getItem("alarm_dashboard_user") || "";
     if (sessionStorage.getItem("alarm_dashboard_pass")) {
       this.loggedIn = true;
       this.startPolling();
     }
-
     document.addEventListener("keydown", e => { if (e.key === "Escape" && this.check.target) this.closeCheck(); });
   },
 
   beforeUnmount() { this.stopPolling(); },
 
   methods: {
+    // ---------- 分頁 ----------
+    goToPage(page) {
+      this.currentPage = Math.min(Math.max(1, page), this.totalPages);
+    },
+
     // ---------- Group ----------
     async loadGroups() {
       try {
@@ -400,17 +456,14 @@ const app = Vue.createApp({
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const list = await res.json();
         if (!Array.isArray(list) || !list.length) throw new Error("後端回傳空陣列 (groups.json 不存在或格式錯誤)");
-        {
-          this.GROUPS = list.map(g => ({
-            name: String(g.name || ""),
-            buildings: (g.buildings || []).map(b => String(b).toUpperCase()),
-            floors: (g.floors || []).map(f => String(f).toUpperCase())
-          })).filter(g => g.name);
-        }
+        this.GROUPS = list.map(g => ({
+          name: String(g.name || ""),
+          buildings: (g.buildings || []).map(b => String(b).toUpperCase()),
+          floors: (g.floors || []).map(f => String(f).toUpperCase())
+        })).filter(g => g.name);
       } catch (e) {
         console.warn("後端 /api/groups 讀取失敗，使用內建預設 Group：", e);
       }
-      // 記憶的 group 已不存在時清掉
       if (this.filters.group && !this.GROUPS.some(g => g.name === this.filters.group)) this.filters.group = "";
     },
     inGroup(a, g) {
@@ -428,7 +481,6 @@ const app = Vue.createApp({
       };
     },
     normalize(raw) {
-      // 把後端資料加上 lv / building / floor 方便排序篩選
       const parts = String(raw.Place || "").trim().split(/[-_\s/]+/).filter(Boolean);
       const floor = parts.find(p => /^\d+F$/i.test(p));
       return {
@@ -444,6 +496,8 @@ const app = Vue.createApp({
 
     // ---------- 登入 ----------
     async doLogin() {
+      // 避免連續按 Enter 或點擊按鈕重複送出
+      if (this.login.busy) return;
       const { username, password } = this.login;
       if (!username || !password) { this.login.error = "請輸入帳號與密碼"; return; }
       this.login.busy = true; this.login.error = "";
@@ -459,6 +513,7 @@ const app = Vue.createApp({
         this.username = username;
         this.login.password = "";
         this.loggedIn = true;
+        this.currentPage = 1;
         this.startPolling();
       } catch (e) {
         this.login.error = e.message === "Failed to fetch" ? "無法連線到 API，請確認伺服器已啟動" : e.message;
@@ -469,6 +524,7 @@ const app = Vue.createApp({
       sessionStorage.removeItem("alarm_dashboard_pass");
       sessionStorage.removeItem("alarm_dashboard_user");
       this.alerts = [];
+      this.currentPage = 1;
       this._lastSig = "";
       this.username = "";
       this.loggedIn = false;
@@ -487,7 +543,6 @@ const app = Vue.createApp({
       this.timer = setInterval(this.fetchAlerts, this.POLL_MS);
     },
     stopPolling() { if (this.timer) { clearInterval(this.timer); this.timer = null; } },
-
     async fetchAlerts() {
       if (this._fetching) return;
       this._fetching = true;
@@ -497,12 +552,9 @@ const app = Vue.createApp({
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const list = await res.json();
         if (!Array.isArray(list)) throw new Error("API 回傳格式不是 Array");
-
         this.apiOnline = true;
         this.lastUpdate = new Date().toLocaleTimeString("zh-TW", { hour12: false });
-
-        // 只有內容真的變了才更新 alerts（Vue 再做 DOM diff，畫面不會每 2 秒跳）
-        // 已被別人消掉的卡片會在這裡從列表消失；但已點開的 CHECK 視窗 (check.target) 不受影響，仍可送出
+        // 內容真的變了才更新列表；已開啟的 CHECK 快照不受影響
         const next = list.map(this.normalize);
         const sig = JSON.stringify(next);
         if (sig !== this._lastSig) { this._lastSig = sig; this.alerts = next; }
@@ -514,7 +566,6 @@ const app = Vue.createApp({
 
     // ---------- CHECK ----------
     openCheck(item) {
-      // 不鎖定：多人可同時開同一張單。複製一份快照，列表刷新時視窗內容不會變動
       this.check = { target: { ...item }, action: "", note: "", error: "", busy: false };
     },
     closeCheck() { this.check.target = null; },
@@ -527,10 +578,9 @@ const app = Vue.createApp({
       if (!target) return;
       if (!action && !note) { this.check.error = "請選擇一個處理結果，或輸入備註"; return; }
       if (action === "其他" && !note) { this.check.error = "選「其他」請在備註說明"; return; }
-
       this.check.busy = true; this.check.error = "";
       try {
-        // 帶卡片快照：就算別人已先消掉，後端也能用快照寫入這個人的處理紀錄
+        // 保留快照：其他人已移除警報時，後端仍可寫入處理紀錄
         const snapshot = {
           alert_id: target.alert_id, System: target.System, Plant: target.Plant, Place: target.Place,
           AlarmCode: target.AlarmCode, Level: target.Level, AlarmMessage_1: target.AlarmMessage_1,
@@ -547,8 +597,6 @@ const app = Vue.createApp({
           const data = await res.json().catch(() => ({}));
           throw new Error(data.message || `HTTP ${res.status}`);
         }
-
-        // 本地先移除，畫面立即反應；下次輪詢再同步
         this.alerts = this.alerts.filter(a => a.alert_id !== target.alert_id);
         this._lastSig = "";
         this.closeCheck();
@@ -559,7 +607,6 @@ const app = Vue.createApp({
     }
   }
 });
-
 app.mount("#app");
 </script>
 </body>

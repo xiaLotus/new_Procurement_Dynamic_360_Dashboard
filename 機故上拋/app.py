@@ -1,4 +1,5 @@
 from datetime import datetime
+from collections import deque  # 【本地測試】讀 checked_failed.jsonl 最後 N 筆用
 import glob                 # 修正：原本 from glob import glob 但下方用 glob.glob() 會 AttributeError
 import json                 # DB 寫入失敗時把 CHECK 紀錄備份成 JSONL / 未確認警報中繼儲存
 import os
@@ -20,6 +21,7 @@ from waitress import serve
 # 1. Log 與 Flask 基礎設定 (保留您原本的設定)
 # =====================================================
 log_folder = rf"機固上拋\Logs"
+# log_folder = rf"D:\Data\API類\機固上拋\Logs"
 os.makedirs(log_folder, exist_ok=True)
 log_file_path = os.path.join(log_folder, "api_{time:YYYY-MM-DD}.log")
 
@@ -102,6 +104,35 @@ ensure_tables()
 
 # DB 寫入失敗時的備份檔：一行一筆 JSON，DB 恢復後可據此補寫
 CHECKED_FAILED_FILE = os.path.join(log_folder, "checked_failed.jsonl")
+_failed_lock = threading.Lock()      # 多人同時寫入 / 讀取 checked_failed.jsonl 時，避免兩筆寫在同一行 (保留，不要註解)
+
+# =====================================================================
+# 【本地測試】▼▼▼ 開始 ▼▼▼  DB 不能用時，歷史頁改讀 checked_failed.jsonl
+#   - 只有「DB 寫入失敗 / 異常」時，CHECK 紀錄才會寫到 Logs\checked_failed.jsonl
+#     (DB 正常就只寫 DB，不會寫 JSON)
+#   - DB 讀不到時，/get_checked_alerts 改讀這個檔，沒有 DB 也能測試歷史頁
+#   - 正式上線不需要時：把這段「開始～結束」整段註解，
+#     再把 get_checked_alerts 裡標【本地測試】的區塊註解即可
+# =====================================================================
+def read_checked_failed(limit: int) -> list:
+    """讀 checked_failed.jsonl 最後 limit 筆，最新在前；檔案不存在回空陣列，壞掉的行略過"""
+    if not os.path.exists(CHECKED_FAILED_FILE):
+        return []
+    with _failed_lock:
+        with open(CHECKED_FAILED_FILE, encoding="utf-8") as f:
+            lines = deque(f, maxlen=limit)
+    records = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            records.append(json.loads(line))
+        except Exception:
+            continue
+    records.sort(key=lambda r: str(r.get("checked_at") or ""), reverse=True)
+    return records
+# 【本地測試】▲▲▲ 結束 ▲▲▲
 
 
 def save_checked_record(record: dict) -> bool:
@@ -122,6 +153,7 @@ def save_checked_record(record: dict) -> bool:
         "Matched_Query_Message": str(record.get("Matched_Query_Message") or "")[:500],
         "received_at": record.get("received_at") or None,
     }
+
     try:
         with engine.begin() as conn:
             conn.execute(text("""
@@ -138,8 +170,9 @@ def save_checked_record(record: dict) -> bool:
     except Exception as e:
         logger.error(f"❌ 寫入 alarm_checked 失敗，已備份到 {CHECKED_FAILED_FILE}: {e}")
         try:
-            with open(CHECKED_FAILED_FILE, "a", encoding="utf-8") as f:
-                f.write(json.dumps(params, ensure_ascii=False, default=str) + "\n")
+            with _failed_lock:
+                with open(CHECKED_FAILED_FILE, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(params, ensure_ascii=False, default=str) + "\n")
         except Exception as e2:
             logger.error(f"❌ 備份 CHECK 紀錄也失敗: {e2} | {params}")
         return False
@@ -518,14 +551,44 @@ def api_groups():
 # =====================================================
 # 【Web 儀表板】登入 API
 # =====================================================
+def authenticate_user(username, password):
+    try:
+        return True
+        # server = Server('ldap://KHADDC02.kh.asegroup.com', get_info = ALL)
+        # # 使用 NTLM
+        # user = f'kh\\{username}'
+        # password = f'{password}'
+
+
+        # # print("帳號: ", username, " 密碼: ", password)
+        # # # 建立連接
+        # conn = Connection(server, user = user, password = password, authentication = NTLM)
+
+        # # # 嘗試綁定
+        # if conn.bind():
+        #     return True
+        # else:
+        #     return False
+    except Exception as e:
+        # app.logger.error(f"Error during authentication for user {username}: {e}")
+        return False
+
+
 @app.route('/api/login', methods=['POST'])
 def api_login():
-    """接收前端送來的 username 與 password，無條件通過，不做任何驗證"""
-    data = request.get_json(silent=True) or {}
+    data = request.get_json()
+    """接收前端送來的 username 與 password，並透過 LDAP 進行驗證"""
     username = str(data.get("username", "")).strip()
     password = str(data.get("password", ""))
-    logger.info(f"🔑 [Web UI] 登入：{username}")
-    return jsonify({"status": "success", "user": username}), 200
+    if not username or not password:
+        return jsonify({"status": "fail", "message": "帳號或密碼不可為空"}), 400
+
+    if authenticate_user(username, password):
+        logger.info(f"✅ [Web UI] 使用者 {username} {password} 登入成功")
+        return jsonify({"success": True, "message": "登入成功!"})
+    else:
+        return jsonify({"success": False, "message": "帳號或密碼錯誤，請重新輸入"})
+
 
 
 # =====================================================
@@ -627,6 +690,8 @@ def clear_alerts():
 def get_checked_alerts():
     """
     提供歷史紀錄頁顯示 (最新在前)，從 DB 的 alarm_checked 表讀取。
+    【本地測試】DB 讀不到時，改讀 Logs/checked_failed.jsonl (沒有 DB 也能測試)。
+    回應 header X-Data-Source 標示資料來源：db / local。
     """
     limit = max(1, min(request.args.get("limit", 50, type=int), CHECKED_MAX))
 
@@ -646,11 +711,23 @@ def get_checked_alerts():
                 if r.get(k) is not None and not isinstance(r[k], str):
                     r[k] = r[k].strftime("%Y-%m-%d %H:%M:%S")
     except Exception as e:
+        # ---------- 【本地測試】▼ 開始：DB 讀不到 → 改讀 checked_failed.jsonl ----------
+        logger.warning(f"⚠️ 讀取 alarm_checked 失敗，改讀本地 {CHECKED_FAILED_FILE}: {e}")
+        try:
+            resp = jsonify(read_checked_failed(limit))
+            resp.headers["X-Data-Source"] = "local"
+            return resp, 200
+        except Exception as e2:
+            logger.error(f"❌ 讀取本地 CHECK 紀錄也失敗: {e2}")
+        # ---------- 【本地測試】▲ 結束 ----------
+
         # 回 500 讓歷史頁保留上一次的內容，而不是誤顯示「尚無紀錄」
         logger.error(f"❌ 讀取 alarm_checked 失敗: {e}")
         return jsonify({"status": "error", "message": "讀取歷史紀錄失敗"}), 500
 
-    return jsonify(records), 200
+    resp = jsonify(records)
+    resp.headers["X-Data-Source"] = "db"
+    return resp, 200
 
 
 # =====================================================
