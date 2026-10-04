@@ -1,3 +1,144 @@
-group 3456F
-框框變小
-外面只保留機台
+# 機故警報監控系統（機故上拋網頁版與手機版）
+
+機台把警報 POST 到後端 → 後端用 `query_result.csv` 比對出等級 → A/B/C 級顯示在網頁儀表板 → 人員按 CHECK 確認 → 紀錄寫入 DB，可在歷史頁查詢。
+
+made by **RuiYing**
+
+---
+
+## 檔案結構
+
+```
+(啟動資料夾)\
+├─ app.py                     後端 API (Flask + Waitress, port 8900)
+├─ dashboard.html             儀表板：未確認警報卡片 (正式版，原 new_dashboard.html)
+├─ history.html               歷史紀錄：已確認 (CHECK) 紀錄
+├─ groups.json                儀表板 Group 分組設定
+├─ query_result.csv           等級比對字典 (每日覆蓋更新，自動熱重載)
+├─ test.py                    測試腳本：送 7 筆測試警報
+├─ static\                    前端套件 (css2.css / tailwinds.js / vue.global.prod.js)
+└─ 機固上拋\                  ← 程式自動建立
+   ├─ Logs\api_YYYY-MM-DD.log       執行 log (保留 30 天)
+   ├─ Logs\checked_failed.jsonl     DB 寫入失敗的 CHECK 紀錄備份
+   └─ Data\active_alerts.json       未確認警報中繼儲存 (重啟後還原)
+```
+
+> ⚠️ `app.py` 使用**相對路徑**，請每次都從**同一個資料夾**啟動，否則 `機固上拋\Logs`、`機固上拋\Data`、`query_result.csv`、`groups.json` 會找不到。
+> `history.html` 的「回儀表板」連結寫死 `dashboard.html`，檔名不要改。
+
+---
+
+## 啟動
+
+```bash
+pip install flask flask-cors loguru pymysql sqlalchemy pandas waitress requests
+python app.py
+```
+
+開啟 `dashboard.html` 登入即可。前端 API 位址在兩個 HTML 的 `API_BASE: "http://localhost:8900"`，部署到其他電腦時要改成伺服器 IP。
+
+測試：`python test.py`，預期 7/7 等級正確、儀表板出現 6 張卡片 (D 級不顯示)。
+
+---
+
+## 處理流程
+
+1. 機台 POST `/upload_message`，必要欄位：`System, Mechanism, ClassName, Plant, Site, Place, AlarmCode, AlarmMessage, Flag`
+2. 訊息每 255 字切成 `AlarmMessage_1~4`
+3. 比對等級 (越前面越準)：
+   1. System + AlarmCode
+   2. AlarmCode + 訊息內容相符 (跨設備)
+   3. System + 括號代號
+   4. 括號代號 + 訊息內容相符 (跨設備)
+   - 比對不到才用 payload 自帶的 `Level` (只有 test.py 有)
+4. 等級在 `DISPLAY_LEVELS` 內 → 放入記憶體並寫入 `active_alerts.json`
+5. 儀表板每 2 秒讀 `/get_alerts`
+6. 按 CHECK → `/remove_alert/<id>` → 背景寫入 DB `alarm_checked`；失敗備份到 `checked_failed.jsonl`
+7. 歷史頁每 5 秒讀 `/get_checked_alerts` (最多 500 筆)
+
+---
+
+## API
+
+| 路徑 | 方法 | 說明 |
+|---|---|---|
+| `/upload_message` | POST | 機台上拋警報 |
+| `/get_alerts` | GET | 未確認警報清單 |
+| `/remove_alert/<alert_id>` | POST | CHECK 確認並移除 (body: username / action / note / alert 快照) |
+| `/get_checked_alerts?limit=500` | GET | 歷史紀錄 (header `X-Data-Source`: db / local) |
+| `/clear_alerts` | POST | 清空全部未確認警報 (測試用，不寫紀錄) |
+| `/api/login` | POST | 登入 |
+| `/api/groups` | GET | 讀 groups.json |
+| `/api/webhook_receive` | POST | 外部系統直接推送警報 |
+| `/health` | GET | 伺服器 / DB / 比對字典狀態 |
+| `/reload_query` | GET/POST | 立即重載 query_result.csv |
+| `/logs` | GET | 最新 log 最後 100 行 |
+
+---
+
+## 常用設定
+
+| 要改什麼 | 檔案 | 位置 |
+|---|---|---|
+| 儀表板只顯示 AB 或 ABC | `dashboard.html` | `<script>` 最上方 `const SHOW_LEVELS = ["A", "B", "C"];` |
+| 後端只收 AB (連 C 都不存) | `app.py` | `DISPLAY_LEVELS = ['A', 'B', 'C']` |
+| 儀表板每頁筆數 | `dashboard.html` | `PAGE_SIZE: 10` |
+| 歷史頁每頁筆數 | `history.html` | `PAGE_SIZE: 20` |
+| API 位址 | 兩個 HTML | `API_BASE` |
+| Group 分組 | `groups.json` | 改完重新整理頁面即可，不用重啟 |
+| DB 連線 | `app.py` | `db_config` |
+
+`groups.json` 格式 (`floors` 空陣列 = 整棟)：
+
+```json
+[{ "name": "K11-3~6F", "buildings": ["K11"], "floors": ["3F","4F","5F","6F"] }]
+```
+
+---
+
+## 頁面功能
+
+### dashboard.html
+- 統計方塊 (點擊只看該等級)、Group 下拉篩選 (記住上次選擇)
+- 卡片：等級、棟別樓層、時間、機台名稱 (System)、**ClassName**
+- 每頁 10 筆分頁，輪詢不會跳頁
+- CHECK 視窗：已處理 / Reset / 調整 / 持續觀察 / 其他 + 備註；同一張單允許多人送出
+- 標題旁顯示 `(username)`，頁尾 made by RuiYing
+
+### history.html
+- 統計、篩選列 (棟別 / 樓層 / 等級 / 處理結果 / 處理人 / 關鍵字)
+- 表頭下拉：**處理人**、**等級**、**位置 (先選棟別 → 再選樓層)**，與篩選列同步
+- 點表頭排序、每頁 20 筆分頁
+- 匯出 CSV (匯出全部篩選結果，不只當頁)
+
+---
+
+## 【本地測試】功能 (沒有 DB 也能測)
+
+- DB **寫入失敗**時，CHECK 紀錄才會寫到 `機固上拋\Logs\checked_failed.jsonl` (DB 正常只寫 DB)
+- DB **讀不到**時，歷史頁改讀 `checked_failed.jsonl`，回應 header `X-Data-Source: local`
+
+正式上線要關閉：在 `app.py` 搜尋 `【本地測試】`，註解以下三處即可
+
+1. `from collections import deque`
+2. `▼▼▼ 開始 ▼▼▼` ～ `▲▲▲ 結束 ▲▲▲` (`read_checked_failed` 函式)
+3. `get_checked_alerts` 裡 `▼ 開始` ～ `▲ 結束`
+
+> `_failed_lock` 那一行**不要註解**，DB 失敗備份也會用到。
+
+---
+
+## 已知問題 / 待辦
+
+| # | 項目 | 影響 |
+|---|---|---|
+| 1 | `authenticate_user` 直接 `return True`，LDAP 被註解 | 任何帳密都能登入 |
+| 2 | 登入成功的 log 印出明文密碼 | 密碼外洩風險 |
+| 3 | 後端所有 API 都沒驗證身分 | `/clear_alerts` 任何人可呼叫 |
+| 4 | 登入失敗回 HTTP 200 + `success: False` | 開啟 LDAP 後前端會誤判為成功，需改回 401 |
+| 5 | `/api/login` body 不是 JSON 時會 500 | 應改 `get_json(silent=True) or {}` |
+| 6 | 上拋原始資料寫 DB (`alarmcode_alarmmessage`) 停用中 | D 級與原始上拋完全沒有留存 |
+| 7 | DB 斷線期間的 CHECK 紀錄不會自動補寫回 DB | 需手動從 `checked_failed.jsonl` 補寫 |
+| 8 | `alarm_checked` 沒有 `ClassName` 欄位 | 歷史頁看不到 ClassName |
+| 9 | `history.html` 棟別清單部分寫死、沒有 Group 篩選 | 和儀表板篩選方式不一致 |
+| 10 | `history.html` 登入沒有防止重複送出 | dashboard 已修，history 未同步 |
