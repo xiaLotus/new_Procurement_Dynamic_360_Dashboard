@@ -1,0 +1,62 @@
+2026-10-05 19:27:38.563 | INFO | 🚀 AlarmCode and AlarmMessage 伺服器啟動中...
+2026-10-05 19:27:41.639 | ERROR | ❌ 建立 alarm_checked 失敗 (不影響警報接收，但 CHECK 紀錄無法寫入 DB): (pymysql.err.OperationalError) (2003, "Can't connect to MySQL server on '10.11.104.247' (timed out)")
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-10-05 19:27:41.641 | INFO | ℹ️ 沒有中繼儲存檔，未確認警報從空清單開始
+2026-10-05 19:27:41.641 | INFO | ⏳ 正在載入 query_result.csv 到記憶體...
+2026-10-05 19:27:43.207 | WARNING | ⚠️ query_result.csv 有 1234 列欄位錯位，已從 message 欄救回等級
+2026-10-05 19:27:45.247 | SUCCESS | ✅ 比對字典載入完成！列數 0 → 205840 (system+code: 205840, system+括號: 61494, 跨設備 code: 121460, 跨設備括號: 13424)
+2026-10-05 19:27:45.280 | INFO | 🚀 Waitress 伺服器啟動於 Port 8900...
+2026-10-05 19:27:45.596 | INFO | ✅ [Web UI] 使用者 K18251 11 登入成功
+2026-10-05 19:27:46.758 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=RB1191 (DB 寫入目前停用)
+2026-10-05 19:27:46.758 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=B, Code=RB1191
+2026-10-05 19:27:46.762 | INFO | 📥 [Web UI] 接收到新警報: 7997b06d-1f0d-45fc-9d90-8b12871c9ae9, Level: B, Code: RB1191
+2026-10-05 19:27:46.762 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=7997b06d-1f0d-45fc-9d90-8b12871c9ae9)
+2026-10-05 19:27:48.838 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=RB1147 (DB 寫入目前停用)
+2026-10-05 19:27:48.839 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=C, Code=RB1147
+2026-10-05 19:27:48.843 | INFO | 📥 [Web UI] 接收到新警報: afce092c-403b-4dd9-b82e-b38bd362d59d, Level: C, Code: RB1147
+2026-10-05 19:27:48.844 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=afce092c-403b-4dd9-b82e-b38bd362d59d)
+2026-10-05 19:27:50.921 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=VST1020019 (DB 寫入目前停用)
+2026-10-05 19:27:50.922 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=A, Code=VST1020019
+2026-10-05 19:27:50.927 | INFO | 📥 [Web UI] 接收到新警報: 6b0f046e-7fa0-406c-a543-935c35dd5080, Level: A, Code: VST1020019
+2026-10-05 19:27:50.927 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=6b0f046e-7fa0-406c-a543-935c35dd5080)
+2026-10-05 19:27:52.982 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=VA12000037 (DB 寫入目前停用)
+2026-10-05 19:27:52.982 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=A, Code=VA12000037
+2026-10-05 19:27:52.989 | INFO | 📥 [Web UI] 接收到新警報: 1a4a61ec-f0ed-4484-af86-d65ce1fb2fbb, Level: A, Code: VA12000037
+2026-10-05 19:27:52.989 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=1a4a61ec-f0ed-4484-af86-d65ce1fb2fbb)
+2026-10-05 19:27:55.054 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=VA12000501 (DB 寫入目前停用)
+2026-10-05 19:27:55.056 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=B, Code=VA12000501
+2026-10-05 19:27:55.061 | INFO | 📥 [Web UI] 接收到新警報: 4c228e03-faeb-4579-8da3-a5a031e2b0e1, Level: B, Code: VA12000501
+2026-10-05 19:27:55.061 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=4c228e03-faeb-4579-8da3-a5a031e2b0e1)
+2026-10-05 19:27:57.161 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=A021A04 (DB 寫入目前停用)
+2026-10-05 19:27:57.162 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=A, Code=A021A04
+2026-10-05 19:27:57.168 | INFO | 📥 [Web UI] 接收到新警報: 69cbaa72-fad0-4ff3-8454-2ca8380fa723, Level: A, Code: A021A04
+2026-10-05 19:27:57.169 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=69cbaa72-fad0-4ff3-8454-2ca8380fa723)
+2026-10-05 19:27:58.833 | INFO | ✅ [Web UI] 使用者 F9999 55 登入成功
+2026-10-05 19:27:59.249 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=A011000 (DB 寫入目前停用)
+2026-10-05 19:27:59.249 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=C, Code=A011000
+2026-10-05 19:27:59.253 | INFO | 📥 [Web UI] 接收到新警報: faf021a8-42e4-4944-81e4-9b66d82f8129, Level: C, Code: A011000
+2026-10-05 19:27:59.253 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=faf021a8-42e4-4944-81e4-9b66d82f8129)
+2026-10-05 19:28:01.346 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=A011F0B (DB 寫入目前停用)
+2026-10-05 19:28:01.346 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=B, Code=A011F0B
+2026-10-05 19:28:01.351 | INFO | 📥 [Web UI] 接收到新警報: eba213d5-8ca0-475b-8afe-be35e5117790, Level: B, Code: A011F0B
+2026-10-05 19:28:01.352 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=eba213d5-8ca0-475b-8afe-be35e5117790)
+2026-10-05 19:28:03.394 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=1003 (DB 寫入目前停用)
+2026-10-05 19:28:03.395 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=A, Code=1003
+2026-10-05 19:28:03.402 | INFO | 📥 [Web UI] 接收到新警報: 534339af-977f-4120-9d82-998abf206780, Level: A, Code: 1003
+2026-10-05 19:28:03.403 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=534339af-977f-4120-9d82-998abf206780)
+2026-10-05 19:28:05.479 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=1000 (DB 寫入目前停用)
+2026-10-05 19:28:05.480 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=C, Code=1000
+2026-10-05 19:28:05.483 | INFO | 📥 [Web UI] 接收到新警報: 70129724-ad5c-498e-b424-f8e5eee3df61, Level: C, Code: 1000
+2026-10-05 19:28:05.483 | SUCCESS | ✅ [步驟 C] 等級 C 符合顯示條件，已推送前端 (alert_id=70129724-ad5c-498e-b424-f8e5eee3df61)
+2026-10-05 19:28:07.568 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=ROBOT_A0001 (DB 寫入目前停用)
+2026-10-05 19:28:07.569 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=A, Code=ROBOT_A0001
+2026-10-05 19:28:07.573 | INFO | 📥 [Web UI] 接收到新警報: 17f16eec-eef0-4f25-b5b9-9954f3afc7f3, Level: A, Code: ROBOT_A0001
+2026-10-05 19:28:07.574 | SUCCESS | ✅ [步驟 C] 等級 A 符合顯示條件，已推送前端 (alert_id=17f16eec-eef0-4f25-b5b9-9954f3afc7f3)
+2026-10-05 19:28:09.626 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=ROBOT_A0051 (DB 寫入目前停用)
+2026-10-05 19:28:09.627 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=B, Code=ROBOT_A0051
+2026-10-05 19:28:09.631 | INFO | 📥 [Web UI] 接收到新警報: cab7680e-bfb6-43a6-ae4b-b4bc0354a48f, Level: B, Code: ROBOT_A0051
+2026-10-05 19:28:09.631 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=cab7680e-bfb6-43a6-ae4b-b4bc0354a48f)
+2026-10-05 19:28:11.694 | INFO | ℹ️ [步驟 A] 收到資料：AlarmCode=ROBOT_A0051 (DB 寫入目前停用)
+2026-10-05 19:28:11.695 | INFO | 🔍 [步驟 B] 比對結果: Method=System+AlarmCode, LV=B, Code=ROBOT_A0051
+2026-10-05 19:28:11.701 | INFO | 📥 [Web UI] 接收到新警報: 110abd08-f55c-4905-9a44-0feadde7cdcd, Level: B, Code: ROBOT_A0051
+2026-10-05 19:28:11.701 | SUCCESS | ✅ [步驟 C] 等級 B 符合顯示條件，已推送前端 (alert_id=110abd08-f55c-4905-9a44-0feadde7cdcd)
