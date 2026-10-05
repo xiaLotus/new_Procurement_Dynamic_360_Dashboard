@@ -251,6 +251,12 @@ MIN_ROWS_RATIO = 0.8                # 新檔列數低於舊檔 80% 視為異常�
 QUERY_SETTLE_SEC = 10               # 檔案最後修改未滿 10 秒 = 可能還在寫入，等下一輪再讀
 DISPLAY_LEVELS = ['A', 'B', 'C']    # 會推送到前端的等級
 
+# 【新增】ClassName 去重：前端 (未確認清單) 已經有同一個 ClassName 的卡片時，新的警報不再推送
+#   True  = 開啟去重 (同一台設備在被 CHECK 掉之前只會顯示一張卡片)
+#   False = 關閉去重 (每筆都推送，恢復原本行為)
+#   ClassName 是空白的警報不做去重，照常推送
+DEDUP_BY_CLASSNAME = True
+
 # 四本字典放在同一個 dict，重載時「整包換掉」，進行中的請求不會讀到半新半舊
 #   sys_code : (SYSTEM, alarmcode)  -> (alarmcode, message, lv)     ← 唯一鍵，最準
 #   sys_ext  : (SYSTEM, 括號代號)    -> (alarmcode, message, lv)
@@ -594,16 +600,27 @@ def api_login():
 # =====================================================
 # 【Web 儀表板】後端 API 路由
 # =====================================================
-def store_alert(data: dict) -> str:
-    """把警報放進記憶體並寫入中繼儲存，回傳 alert_id (upload_message 與 webhook_receive 共用)"""
-    alert_id = str(uuid.uuid4())
-    data['alert_id'] = alert_id
-    data['received_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   # 接收時間
+def store_alert(data: dict, dedup: bool = False):
+    """
+    把警報放進記憶體並寫入中繼儲存 (upload_message 與 webhook_receive 共用)。
+    回傳 (alert_id, duplicate_of)：
+      - 正常新增：(新 alert_id, None)
+      - 【新增】dedup=True 且前端已有相同 ClassName：(None, 既有卡片的 alert_id)，不新增
+    檢查與新增在同一把鎖內完成，兩筆同時進來也不會各新增一張。
+    """
+    class_name = str(data.get("ClassName") or "").strip()
     with alerts_lock:
+        if dedup and class_name:
+            for a in active_alerts.values():
+                if str(a.get("ClassName") or "").strip() == class_name:
+                    return None, a.get("alert_id")
+        alert_id = str(uuid.uuid4())
+        data['alert_id'] = alert_id
+        data['received_at'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")   # 接收時間
         active_alerts[alert_id] = data
     persist_active_alerts()          # 新增：落地到 active_alerts.json
     logger.info(f"📥 [Web UI] 接收到新警報: {alert_id}, Level: {data.get('Level')}, Code: {data.get('AlarmCode')}")
-    return alert_id
+    return alert_id, None
 
 @app.route('/api/webhook_receive', methods=['POST'])
 def webhook_receive():
@@ -611,14 +628,60 @@ def webhook_receive():
     data = request.get_json(silent=True)
     if not data:
         return jsonify({"status": "error", "message": "Invalid JSON"}), 400
-    store_alert(data)
+    store_alert(data)                # webhook 不做 ClassName 去重 (維持原本行為)
     return jsonify({"status": "received"}), 200
+
+# =====================================================
+# 【新增】目前「誰正在點開哪一張單」(只做顯示，不鎖單，大家照樣可以送出)
+#   - 前端打開 CHECK 視窗時呼叫 /api/viewing (active=true)，視窗開著每 2 秒隨輪詢續約一次
+#   - 關閉視窗時呼叫 active=false；網頁直接被關掉、斷線則 VIEWING_TTL_SEC 秒後自動消失
+#   - 只放記憶體，不寫入 active_alerts.json (重啟後清空，不影響警報本身)
+# =====================================================
+VIEWING_TTL_SEC = 10
+viewing = {}        # alert_id -> {username: 最後續約時間 (time.time())}；用 alerts_lock 保護
+
+
+@app.route('/api/viewing', methods=['POST'])
+def api_viewing():
+    """body: { "alert_id": "...", "username": "...", "active": true/false }"""
+    body = request.get_json(silent=True) or {}
+    alert_id = str(body.get("alert_id") or "").strip()
+    username = str(body.get("username") or "").strip()
+    active = body.get("active", True) is not False
+    if not alert_id or not username:
+        return jsonify({"status": "error", "message": "缺少 alert_id 或 username"}), 400
+    with alerts_lock:
+        if active:
+            if alert_id in active_alerts:                  # 已被消掉的單不再登記
+                viewing.setdefault(alert_id, {})[username] = time.time()
+        else:
+            users = viewing.get(alert_id)
+            if users:
+                users.pop(username, None)
+                if not users:
+                    viewing.pop(alert_id, None)
+    return jsonify({"status": "ok"}), 200
+
 
 @app.route('/get_alerts')
 def get_alerts():
-    """提供給前端網頁撈取目前所有未確認的警報"""
+    """提供給前端網頁撈取目前所有未確認的警報
+    【新增】每筆多帶 viewing_by：目前正在點開這張單的使用者清單 (已過期的自動清掉)"""
+    now = time.time()
     with alerts_lock:
-        return jsonify([dict(a) for a in active_alerts.values()]), 200
+        # 清掉過期的人、以及已經不在未確認清單的單
+        for aid in list(viewing):
+            users = {u: t for u, t in viewing[aid].items() if now - t <= VIEWING_TTL_SEC}
+            if users and aid in active_alerts:
+                viewing[aid] = users
+            else:
+                viewing.pop(aid, None)
+        result = []
+        for aid, a in active_alerts.items():
+            item = dict(a)
+            item["viewing_by"] = sorted(viewing.get(aid, {}))
+            result.append(item)
+    return jsonify(result), 200
 
 # 前端送來的警報快照只允許這些欄位寫進紀錄 (避免亂塞欄位)
 _ALERT_SNAPSHOT_KEYS = ("alert_id", "System", "Plant", "Place", "AlarmCode", "Level",
@@ -645,6 +708,7 @@ def remove_alert(alert_id):
 
     with alerts_lock:
         alert = active_alerts.pop(alert_id, None)
+        viewing.pop(alert_id, None)      # 【新增】單消掉了，「誰在點開」也一起清掉
 
     status = "removed"
     if alert is None:
@@ -682,6 +746,7 @@ def clear_alerts():
     with alerts_lock:
         count = len(active_alerts)
         active_alerts.clear()
+        viewing.clear()                  # 【新增】
     persist_active_alerts()          # 新增：清空也要同步到中繼儲存，否則重啟又會跑回來
     logger.warning(f"🧹 [Web UI] {username} 清空全部未確認警報，共 {count} 筆")
     return jsonify({"status": "cleared", "count": count}), 200
@@ -798,7 +863,20 @@ def upload_message():
 
         if level in DISPLAY_LEVELS:
             payload = {**data, **match_result}
-            alert_id = store_alert(payload)
+            alert_id, dup_id = store_alert(payload, dedup=DEDUP_BY_CLASSNAME)
+
+            # 【新增】前端已有相同 ClassName 的卡片 → 不再推送
+            if dup_id:
+                logger.info(f"🔁 [步驟 C] ClassName={data.get('ClassName')} 已在前端 (alert_id={dup_id})，"
+                            f"本筆不再推送 | Level={level}, Code={data.get('AlarmCode')}")
+                return jsonify({
+                    'status': 'duplicate_skipped',
+                    'message': f"前端已有相同 ClassName 的警報，未重複推送",
+                    'duplicate_of': dup_id,
+                    'level': level,
+                    'match_result': match_result
+                }), 200
+
             logger.success(f"✅ [步驟 C] 等級 {level} 符合顯示條件，已推送前端 (alert_id={alert_id})")
 
             return jsonify({

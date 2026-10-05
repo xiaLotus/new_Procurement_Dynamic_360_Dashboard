@@ -34,6 +34,8 @@
   .card-class { margin: 3px 0 0; font-size: 12px; line-height: 1.3; color: #64748b; font-family: Consolas, "Courier New", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 11px; }
   .card-time { margin-left: auto; white-space: nowrap; }
+  /* 【新增】「誰正在點開這張單」標籤 */
+  .viewing-chip { display: inline-flex; align-items: center; gap: 3px; max-width: 45%; padding: 2px 6px; border-radius: 6px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 11px; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   @media (min-width: 640px) {
     body { font-size: 15px; }
     .stats { gap: 16px; }
@@ -188,7 +190,7 @@
     <section class="toolbar mb-3 sm:mb-4">
       <h2 class="text-sm sm:text-lg font-bold text-slate-800 whitespace-nowrap" style="margin:0;white-space:nowrap">
         未確認
-        <span class="ml-1 text-xs sm:text-sm font-medium text-slate-500">{{ visibleAlerts.length }}<span v-if="isFiltering"> / {{ shownAlerts.length }}</span> 筆</span>
+        <span class="ml-1 text-xs sm:text-sm font-medium text-slate-500">{{ visibleAlerts.length }}<span v-if="filters.level"> / {{ groupAlerts.length }}</span> 筆</span>
       </h2>
       <div class="flex items-center gap-2 text-sm" style="display:flex;align-items:center;gap:8px;min-width:0">
         <label class="flex items-center gap-1.5" style="display:flex;align-items:center;gap:6px;min-width:0">
@@ -217,6 +219,10 @@
               <span class="w-1.5 h-1.5 rounded-full bg-current" style="width:6px;height:6px;border-radius:9999px;display:inline-block;margin-right:3px"></span>{{ a.lv }}
             </span>
             <span class="inline-flex px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[11px] font-semibold leading-none" style="padding:2px 6px">{{ a.building }} {{ a.floor }}</span>
+            <!-- 【新增】目前正在點開這張單的人 (只顯示，不鎖單) -->
+            <span v-if="a.viewing_by && a.viewing_by.length" class="viewing-chip" :title="'正在處理：' + viewerText(a.viewing_by)">
+              <svg style="width:11px;height:11px;flex:0 0 auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>{{ viewerText(a.viewing_by) }}
+            </span>
             <span class="card-time text-slate-400 tabular-nums">{{ shortTime(a.received_at) }}</span>
           </div>
           <h3 class="card-title" style="margin:0" :class="levelStyle[a.lv].text" :title="a.System">{{ a.System || 'N/A' }}</h3>
@@ -283,6 +289,8 @@
           <!-- 【新增】視窗內也顯示 ClassName -->
           <p v-if="check.target.ClassName" class="text-xs text-slate-600 font-mono break-all" style="margin:0 0 2px">{{ check.target.ClassName }}</p>
           <p class="text-xs text-slate-500 font-mono">{{ check.target.AlarmCode }}</p>
+          <!-- 【新增】其他人也開著這張單時提醒 (仍可送出) -->
+          <p v-if="checkOthers.length" class="text-xs font-semibold" style="margin:4px 0;color:#b45309">⚠ {{ checkOthers.join('、') }} 也正在處理這張單</p>
           <p class="text-slate-700 line-clamp-2">{{ check.target.AlarmMessage_1 }}</p>
         </div>
         <p class="text-sm font-medium text-slate-700 mb-2">處理結果</p>
@@ -369,11 +377,24 @@ const app = Vue.createApp({
     shownAlerts() {
       return this.alerts.filter(a => this.SHOW_LEVELS.includes(a.lv));
     },
+    // 【新增】先依 Group 篩選 (不含等級)；統計方塊、筆數都以這份為準
+    //   選了 Group → 只算該 Group 的 Level A~C；沒選 → 全部
+    groupAlerts() {
+      const g = this.activeGroup;
+      return g ? this.shownAlerts.filter(a => this.inGroup(a, g)) : this.shownAlerts;
+    },
     counts() {
       const c = {};
       this.SHOW_LEVELS.forEach(lv => { c[lv] = 0; });
-      this.shownAlerts.forEach(a => { if (c[a.lv] !== undefined) c[a.lv]++; });
+      this.groupAlerts.forEach(a => { if (c[a.lv] !== undefined) c[a.lv]++; });   // 【修改】原本 shownAlerts (全部)
       return c;
+    },
+    // 【新增】CHECK 視窗：除了自己以外，還有誰開著同一張單 (用即時資料，不用開窗時的快照)
+    checkOthers() {
+      const t = this.check.target;
+      if (!t) return [];
+      const live = this.alerts.find(a => a.alert_id === t.alert_id);
+      return ((live && live.viewing_by) || []).filter(u => u !== this.username);
     },
     isFiltering() {
       return !!(this.filters.group || this.filters.level);
@@ -383,9 +404,9 @@ const app = Vue.createApp({
     },
     // 完整篩選結果，用於統計、排序與計算總頁數
     visibleAlerts() {
-      const f = this.filters, g = this.activeGroup;
-      return this.shownAlerts
-        .filter(a => (!g || this.inGroup(a, g)) && (!f.level || a.lv === f.level))
+      const f = this.filters;
+      return this.groupAlerts
+        .filter(a => !f.level || a.lv === f.level)
         .sort((x, y) => {
           const rx = this.LEVEL_RANK[x.lv] ?? 9, ry = this.LEVEL_RANK[y.lv] ?? 9;
           if (rx !== ry) return rx - ry;
@@ -520,6 +541,7 @@ const app = Vue.createApp({
       } finally { this.login.busy = false; }
     },
     doLogout() {
+      this.closeCheck();               // 【新增】登出時順便通知後端不再處理
       this.stopPolling();
       sessionStorage.removeItem("alarm_dashboard_pass");
       sessionStorage.removeItem("alarm_dashboard_user");
@@ -546,6 +568,8 @@ const app = Vue.createApp({
     async fetchAlerts() {
       if (this._fetching) return;
       this._fetching = true;
+      // 【新增】CHECK 視窗開著時，每次輪詢順便續約「我正在處理」(後端 10 秒沒續約就自動消失)
+      if (this.check.target) this.pingViewing(this.check.target.alert_id, true);
       try {
         const res = await fetch(`${this.API_BASE}/get_alerts`, { cache: "no-store", headers: this.authHeaders() });
         if (res.status === 401) { this.forceRelogin("請重新登入"); return; }
@@ -566,9 +590,28 @@ const app = Vue.createApp({
 
     // ---------- CHECK ----------
     openCheck(item) {
+      if (this.check.target && this.check.target.alert_id !== item.alert_id) this.pingViewing(this.check.target.alert_id, false);
       this.check = { target: { ...item }, action: "", note: "", error: "", busy: false };
+      this.pingViewing(item.alert_id, true);
     },
-    closeCheck() { this.check.target = null; },
+    closeCheck() {
+      if (this.check.target) this.pingViewing(this.check.target.alert_id, false);
+      this.check.target = null;
+    },
+    // 【新增】通知後端「我正在點開 / 已關閉」這張單；失敗不影響操作
+    pingViewing(alertId, active) {
+      if (!alertId || !this.username) return;
+      fetch(`${this.API_BASE}/api/viewing`, {
+        method: "POST",
+        headers: this.authHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify({ alert_id: alertId, username: this.username, active }),
+        keepalive: true
+      }).catch(() => {});
+    },
+    // 【新增】卡片上的名字：自己顯示成「我」
+    viewerText(list) {
+      return list.map(u => u === this.username ? "我" : u).join("、") + " 處理中";
+    },
     selectOption(opt) {
       this.check.action = opt;
       if (opt === "其他") this.$nextTick(() => this.$refs.note && this.$refs.note.focus());
